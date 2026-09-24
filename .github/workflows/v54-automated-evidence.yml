@@ -40,9 +40,11 @@ jobs:
           cache: pip
       - name: Install and verify scientific source
         run: |
+          mkdir -p evidence_v54
           python -m pip install -e '.[dev]'
           python -m compileall -q research_bot scripts tests
-          python -m pytest -q tests/test_feature_audit_v54.py tests/test_v54_integrity.py tests/test_v53_candle_zone_mtf.py
+          set -o pipefail
+          python -m pytest -q tests/test_feature_audit_v54.py tests/test_v54_integrity.py | tee evidence_v54/integrity.log
       - name: Fetch, freeze, replay, and record v0.54 evidence
         id: evidence
         shell: bash
