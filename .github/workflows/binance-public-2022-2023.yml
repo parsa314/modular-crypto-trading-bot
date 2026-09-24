@@ -1,0 +1,33 @@
+name: Download checksummed Binance 2022-2023 spot 4h archives
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['main']
+    paths: ['.github/workflows/binance-public-2022-2023.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install 'pandas>=2.2,<4'
+      - run: python -m unittest tests.test_collect_binance_archive -v
+      - name: Fetch and validate primary-source ZIP checksums
+        run: python scripts/collect_binance_archive_2022_2023.py --output-dir data/binance-2022-2023
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: binance-real-2022-2023-${{ github.run_id }}
+          path: data/binance-2022-2023/
+          if-no-files-found: warn
+          retention-days: 90
