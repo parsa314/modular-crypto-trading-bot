@@ -48,6 +48,14 @@ class HistoricalCollectorTests(unittest.TestCase):
                                    Path(tmp), lambda *a, **k: self.sample())
             self.assertEqual(manifest["rows"], 5)
 
+    def test_missing_requested_history_is_not_called_complete(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            frame = self.sample().iloc[2:]
+            manifest = collect_one("XRP/USDT", self.start, self.cutoff,
+                                   Path(tmp), lambda *a, **k: frame)
+            self.assertEqual(manifest["status"], "PARTIAL_COVERAGE")
+            self.assertEqual(manifest["leading_missing_bars"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
