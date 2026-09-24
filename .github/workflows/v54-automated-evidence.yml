@@ -2,6 +2,9 @@ name: v54 automated research evidence
 
 on:
   workflow_dispatch:
+  push:
+    branches: ['main']
+    paths: ['.github/workflows/v54-automated-evidence.yml']
   schedule:
     - cron: '17 3 * * 1'
 
