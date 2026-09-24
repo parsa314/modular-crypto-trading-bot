@@ -1,0 +1,46 @@
+name: Download real CoinEx spot 4h history
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['main']
+    paths:
+      - '.github/workflows/coinex-real-history.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  historical-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Read collector from reviewed main branch
+        uses: actions/checkout@v4
+        with:
+          path: collector
+          persist-credentials: false
+      - name: Check out frozen scientific source
+        uses: actions/checkout@v4
+        with:
+          ref: f234a85028ed2d86cd3bc672e7491f72b0245b9b
+          path: scientific
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install source and verify collector offline
+        run: |
+          python -m pip install -e ./scientific
+          PYTHONPATH=collector python -m unittest discover -s collector/tests -p test_collect_coinex_history.py -v
+      - name: Download five real market histories
+        run: |
+          PYTHONPATH=collector python collector/scripts/collect_coinex_history.py --output-dir data/coinex-4h
+      - name: Keep data and manifest even if one market fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coinex-spot-4h-real-${{ github.run_id }}
+          path: data/coinex-4h/
+          if-no-files-found: warn
+          retention-days: 90
