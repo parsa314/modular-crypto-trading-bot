@@ -51,18 +51,23 @@ def collect_one(symbol: str, start: datetime, cutoff: datetime, output: Path,
     deltas = frame.timestamp.diff().dropna()
     gap_intervals = int((deltas != step).sum())
     missing_bars = int(sum(int(d / step) - 1 for d in deltas if d > step))
+    leading_missing_bars = max(0, int((frame.timestamp.iloc[0] - start_ts) / step))
     if (deltas < step).any():
         raise ValueError("overlapping or off-grid timestamps")
     selected = frame[["timestamp", *cols]].copy()
     csv_file = output / (symbol.replace("/", "_") + "_4h.csv.gz")
     selected.to_csv(csv_file, index=False, compression={"method": "gzip", "mtime": 0}, float_format="%.17g")
     return {
-        "symbol": symbol, "status": "GAPLESS" if gap_intervals == 0 else "GAPS_PRESENT",
+        "symbol": symbol, "status": (
+            "PARTIAL_COVERAGE" if leading_missing_bars else
+            "GAPS_PRESENT" if gap_intervals else "GAPLESS"
+        ),
         "source": SOURCE, "endpoint": "/spot/kline", "market_type": "spot",
         "period": "4hour", "requested_start": start_ts.isoformat(),
         "requested_cutoff": end_ts.isoformat(), "first_bar": frame.timestamp.iloc[0].isoformat(),
         "last_bar": frame.timestamp.iloc[-1].isoformat(), "rows": len(frame),
         "gap_intervals": gap_intervals, "missing_bars": missing_bars,
+        "leading_missing_bars": leading_missing_bars,
         "file": csv_file.name, "sha256": hashlib.sha256(csv_file.read_bytes()).hexdigest(),
         "note": "Real public exchange candles; no gap filling; last unclosed candle excluded",
     }
@@ -86,7 +91,8 @@ def main() -> int:
         print(symbol, manifest["symbols"].get(symbol, manifest["blocked"].get(symbol)), flush=True)
     (args.output_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    return 0 if len(manifest["symbols"]) == len(SYMBOLS) else 1
+    return 0 if (len(manifest["symbols"]) == len(SYMBOLS)
+                 and all(v["status"] == "GAPLESS" for v in manifest["symbols"].values())) else 1
 
 
 if __name__ == "__main__":
