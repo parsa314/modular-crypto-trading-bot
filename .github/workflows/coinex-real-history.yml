@@ -6,6 +6,7 @@ on:
     branches: ['main']
     paths:
       - '.github/workflows/coinex-real-history.yml'
+      - 'scripts/collect_coinex_history.py'
 
 permissions:
   contents: read
