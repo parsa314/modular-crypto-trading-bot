@@ -1,0 +1,156 @@
+name: v54 automated research evidence
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v54-automated-evidence
+  cancel-in-progress: false
+
+jobs:
+  coinex-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      LIVE_EXECUTION: 'false'
+      PAPER_EXECUTION: 'false'
+      BOT_FORWARD_PAPER_ENABLED: 'false'
+      BOT_PAPER_EXECUTION_ENABLED: 'false'
+      EXECUTION_MODE: RESEARCH_ONLY
+      INSTITUTIONAL_RESEARCH: 'true'
+      TRADING_EXECUTION: 'false'
+      SOURCE_SHA: f234a85028ed2d86cd3bc672e7491f72b0245b9b
+    steps:
+      - name: Check out frozen v0.54 scientific source
+        uses: actions/checkout@v4
+        with:
+          ref: f234a85028ed2d86cd3bc672e7491f72b0245b9b
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install and verify scientific source
+        run: |
+          python -m pip install -e '.[dev]'
+          python -m compileall -q research_bot scripts tests
+          python -m pytest -q tests/test_feature_audit_v54.py tests/test_v54_integrity.py tests/test_v53_candle_zone_mtf.py
+      - name: Fetch, freeze, replay, and record v0.54 evidence
+        id: evidence
+        shell: bash
+        run: |
+          mkdir -p evidence_v54/frozen_inputs
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import subprocess
+          import sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          root = Path('evidence_v54')
+          frozen = root / 'frozen_inputs'
+          source_sha = os.environ['SOURCE_SHA']
+          env = dict(os.environ)
+          env.pop('GITHUB_SHA', None)
+          env['SOURCE_COMMIT'] = source_sha
+          common = [
+              sys.executable, '-m', 'scripts.run_v54_feature_audit',
+              '--min-train', '1200', '--test-rows', '240',
+              '--step-rows', '240', '--bootstrap-resamples', '2000',
+              '--bootstrap-block', '24',
+          ]
+          fresh_path = root / 'feature_audit.json'
+          status = {
+              'run_id': datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ'),
+              'workflow_status': 'RUN_INCOMPLETE',
+              'source_commit': source_sha,
+              'research_only': True,
+              'paper_execution': False,
+              'live_execution': False,
+              'scientific_promotion_authorized': False,
+          }
+          try:
+              with (root / 'fresh.log').open('w') as log:
+                  fresh_rc = subprocess.run(
+                      common + ['--freeze-dir', str(frozen), '--output', str(fresh_path)],
+                      env=env, stdout=log, stderr=subprocess.STDOUT, check=False,
+                  ).returncode
+              status['fresh_return_code'] = fresh_rc
+              fresh = json.loads(fresh_path.read_text(encoding='utf-8'))
+              completed = fresh.get('symbols_completed', [])
+              status['completed_symbols'] = completed
+              status['blocked'] = fresh.get('blocked', {})
+              status['empirical_status'] = fresh.get('status')
+              status['completion'] = fresh.get('completion')
+              if completed:
+                  replay_path = root / 'feature_audit_replay.json'
+                  with (root / 'replay.log').open('w') as log:
+                      replay_rc = subprocess.run(
+                          common + ['--symbols', *completed, '--replay-dir', str(frozen),
+                                    '--output', str(replay_path)],
+                          env=env, stdout=log, stderr=subprocess.STDOUT, check=False,
+                      ).returncode
+                  status['replay_return_code'] = replay_rc
+                  replay = json.loads(replay_path.read_text(encoding='utf-8'))
+                  status['replay_manifest_match'] = all(
+                      fresh['dataset_manifests'][symbol][key]
+                      == replay['dataset_manifests'][symbol][key]
+                      for symbol in completed
+                      for key in ('frame_sha256', 'schema_sha256')
+                  )
+              else:
+                  status['replay_return_code'] = None
+                  status['replay_manifest_match'] = False
+              if (fresh_rc == 0 and status['replay_return_code'] == 0
+                      and status['replay_manifest_match']
+                      and fresh.get('completion', {}).get('complete') is True):
+                  status['workflow_status'] = 'WORKFLOW_COMPLETE'
+              elif status['blocked']:
+                  status['workflow_status'] = 'BLOCKED_OR_INCOMPLETE'
+          except Exception as exc:
+              status['error'] = f'{type(exc).__name__}: {exc}'
+          finally:
+              files = [fresh_path, root / 'feature_audit_replay.json']
+              status['report_sha256'] = {
+                  p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                  for p in files if p.is_file()
+              }
+              (root / 'run_status.json').write_text(
+                  json.dumps(status, indent=2, sort_keys=True) + '\n', encoding='utf-8',
+              )
+              summary = [
+                  '# v0.54 automated evidence', '',
+                  f"Run: {status['run_id']}",
+                  f"Status: {status['workflow_status']}",
+                  f"Source: {source_sha}",
+                  f"Completed: {', '.join(status.get('completed_symbols', [])) or 'none'}",
+                  f"Blocked: {json.dumps(status.get('blocked', {}), ensure_ascii=False)}",
+                  'Paper and live execution: disabled.',
+                  'Scientific promotion: requires separate review.',
+              ]
+              Path(os.environ['GITHUB_STEP_SUMMARY']).write_text(
+                  '\n\n'.join(summary) + '\n', encoding='utf-8',
+              )
+              with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+                  out.write('status=' + status['workflow_status'] + '\n')
+          PY
+      - name: Preserve frozen data and audit on every outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v54-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence_v54/
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Mark an incomplete empirical run
+        if: steps.evidence.outputs.status != 'WORKFLOW_COMPLETE'
+        run: |
+          echo 'v0.54 run incomplete; inspect uploaded evidence and runner logs.'
+          exit 1
