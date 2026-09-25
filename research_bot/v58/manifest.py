@@ -28,8 +28,21 @@ def stable_frame_hash(frame: pd.DataFrame) -> str:
     return sha256(raw).hexdigest()
 
 
+def _semantic_dtype(series: pd.Series) -> str:
+    if pd.api.types.is_datetime64_any_dtype(series):
+        return "datetime_utc"
+    if pd.api.types.is_bool_dtype(series):
+        return "boolean"
+    if pd.api.types.is_numeric_dtype(series):
+        return "number"
+    if pd.api.types.is_string_dtype(series) or pd.api.types.is_object_dtype(series):
+        return "string"
+    return "other"
+
+
 def stable_schema_hash(frame: pd.DataFrame) -> str:
-    schema = [(str(c), str(frame[c].dtype)) for c in frame.columns]
+    """Version-robust schema identity based on ordered columns + semantic types."""
+    schema = [(str(c), _semantic_dtype(frame[c])) for c in frame.columns]
     raw = json.dumps(schema, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     return sha256(raw).hexdigest()
 

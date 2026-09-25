@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-import math
 from typing import Iterable
 
 from .contracts import Direction, TargetClass, require_aware_utc, require_finite_positive
@@ -43,13 +42,20 @@ def _touches(event: EventRecord, bar: OHLCBar) -> tuple[bool, bool]:
 
 
 def resolve_target(event: EventRecord, bars: Iterable[OHLCBar]) -> TargetResolution:
+    """Resolve TP/SL/TIMEOUT under the frozen v0.19-compatible V58 horizon.
+
+    holding_horizon means the number of complete bars after the entry bar
+    before forced timeout. Therefore a 30-bar horizon can inspect the entry bar
+    plus 30 later bars (31 observations total). A barrier hit may resolve earlier
+    without requiring the full future path to be supplied.
+    """
+
     ordered = list(bars)
     if not ordered:
         raise ValueError("at least one post-entry bar is required")
-    if len(ordered) < event.holding_horizon:
-        raise ValueError("insufficient bars to resolve frozen holding horizon")
+    max_observations = int(event.holding_horizon) + 1
     prior = None
-    for i, bar in enumerate(ordered[: event.holding_horizon], start=1):
+    for i, bar in enumerate(ordered[:max_observations], start=1):
         ts = require_aware_utc(bar.timestamp, name="bar.timestamp")
         if ts < require_aware_utc(event.entry_time, name="entry_time"):
             raise ValueError("target path contains a pre-entry bar")
@@ -63,5 +69,8 @@ def resolve_target(event: EventRecord, bars: Iterable[OHLCBar]) -> TargetResolut
             return TargetResolution(TargetClass.SL, i, ts, False, "STOP_FIRST")
         if tp:
             return TargetResolution(TargetClass.TP, i, ts, False, "STOP_FIRST")
-    final_ts = require_aware_utc(ordered[event.holding_horizon - 1].timestamp, name="bar.timestamp")
-    return TargetResolution(TargetClass.TIMEOUT, event.holding_horizon, final_ts, False, "STOP_FIRST")
+
+    if len(ordered) < max_observations:
+        raise ValueError("insufficient bars to resolve frozen timeout horizon")
+    final_ts = require_aware_utc(ordered[max_observations - 1].timestamp, name="bar.timestamp")
+    return TargetResolution(TargetClass.TIMEOUT, max_observations, final_ts, False, "STOP_FIRST")
