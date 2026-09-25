@@ -1,0 +1,65 @@
+name: v58 phase2 event and data freeze
+
+on:
+  push:
+    branches:
+      - research/v58-phase2-event-data-freeze
+    paths:
+      - 'research_bot/v58/**'
+      - 'tests/v58/**'
+      - 'scripts/v58/**'
+      - 'configs/v58/**'
+      - 'docs/v58/**'
+      - 'V58_DATA_MANIFEST.json'
+      - 'V58_EVENT_SCHEMA.json'
+      - '.github/workflows/v58-phase2-data-freeze.yml'
+  pull_request:
+    paths:
+      - 'research_bot/v58/**'
+      - 'tests/v58/**'
+      - 'scripts/v58/**'
+      - 'configs/v58/**'
+      - 'V58_DATA_MANIFEST.json'
+      - 'V58_EVENT_SCHEMA.json'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  phase2-freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      LIVE_EXECUTION: 'false'
+      PAPER_EXECUTION: 'false'
+      BOT_FORWARD_PAPER_ENABLED: 'false'
+      BOT_PAPER_EXECUTION_ENABLED: 'false'
+      EXECUTION_MODE: RESEARCH_ONLY
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m compileall -q research_bot/v58 tests/v58 scripts/v58
+      - name: Recover exact frozen CoinEx artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p phase2_data/coinex
+          gh run download 36042192410             --repo "${GITHUB_REPOSITORY}"             --name coinex-spot-4h-real-36042192410             --dir phase2_data/coinex
+      - name: Recover exact frozen Binance transfer artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p phase2_data/binance
+          gh run download 36042637131             --repo "${GITHUB_REPOSITORY}"             --name binance-real-2022-2023-36042637131             --dir phase2_data/binance
+      - name: Verify exact data identities and split freeze
+        run: |
+          python scripts/v58/verify_phase2_freeze.py             --coinex-dir phase2_data/coinex             --binance-dir phase2_data/binance
+      - name: V58 phase2 focused tests
+        run: python -m pytest -q tests/v58
+      - name: Full repository regression
+        run: python -m pytest -q

@@ -1,25 +1,40 @@
 version: 58
+status: FROZEN_PHASE2
+primary_timeframe: 4h
 entry_semantics: NEXT_EXECUTABLE_BAR_OPEN
 same_bar_tp_sl_policy: STOP_FIRST
+target_classes:
+  - TP
+  - SL
+  - TIMEOUT
+common_primary_barrier:
+  source_protocol: v0.19_multitimeframe_H4_defaults
+  atr_period: 14
+  atr_source: decision_bar_completed_history_only
+  stop_atr: 1.5
+  minimum_stop_fraction_of_entry: 0.0005
+  reward_target_R: 3.0
+  max_hold_bars_after_entry: 30
+  timeout_exit: close_at_entry_plus_30_bars
+  observations_if_timeout: 31
+  rationale: common_payoff_geometry_for_incremental_feature_family_comparison
 training_authorized: false
 arms:
   ARM_A:
     name: S6_TREND_BREAKOUT
-    numeric_barriers: BLOCKED_PENDING_FREEZE
-    holding_horizon: BLOCKED_PENDING_FREEZE
+    use_common_primary_barrier: true
   ARM_B:
     name: ICHIMOKU_TREND_PULLBACK_REJECTION
-    numeric_barriers: BLOCKED_PENDING_FREEZE
-    holding_horizon: BLOCKED_PENDING_FREEZE
+    use_common_primary_barrier: true
   ARM_C:
     name: ICT_SMC_SWEEP_DISPLACEMENT_MSS_FVG_OB
-    numeric_barriers: BLOCKED_PENDING_FREEZE
-    holding_horizon: BLOCKED_PENDING_FREEZE
+    use_common_primary_barrier: true
   ARM_D:
     name: AL_BROOKS_PRICE_ACTION
-    numeric_barriers: BLOCKED_PENDING_FREEZE
-    holding_horizon: BLOCKED_PENDING_FREEZE
+    use_common_primary_barrier: true
   ARM_E:
     name: FOUR_FRAMEWORK_CONFLUENCE
-    numeric_barriers: BLOCKED_PENDING_FREEZE
-    holding_horizon: BLOCKED_PENDING_FREEZE
+    use_common_primary_barrier: true
+secondary_structural_stop_ablation:
+  status: NOT_AUTHORIZED_IN_PRIMARY_TOURNAMENT
+  rule: may_be_added_only_by_pre_outcome_amendment_after_primary_baseline

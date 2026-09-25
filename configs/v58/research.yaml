@@ -1,9 +1,14 @@
 version: 58
 mode: STRICT_SCIENTIFIC_RESEARCH
 institutional_research: true
+research_freeze: true
+phase1_infrastructure: true
+phase2_barrier_contract_frozen: true
+phase2_historical_data_identity_frozen: true
+final_prospective_holdout_identity_sealed: true
 training_authorized: false
+training_blocker: VALIDATION_SELECTION_FIREWALL_T2_T4_NOT_YET_COMPLETE
 paper_execution: false
 live_execution: false
 withdrawal_or_transfer_capability: false
-final_holdout_sealed: true
 evidence_before_opinion: true

@@ -1,7 +1,7 @@
 {
   "schema_name": "V58_EVENT_SCHEMA",
-  "schema_version": "58.0-freeze1",
-  "status": "FROZEN_DESIGN_TRAINING_BLOCKED_PENDING_ARM_NUMERIC_BARRIERS",
+  "schema_version": "58.0-phase2-freeze1",
+  "status": "FROZEN_H4_PRIMARY_BARRIER_AND_TARGET_CONTRACT",
   "execution_mode": {
     "institutional_research": true,
     "paper_execution": false,
@@ -94,7 +94,8 @@
     "holding_horizon": {
       "type": "integer",
       "nullable": false,
-      "constraint": ">0 bars; arm config must be frozen before training"
+      "constraint": "exactly 30 for V58 primary H4 tournament",
+      "meaning": "number of complete bars after the entry bar before forced timeout"
     },
     "decision_timeframe": {
       "type": "string",
@@ -201,29 +202,44 @@
     "intrabar_override_allowed_only_if": "timestamped validated intrabar sequence proves order",
     "optimistic_fill_forbidden": true,
     "future_based_event_mutation_forbidden": true,
-    "timeout_rule": "holding_horizon is frozen pre-training in arm config",
-    "barrier_rule_status": "NUMERIC_STOP_TARGET_AND_HORIZON_RULES_MUST_BE_FROZEN_PER_INCLUDED_ARM_BEFORE_TRAINING"
+    "timeout_rule": "entry bar may resolve immediately; otherwise allow 30 complete bars after entry and force TIMEOUT at the close of entry+30 bar",
+    "barrier_rule_status": "FROZEN",
+    "primary_timeframe": "4h",
+    "atr_period": 14,
+    "stop_atr": 1.5,
+    "minimum_stop_fraction_of_entry": 0.0005,
+    "reward_target_R": 3,
+    "max_hold_bars_after_entry": 30,
+    "timeout_observations_including_entry_bar": 31,
+    "source_protocol": "v0.19 H4 defaults in research_bot/multitimeframe_strategies_v19.py",
+    "common_across_arms": true,
+    "common_geometry_rationale": "isolate incremental information from feature/event families rather than confound results with different payoff geometry"
   },
   "arms": {
     "ARM_A": {
       "name": "S6_TREND_BREAKOUT",
-      "event_independent": true
+      "event_independent": true,
+      "primary_barrier_contract": "COMMON_H4_1.5ATR_3R_30_BARS"
     },
     "ARM_B": {
       "name": "ICHIMOKU_TREND_PULLBACK_REJECTION",
-      "event_independent": true
+      "event_independent": true,
+      "primary_barrier_contract": "COMMON_H4_1.5ATR_3R_30_BARS"
     },
     "ARM_C": {
       "name": "ICT_SMC_SWEEP_DISPLACEMENT_MSS_FVG_OB",
-      "event_independent": true
+      "event_independent": true,
+      "primary_barrier_contract": "COMMON_H4_1.5ATR_3R_30_BARS"
     },
     "ARM_D": {
       "name": "AL_BROOKS_PRICE_ACTION",
-      "event_independent": true
+      "event_independent": true,
+      "primary_barrier_contract": "COMMON_H4_1.5ATR_3R_30_BARS"
     },
     "ARM_E": {
       "name": "FOUR_FRAMEWORK_CONFLUENCE",
-      "event_independent": true
+      "event_independent": true,
+      "primary_barrier_contract": "COMMON_H4_1.5ATR_3R_30_BARS"
     }
   },
   "lifecycle": [
