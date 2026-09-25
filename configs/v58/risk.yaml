@@ -1,0 +1,7 @@
+version: 58
+risk_per_trade_max_fraction: 0.0025
+max_asset_weight_fraction: 0.35
+gross_exposure_max_fraction: 0.70
+drawdown_kill_switch_fraction: 0.05
+risk_engine_veto: true
+model_bypass_forbidden: true
