@@ -58,7 +58,7 @@
         "gap_count": 0,
         "compressed_sha256": "4a9efad22062115006ef14104bdb5e9f0ace3a1d4fdcca4d9f671c9c6a85b23c",
         "frame_sha256": "a69065a3c4af147638e772873ec89c76fc91b7b8c7f06513c017c4a04d66ac20",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
         "research_spent": true,
         "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY"
@@ -75,7 +75,7 @@
         "gap_count": 0,
         "compressed_sha256": "a5239aea670a3f6c477711ec0f612512ec1307ab7419c2ca89702b32dbe494a1",
         "frame_sha256": "6490cb384b3177b134da440c1480f97b8570a83306162fc02c63a0ec7934eaec",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
         "research_spent": true,
         "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY"
@@ -92,7 +92,7 @@
         "gap_count": 0,
         "compressed_sha256": "3565afdb54fe9a106d8eafac0d3cb5629b5f0d50807d1d9b797967adf8c4f97c",
         "frame_sha256": "92cb5928a42964d337a4b727b8eb4644a43ca119d722f162dab3442cb37d3c2e",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
         "research_spent": true,
         "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY"
@@ -109,7 +109,7 @@
         "gap_count": 0,
         "compressed_sha256": "ba889e2510dc77400c93fe9a3dbb00f9a567b1444d36b9df1025880e6509fe7a",
         "frame_sha256": "70088786cd9f355187a2c393c75e11f457f538993bc99239b8af3d2c4fb7d33e",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
         "research_spent": true,
         "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY"
@@ -126,7 +126,7 @@
         "gap_count": 0,
         "compressed_sha256": "f6443903f3dc3c64c263f633d35062dbc06fc09933a3b20bd48c62af66afcef8",
         "frame_sha256": "c53b12b6d12540df83a193be2cab50bb57aa95a82c4f23497d233046052a2a35",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
         "research_spent": true,
         "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY"
@@ -156,7 +156,7 @@
         "gap_count": 0,
         "compressed_sha256": "aabf9e3fdb059d86e50882a54ff9835719af2891918eba058ccccc3339cb6388",
         "frame_sha256": "97efebca9eb91a4035b0e0b66eb80b9ededd3780524bfbe0d0355d01fa259583",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "PROVIDER_CHECKSUM_VERIFIED_CLOSED_OHLCV",
         "research_spent": true,
         "promotion_role": "HISTORICAL_EXTERNAL_TRANSFER_DIAGNOSTIC_ONLY"
@@ -173,7 +173,7 @@
         "gap_count": 0,
         "compressed_sha256": "0f374c282ff6dd0b8056f1e64a8bce9e59ba8c826fe0b98988bc7f09726951c1",
         "frame_sha256": "ced9fda5826628fb7e0d12b48fd060d2a06fff58724afe2da752ced86a5e143a",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "PROVIDER_CHECKSUM_VERIFIED_CLOSED_OHLCV",
         "research_spent": true,
         "promotion_role": "HISTORICAL_EXTERNAL_TRANSFER_DIAGNOSTIC_ONLY"
@@ -190,7 +190,7 @@
         "gap_count": 0,
         "compressed_sha256": "908c064f5d6079586f20388a8eb21ca8d027b8e4226dbc115046e0e8c5ea8103",
         "frame_sha256": "7227775ba2a1fff12f8ce3fef3517ead4574b6e0e7e70ac8c5f1395388937265",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "PROVIDER_CHECKSUM_VERIFIED_CLOSED_OHLCV",
         "research_spent": true,
         "promotion_role": "HISTORICAL_EXTERNAL_TRANSFER_DIAGNOSTIC_ONLY"
@@ -207,7 +207,7 @@
         "gap_count": 0,
         "compressed_sha256": "3fefa40667f94f12d5f7119d07fe6c0e99707097fb14091ea7f68f939248867c",
         "frame_sha256": "b08a4c12b179c9f1704df07787449c2e1b92170b470b2a89edbb1ef44b545578",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "PROVIDER_CHECKSUM_VERIFIED_CLOSED_OHLCV",
         "research_spent": true,
         "promotion_role": "HISTORICAL_EXTERNAL_TRANSFER_DIAGNOSTIC_ONLY"
@@ -224,7 +224,7 @@
         "gap_count": 0,
         "compressed_sha256": "725ea996030e20f4b8cacf6592342a3032006d9075346a4ea475d2cce0e4bd55",
         "frame_sha256": "2c1194a4ce38ac729bb500f37bc544615173998a937d9b72f53eb78c1e46344b",
-        "schema_sha256": "537d9253df8e3c4236164803ec2c6558d1e87ba2f96ac63b494cc655ff797f04",
+        "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
         "pit_status": "PROVIDER_CHECKSUM_VERIFIED_CLOSED_OHLCV",
         "research_spent": true,
         "promotion_role": "HISTORICAL_EXTERNAL_TRANSFER_DIAGNOSTIC_ONLY"
@@ -269,5 +269,7 @@
     "PHASE2_CI_VERIFICATION_NOT_YET_RECORDED",
     "VALIDATION_SELECTION_FIREWALL_T2_T4_NOT_YET_COMPLETE",
     "PROSPECTIVE_FINAL_HOLDOUT_NOT_YET_MATURE"
-  ]
+  ],
+  "schema_hash_contract": "ordered_columns_plus_semantic_types_v1",
+  "schema_hash_note": "numeric precision/inference differences across pandas versions do not change schema identity"
 }
