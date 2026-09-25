@@ -1,7 +1,7 @@
 {
   "schema": "V58_DATA_MANIFEST",
   "version": "58.0-phase2-freeze1",
-  "status": "HISTORICAL_DATA_FROZEN_PROSPECTIVE_HOLDOUT_SEALED_PENDING_CI_VERIFICATION",
+  "status": "PHASE2_HISTORICAL_DATA_VERIFIED_PROSPECTIVE_HOLDOUT_SEALED",
   "institutional_research": true,
   "paper_execution": false,
   "live_execution": false,
@@ -266,10 +266,20 @@
   "training_authorized": false,
   "promotion_authorized": false,
   "blockers": [
-    "PHASE2_CI_VERIFICATION_NOT_YET_RECORDED",
     "VALIDATION_SELECTION_FIREWALL_T2_T4_NOT_YET_COMPLETE",
     "PROSPECTIVE_FINAL_HOLDOUT_NOT_YET_MATURE"
   ],
   "schema_hash_contract": "ordered_columns_plus_semantic_types_v1",
-  "schema_hash_note": "numeric precision/inference differences across pandas versions do not change schema identity"
+  "schema_hash_note": "numeric precision/inference differences across pandas versions do not change schema identity",
+  "phase2_verification": {
+    "workflow": "v58 phase2 event and data freeze",
+    "run_id": 36140144927,
+    "verified_head_sha": "26eb2ffbf6dffd734d7a06755d725b0b8f94b4c8",
+    "result": "PASS",
+    "exact_artifacts_recovered": true,
+    "coinex_files_verified": 5,
+    "binance_files_verified": 5,
+    "focused_v58_tests": "24 passed",
+    "full_repository_regression": "187 passed, 1 skipped, 0 failed, 1 warning"
+  }
 }
