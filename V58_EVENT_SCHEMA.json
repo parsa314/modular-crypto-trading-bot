@@ -231,9 +231,9 @@
     "intrabar_override_allowed_only_if": "timestamped validated intrabar sequence proves order",
     "optimistic_fill_forbidden": true,
     "future_based_event_mutation_forbidden": true,
-    "timeout_rule": "30 bars including the entry bar; premature data end is RIGHT_CENSORED",
+    "timeout_rule": "12 bars including the entry bar; premature data end is RIGHT_CENSORED",
     "barrier_rule_status": "FROZEN_BY_V58_AMENDMENT_001",
-    "barrier_rule": "distance=max(1.5*decision_ATR14,0.0005*entry); target=3R",
+    "barrier_rule": "distance=1.0*decision_ATR14; target_distance=1.5*decision_ATR14",
     "decision_entry_separation": "next-open-derived values forbidden in immutable decision event"
   },
   "arms": {
