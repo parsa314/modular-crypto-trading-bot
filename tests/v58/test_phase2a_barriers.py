@@ -30,9 +30,9 @@ def test_next_open_materializes_barriers_without_mutating_decision():
     event = _decision()
     entered = materialize_entry(event, entry_bar=_bar(1, 100, 101, 99, 100), policy=BarrierPolicy())
     assert entered.entry_time > event.decision_time
-    assert entered.risk_distance == 3.0
-    assert entered.stop_price == 97.0
-    assert entered.target_price == 109.0
+    assert entered.risk_distance == 2.0
+    assert entered.stop_price == 98.0
+    assert entered.target_price == 103.0
     assert not hasattr(event, "entry_price")
 
 
@@ -91,3 +91,19 @@ def test_invalid_policy_rejected(kwargs):
 def test_entry_must_be_after_decision():
     with pytest.raises(ValueError, match="strictly after"):
         materialize_entry(_decision(), entry_bar=_bar(0, 100, 101, 99, 100), policy=BarrierPolicy())
+
+
+def test_cost_is_separate_from_label_and_charged_once():
+    policy = BarrierPolicy()
+    entered = materialize_entry(_decision(), entry_bar=_bar(1, 100, 101, 99, 100), policy=policy)
+    outcome = resolve_barriers(entered, direction=Direction.LONG, bars=[_bar(1, 100, 103, 99, 103)], policy=policy)
+    assert outcome.target_class is TargetClass.TP
+    assert outcome.gross_return == pytest.approx(0.03)
+    assert outcome.gross_return_r == pytest.approx(1.5)
+    assert outcome.after_cost(24) == pytest.approx(0.0276)
+    assert outcome.target_class is TargetClass.TP
+
+
+def test_sensitivity_contracts_are_not_primary_defaults():
+    primary = BarrierPolicy()
+    assert (primary.atr_multiple, primary.reward_r, primary.holding_horizon_bars) == (1.0, 1.5, 12)
