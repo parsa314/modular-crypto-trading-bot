@@ -1,0 +1,12 @@
+{
+  "manifest": "V58_TEMPORAL_SPLIT_MANIFEST",
+  "status": "BLOCKED_PENDING_DATA_FREEZE",
+  "created_at_utc": "2026-09-25T12:25:00Z",
+  "development": null,
+  "validation": null,
+  "final_holdout": null,
+  "reason": "Exact boundaries cannot be sealed before admissible dataset UTC bounds are known.",
+  "silent_boundary_changes_forbidden": true,
+  "event_dataset_authorized": false,
+  "model_training_authorized": false
+}

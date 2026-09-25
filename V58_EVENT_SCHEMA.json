@@ -1,7 +1,7 @@
 {
   "schema_name": "V58_EVENT_SCHEMA",
-  "schema_version": "58.0-freeze1",
-  "status": "FROZEN_DESIGN_TRAINING_BLOCKED_PENDING_ARM_NUMERIC_BARRIERS",
+  "schema_version": "58.1-amendment1",
+  "status": "BARRIERS_FROZEN_TRAINING_BLOCKED_PENDING_DATA_AND_ARM_GENERATORS",
   "execution_mode": {
     "institutional_research": true,
     "paper_execution": false,
@@ -20,6 +20,11 @@
       "strategy_version"
     ],
     "duplicates_forbidden": true
+  },
+  "record_layers": {
+    "decision_event": "immutable at decision close; contains no next-open-derived prices",
+    "entered_event": "append-only after the next executable open; contains entry and barrier prices",
+    "outcome": "append-only resolved or right-censored observation"
   },
   "required_columns": {
     "event_id": {
@@ -68,23 +73,33 @@
     },
     "entry_time": {
       "type": "datetime_utc",
-      "nullable": false,
+      "nullable": true,
       "constraint": "entry_time > timestamp"
     },
     "entry_price": {
       "type": "float",
-      "nullable": false,
+      "nullable": true,
       "constraint": ">0"
     },
     "stop_price": {
       "type": "float",
-      "nullable": false,
-      "constraint": ">0 and frozen before label resolution"
+      "nullable": true,
+      "constraint": ">0 and materialized only after next executable open"
     },
     "target_price": {
       "type": "float",
+      "nullable": true,
+      "constraint": ">0 and materialized only after next executable open"
+    },
+    "decision_atr": {
+      "type": "float",
       "nullable": false,
-      "constraint": ">0 and frozen before label resolution"
+      "constraint": "finite >0 and known at decision close"
+    },
+    "barrier_policy_hash": {
+      "type": "string",
+      "nullable": true,
+      "meaning": "null before entry materialization"
     },
     "risk_R": {
       "type": "float",
@@ -153,6 +168,20 @@
       "nullable": true,
       "meaning": "null before label resolution"
     },
+    "outcome_state": {
+      "type": "enum",
+      "values": [
+        "RESOLVED",
+        "RIGHT_CENSORED"
+      ],
+      "nullable": true,
+      "constraint": "RIGHT_CENSORED implies target_class and resolved_at are null"
+    },
+    "observed_bars": {
+      "type": "integer",
+      "nullable": true,
+      "constraint": ">=0; preserves censoring duration"
+    },
     "time_to_event_bars": {
       "type": "integer",
       "nullable": true,
@@ -192,7 +221,8 @@
     "primary_target": [
       "TP",
       "SL",
-      "TIMEOUT"
+      "TIMEOUT",
+      "RIGHT_CENSORED"
     ],
     "auxiliary_target": "time_to_event_bars",
     "label_start": "entry_time",
@@ -201,8 +231,10 @@
     "intrabar_override_allowed_only_if": "timestamped validated intrabar sequence proves order",
     "optimistic_fill_forbidden": true,
     "future_based_event_mutation_forbidden": true,
-    "timeout_rule": "holding_horizon is frozen pre-training in arm config",
-    "barrier_rule_status": "NUMERIC_STOP_TARGET_AND_HORIZON_RULES_MUST_BE_FROZEN_PER_INCLUDED_ARM_BEFORE_TRAINING"
+    "timeout_rule": "12 bars including the entry bar; premature data end is RIGHT_CENSORED",
+    "barrier_rule_status": "FROZEN_BY_V58_AMENDMENT_001",
+    "barrier_rule": "distance=1.0*decision_ATR14; target_distance=1.5*decision_ATR14",
+    "decision_entry_separation": "next-open-derived values forbidden in immutable decision event"
   },
   "arms": {
     "ARM_A": {

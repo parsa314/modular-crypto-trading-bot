@@ -1,0 +1,19 @@
+{
+  "manifest": "V58_DATA_MANIFEST_FINAL",
+  "status": "BLOCKED_NO_ADMISSIBLE_RAW_DATA_FILES_IN_REPOSITORY",
+  "created_at_utc": "2026-09-25T12:25:00Z",
+  "baseline_commit": "fdaee2580f24997acd8122760dbf73a9f06a3141",
+  "datasets": [],
+  "required_fields": [
+    "dataset_id", "venue", "symbol", "timeframe", "start_timestamp",
+    "end_timestamp", "row_count", "schema_hash", "file_sha256",
+    "missing_bar_count", "duplicate_timestamp_count", "timezone",
+    "download_source", "download_timestamp", "known_limitations"
+  ],
+  "blockers": [
+    "RAW_BTC_ETH_SOL_XRP_DOGE_FILES_NOT_PRESENT",
+    "EXACT_SOURCE_BYTES_NOT_AVAILABLE_FOR_HASHING"
+  ],
+  "event_dataset_authorized": false,
+  "model_training_authorized": false
+}

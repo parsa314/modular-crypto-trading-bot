@@ -4,6 +4,9 @@ round_trip_cost_stress_bps:
   - 24
   - 36
   - 50
+primary_round_trip_cost_bps: 24
+label_generation_cost_independent: true
+double_charge_forbidden: true
 components:
   fees: required
   spread: required_where_measurable

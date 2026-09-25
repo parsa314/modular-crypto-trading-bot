@@ -1,0 +1,18 @@
+{
+  "version": "58.2A",
+  "scientific_parent": "fdaee2580f24997acd8122760dbf73a9f06a3141",
+  "branch": "research/v58-phase2a-barrier-freeze",
+  "protocol_amendment_sha256": "482eb0b22866f5ad57116007cbd7d79fe9eb3cc5ce1e300d8d789157de60a891",
+  "data_manifest_sha256": "394e860cb650b955d53e21e3f020543e2e6d6607f7beb8d860bb8f479ac36f69",
+  "temporal_split_manifest_sha256": "cefc33ce5ae1df233aa31f346f0768853eae47c3734abf0d292b092c365542e2",
+  "event_dataset_manifest_sha256": "1d98a13af942812d51e11e6e6bb69003b83977fc22f16b8e6642a028247e1e1c",
+  "randomness_used": false,
+  "model_training": false,
+  "outcome_inspection": false,
+  "paper_execution": false,
+  "live_execution": false,
+  "focused_test_command": "python -m pytest -q tests/v58",
+  "event_replay": "PASS_ON_SYNTHETIC_CAUSAL_FIXTURE",
+  "real_data_replay": "BLOCKED_RAW_DATA_UNAVAILABLE",
+  "phase2a_decision": "V58_PHASE2A_NO_GO"
+}
