@@ -5,10 +5,10 @@ training_authorized: false
 barrier_policy:
   scope: SHARED_PRIMARY_ALL_ARMS
   decision_atr: WILDER_ATR_14_AT_DECISION_CLOSE
-  atr_multiple: 1.5
-  minimum_distance_fraction: 0.0005
-  reward_r: 3.0
-  holding_horizon_bars: 30
+  atr_multiple: 1.0
+  minimum_distance_fraction: 0.0
+  reward_r: 1.5
+  holding_horizon_bars: 12
   horizon_includes_entry_bar: true
   incomplete_horizon: RIGHT_CENSORED
   gap_stop_fill: BAR_OPEN
@@ -17,20 +17,24 @@ arms:
   ARM_A:
     name: S6_TREND_BREAKOUT
     numeric_barriers: SHARED_PRIMARY_POLICY
-    holding_horizon: 30
+    holding_horizon: 12
   ARM_B:
     name: ICHIMOKU_TREND_PULLBACK_REJECTION
     numeric_barriers: SHARED_PRIMARY_POLICY
-    holding_horizon: 30
+    holding_horizon: 12
   ARM_C:
     name: ICT_SMC_SWEEP_DISPLACEMENT_MSS_FVG_OB
     numeric_barriers: SHARED_PRIMARY_POLICY
-    holding_horizon: 30
+    holding_horizon: 12
   ARM_D:
     name: AL_BROOKS_PRICE_ACTION
     numeric_barriers: SHARED_PRIMARY_POLICY
-    holding_horizon: 30
+    holding_horizon: 12
   ARM_E:
     name: FOUR_FRAMEWORK_CONFLUENCE
     numeric_barriers: SHARED_PRIMARY_POLICY
-    holding_horizon: 30
+    holding_horizon: 12
+sensitivities:
+  SENS_A: {atr_multiple: 0.75, reward_r: 2.0, holding_horizon_bars: 8, role: SENSITIVITY_ONLY}
+  SENS_B: {atr_multiple: 1.0, reward_r: 2.0, holding_horizon_bars: 12, role: SENSITIVITY_ONLY}
+  SENS_C: {atr_multiple: 1.25, reward_r: 2.0, holding_horizon_bars: 18, role: SENSITIVITY_ONLY}
