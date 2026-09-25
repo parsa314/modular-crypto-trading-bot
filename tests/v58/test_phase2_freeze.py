@@ -214,3 +214,20 @@ def test_phase2_configs_keep_execution_and_training_closed():
     assert events["common_primary_barrier"]["reward_target_R"] == 3.0
     assert events["common_primary_barrier"]["max_hold_bars_after_entry"] == 30
     assert all(v["use_common_primary_barrier"] is True for v in events["arms"].values())
+
+
+def test_semantic_schema_hash_is_precision_invariant():
+    ts = pd.date_range("2026-01-01", periods=3, freq="4h", tz="UTC")
+    a = pd.DataFrame({
+        "timestamp": ts,
+        "open": pd.Series([1.0, 2.0, 3.0], dtype="float32"),
+        "high": pd.Series([2.0, 3.0, 4.0], dtype="float32"),
+        "low": pd.Series([0.5, 1.5, 2.5], dtype="float32"),
+        "close": pd.Series([1.5, 2.5, 3.5], dtype="float32"),
+        "volume": pd.Series([10, 20, 30], dtype="int64"),
+    })
+    b = a.copy()
+    for col in ("open", "high", "low", "close", "volume"):
+        b[col] = b[col].astype("float64")
+    assert stable_schema_hash(a) == stable_schema_hash(b)
+    assert stable_schema_hash(a) == "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a"
