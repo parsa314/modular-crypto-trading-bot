@@ -1,0 +1,13 @@
+{
+  "manifest": "V58_EVENT_DATASET_MANIFEST",
+  "status": "EVENT_DATASET_BUILD_BLOCKED",
+  "event_dataset_files": [],
+  "event_counts_by_arm_asset_partition": null,
+  "reasons": [
+    "DATASET_HASHES_NOT_RECORDED",
+    "TEMPORAL_PARTITIONS_NOT_SEALED",
+    "RAW_FIVE_ASSET_H4_DATA_UNAVAILABLE"
+  ],
+  "outcome_inspection_performed": false,
+  "model_training_performed": false
+}
