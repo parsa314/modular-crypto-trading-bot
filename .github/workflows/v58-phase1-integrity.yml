@@ -7,13 +7,20 @@ on:
     paths:
       - 'research_bot/v58/**'
       - 'tests/v58/**'
+      - 'configs/v58/**'
       - 'V58_DATA_MANIFEST.json'
+      - 'V58_MODEL_REGISTRY.json'
+      - 'V58_TRIAL_REGISTRY.csv'
       - '.github/workflows/v58-phase1-integrity.yml'
   pull_request:
     paths:
       - 'research_bot/v58/**'
       - 'tests/v58/**'
+      - 'configs/v58/**'
       - 'V58_DATA_MANIFEST.json'
+      - 'V58_MODEL_REGISTRY.json'
+      - 'V58_TRIAL_REGISTRY.csv'
+      - '.github/workflows/v58-phase1-integrity.yml'
 
 permissions:
   contents: read
@@ -21,7 +28,7 @@ permissions:
 jobs:
   phase1:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       LIVE_EXECUTION: 'false'
       PAPER_EXECUTION: 'false'
@@ -36,4 +43,7 @@ jobs:
           cache: pip
       - run: python -m pip install -e '.[dev]'
       - run: python -m compileall -q research_bot/v58 tests/v58
-      - run: python -m pytest -q tests/v58
+      - name: V58 focused integrity suite
+        run: python -m pytest -q tests/v58
+      - name: Full repository regression suite
+        run: python -m pytest -q
