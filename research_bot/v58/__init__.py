@@ -3,6 +3,8 @@
 No paper or live execution is authorized from this namespace.
 """
 
+PHASE1_IMPLEMENTED = True
+
 from .contracts import (
     LIVE_EXECUTION,
     PAPER_EXECUTION,
@@ -13,6 +15,7 @@ from .contracts import (
 )
 
 __all__ = [
+    "PHASE1_IMPLEMENTED",
     "LIVE_EXECUTION",
     "PAPER_EXECUTION",
     "Direction",
