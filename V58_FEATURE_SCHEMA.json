@@ -1,0 +1,391 @@
+{
+  "schema_name": "V58_FEATURE_SCHEMA",
+  "schema_version": "58.0-freeze1",
+  "status": "FROZEN_DESIGN",
+  "global_contract": {
+    "causal_only": true,
+    "future_shift_forbidden": true,
+    "chikou_as_future_feature_forbidden": true,
+    "full_sample_normalization_forbidden": true,
+    "imputer_fit_scope": "TRAIN_FOLD_ONLY",
+    "scaler_fit_scope": "TRAIN_FOLD_ONLY",
+    "encoder_fit_scope": "TRAIN_FOLD_ONLY",
+    "feature_selection_scope": "TRAIN_OR_VALIDATION_ONLY",
+    "final_holdout_feature_selection_forbidden": true,
+    "availability_rule": "feature_available_at <= event.timestamp",
+    "htf_join_rule": "as-of backward join on HTF available_at; no forward fill across unavailable future closes",
+    "boolean_policy": "prefer continuous measures; retain booleans only for irreducible event-state semantics"
+  },
+  "common_dependencies": {
+    "ATR": "causal trailing ATR from completed bars only",
+    "trailing_statistics": "rolling/expanding values ending at or before decision timestamp",
+    "swing_structure": "confirmed only using bars available by decision timestamp",
+    "volume_baseline": "trailing historical window only"
+  },
+  "features": [
+    {
+      "name": "tenkan_kijun_distance_atr",
+      "family": "ICHIMOKU",
+      "definition": "(tenkan-kijun)/ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "price_kijun_distance_atr",
+      "family": "ICHIMOKU",
+      "definition": "(close-kijun)/ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "price_cloud_distance_atr",
+      "family": "ICHIMOKU",
+      "definition": "signed distance from close to visible cloud boundary / ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "cloud_width_atr",
+      "family": "ICHIMOKU",
+      "definition": "(cloud_top-cloud_bottom)/ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "kijun_slope",
+      "family": "ICHIMOKU",
+      "definition": "causal trailing slope of kijun",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "tenkan_slope",
+      "family": "ICHIMOKU",
+      "definition": "causal trailing slope of tenkan",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "bars_since_tk_cross",
+      "family": "ICHIMOKU",
+      "definition": "bars since most recent causal tenkan/kijun cross",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "bars_since_cloud_break",
+      "family": "ICHIMOKU",
+      "definition": "bars since most recent causal cloud break",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "price_vs_cloud_percentile",
+      "family": "ICHIMOKU",
+      "definition": "causal normalized position of close relative to cloud geometry",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "sweep_depth_atr",
+      "family": "ICT_SMC",
+      "definition": "liquidity sweep penetration / ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "liquidity_distance_atr",
+      "family": "ICT_SMC",
+      "definition": "distance to pre-existing liquidity reference / ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "displacement_body_ratio",
+      "family": "ICT_SMC",
+      "definition": "abs(close-open)/(high-low) for displacement bar",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "displacement_range_atr",
+      "family": "ICT_SMC",
+      "definition": "bar range / ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "relative_volume",
+      "family": "ICT_SMC",
+      "definition": "volume / trailing-volume baseline",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "fvg_width_atr",
+      "family": "ICT_SMC",
+      "definition": "causally detected FVG width / ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "fvg_age",
+      "family": "ICT_SMC",
+      "definition": "bars since FVG formation",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "mss_break_distance_atr",
+      "family": "ICT_SMC",
+      "definition": "market-structure break distance / ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "bars_since_sweep",
+      "family": "ICT_SMC",
+      "definition": "bars since last eligible liquidity sweep",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "bars_since_mss",
+      "family": "ICT_SMC",
+      "definition": "bars since last eligible MSS/CISD",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "close_location_value",
+      "family": "ICT_SMC",
+      "definition": "((close-low)-(high-close))/(high-low)",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "structure_strength",
+      "family": "ICT_SMC",
+      "definition": "continuous causal score from swing displacement/confirmation",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "trend_strength",
+      "family": "BROOKS",
+      "definition": "continuous directional trend-strength score",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "bar_overlap",
+      "family": "BROOKS",
+      "definition": "causal overlap statistic over trailing bars",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "breakout_strength",
+      "family": "BROOKS",
+      "definition": "normalized breakout distance/body/close quality",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "follow_through_strength",
+      "family": "BROOKS",
+      "definition": "causal follow-through score from completed bars",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "failed_breakout_score",
+      "family": "BROOKS",
+      "definition": "continuous failure score using only completed confirmation bars",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "signal_bar_quality",
+      "family": "BROOKS",
+      "definition": "normalized signal-bar geometry/close-location score",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "micro_channel_length",
+      "family": "BROOKS",
+      "definition": "completed-bar count in current causal micro-channel",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "pullback_depth_atr",
+      "family": "BROOKS",
+      "definition": "pullback depth / ATR",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "trading_range_position",
+      "family": "BROOKS",
+      "definition": "causal position inside trailing range [0,1]",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "bars_since_breakout",
+      "family": "BROOKS",
+      "definition": "bars since most recent eligible breakout",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "ATR_percent",
+      "family": "MARKET",
+      "definition": "ATR/close",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "realized_volatility",
+      "family": "MARKET",
+      "definition": "trailing realized volatility",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "volume_zscore",
+      "family": "MARKET",
+      "definition": "train/causal trailing z-score; no full-sample stats",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "returns_1",
+      "family": "MARKET",
+      "definition": "close_t/close_t-1 - 1",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "returns_3",
+      "family": "MARKET",
+      "definition": "close_t/close_t-3 - 1",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "returns_6",
+      "family": "MARKET",
+      "definition": "close_t/close_t-6 - 1",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "returns_12",
+      "family": "MARKET",
+      "definition": "close_t/close_t-12 - 1",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "EMA_distance",
+      "family": "MARKET",
+      "definition": "(close-EMA_trailing)/ATR or close-normalized per config",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "trend_slope",
+      "family": "MARKET",
+      "definition": "causal trailing regression slope",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "range_compression",
+      "family": "MARKET",
+      "definition": "trailing range/ATR compression score",
+      "availability": "closed_bar",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    },
+    {
+      "name": "liquidity_proxy",
+      "family": "MARKET",
+      "definition": "PIT-valid volume/spread/depth proxy; otherwise UNAVAILABLE_PIT_DATA",
+      "availability": "closed_bar_or_pit",
+      "required": true,
+      "leakage_guard": "must be invariant to mutations strictly after event.timestamp"
+    }
+  ],
+  "htf_contract": {
+    "family": "HTF",
+    "generated_by": "same causal feature families on higher timeframe",
+    "prefix": "htf_ or frozen timeframe prefix such as 4h_",
+    "availability_required": true,
+    "rule": "higher-timeframe bar must be closed and available before decision timestamp"
+  },
+  "fundamental_onchain_whale_contract": {
+    "default_status": "UNAVAILABLE_PIT_DATA",
+    "required_fields": [
+      "entity",
+      "metric",
+      "effective_at",
+      "available_at",
+      "observed_at",
+      "source",
+      "value",
+      "confidence",
+      "source_hash"
+    ],
+    "admissibility": "available_at <= event.timestamp and source-traceable historical value",
+    "current_value_backfill_forbidden": true
+  },
+  "snapshot_contract": {
+    "feature_snapshot_id": "deterministic hash of ordered feature names, values, timestamps, feature_version and source identifiers",
+    "immutable_after_event": true,
+    "missingness_recorded": true
+  }
+}

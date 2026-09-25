@@ -1,0 +1,254 @@
+{
+  "schema_name": "V58_EVENT_SCHEMA",
+  "schema_version": "58.0-freeze1",
+  "status": "FROZEN_DESIGN_TRAINING_BLOCKED_PENDING_ARM_NUMERIC_BARRIERS",
+  "execution_mode": {
+    "institutional_research": true,
+    "paper_execution": false,
+    "live_execution": false
+  },
+  "identity": {
+    "event_id_type": "deterministic_sha256",
+    "immutable_identity_fields": [
+      "symbol",
+      "venue",
+      "strategy_arm",
+      "direction",
+      "setup_timestamp",
+      "entry_reference",
+      "feature_snapshot_id",
+      "strategy_version"
+    ],
+    "duplicates_forbidden": true
+  },
+  "required_columns": {
+    "event_id": {
+      "type": "string",
+      "nullable": false
+    },
+    "symbol": {
+      "type": "string",
+      "nullable": false
+    },
+    "venue": {
+      "type": "string",
+      "nullable": false
+    },
+    "timestamp": {
+      "type": "datetime_utc",
+      "nullable": false,
+      "meaning": "event decision timestamp"
+    },
+    "setup_timestamp": {
+      "type": "datetime_utc",
+      "nullable": false
+    },
+    "strategy_arm": {
+      "type": "enum",
+      "values": [
+        "ARM_A",
+        "ARM_B",
+        "ARM_C",
+        "ARM_D",
+        "ARM_E"
+      ],
+      "nullable": false
+    },
+    "direction": {
+      "type": "enum",
+      "values": [
+        "LONG",
+        "SHORT"
+      ],
+      "nullable": false
+    },
+    "entry_reference": {
+      "type": "string",
+      "nullable": false
+    },
+    "entry_time": {
+      "type": "datetime_utc",
+      "nullable": false,
+      "constraint": "entry_time > timestamp"
+    },
+    "entry_price": {
+      "type": "float",
+      "nullable": false,
+      "constraint": ">0"
+    },
+    "stop_price": {
+      "type": "float",
+      "nullable": false,
+      "constraint": ">0 and frozen before label resolution"
+    },
+    "target_price": {
+      "type": "float",
+      "nullable": false,
+      "constraint": ">0 and frozen before label resolution"
+    },
+    "risk_R": {
+      "type": "float",
+      "nullable": false,
+      "constraint": ">0"
+    },
+    "holding_horizon": {
+      "type": "integer",
+      "nullable": false,
+      "constraint": ">0 bars; arm config must be frozen before training"
+    },
+    "decision_timeframe": {
+      "type": "string",
+      "nullable": false
+    },
+    "htf_timeframe": {
+      "type": "string",
+      "nullable": true
+    },
+    "regime": {
+      "type": "enum",
+      "values": [
+        "TREND_UP",
+        "TREND_DOWN",
+        "RANGE",
+        "HIGH_VOL",
+        "LOW_VOL",
+        "TRANSITION",
+        "UNKNOWN"
+      ],
+      "nullable": false
+    },
+    "regime_confidence": {
+      "type": "float",
+      "nullable": false,
+      "constraint": "0<=x<=1"
+    },
+    "feature_snapshot_id": {
+      "type": "string",
+      "nullable": false
+    },
+    "data_version": {
+      "type": "string",
+      "nullable": false
+    },
+    "code_version": {
+      "type": "string",
+      "nullable": false
+    },
+    "strategy_version": {
+      "type": "string",
+      "nullable": false
+    },
+    "available_at": {
+      "type": "datetime_utc",
+      "nullable": false,
+      "constraint": "available_at <= timestamp"
+    },
+    "target_class": {
+      "type": "enum",
+      "values": [
+        "TP",
+        "SL",
+        "TIMEOUT"
+      ],
+      "nullable": true,
+      "meaning": "null before label resolution"
+    },
+    "time_to_event_bars": {
+      "type": "integer",
+      "nullable": true,
+      "constraint": ">=1 after label resolution"
+    },
+    "target_resolved_at": {
+      "type": "datetime_utc",
+      "nullable": true
+    },
+    "intrabar_ambiguity": {
+      "type": "boolean",
+      "nullable": false,
+      "default": false
+    },
+    "ambiguity_policy": {
+      "type": "enum",
+      "values": [
+        "STOP_FIRST",
+        "VALID_INTRABAR_SEQUENCE"
+      ],
+      "nullable": false
+    },
+    "execution_eligible": {
+      "type": "boolean",
+      "nullable": false
+    },
+    "execution_ineligibility_reason": {
+      "type": "string",
+      "nullable": true
+    },
+    "source_event_hash": {
+      "type": "string",
+      "nullable": false
+    }
+  },
+  "target_contract": {
+    "primary_target": [
+      "TP",
+      "SL",
+      "TIMEOUT"
+    ],
+    "auxiliary_target": "time_to_event_bars",
+    "label_start": "entry_time",
+    "default_entry_rule": "NEXT_EXECUTABLE_BAR_OPEN",
+    "same_ohlc_bar_tp_sl_rule": "STOP_FIRST",
+    "intrabar_override_allowed_only_if": "timestamped validated intrabar sequence proves order",
+    "optimistic_fill_forbidden": true,
+    "future_based_event_mutation_forbidden": true,
+    "timeout_rule": "holding_horizon is frozen pre-training in arm config",
+    "barrier_rule_status": "NUMERIC_STOP_TARGET_AND_HORIZON_RULES_MUST_BE_FROZEN_PER_INCLUDED_ARM_BEFORE_TRAINING"
+  },
+  "arms": {
+    "ARM_A": {
+      "name": "S6_TREND_BREAKOUT",
+      "event_independent": true
+    },
+    "ARM_B": {
+      "name": "ICHIMOKU_TREND_PULLBACK_REJECTION",
+      "event_independent": true
+    },
+    "ARM_C": {
+      "name": "ICT_SMC_SWEEP_DISPLACEMENT_MSS_FVG_OB",
+      "event_independent": true
+    },
+    "ARM_D": {
+      "name": "AL_BROOKS_PRICE_ACTION",
+      "event_independent": true
+    },
+    "ARM_E": {
+      "name": "FOUR_FRAMEWORK_CONFLUENCE",
+      "event_independent": true
+    }
+  },
+  "lifecycle": [
+    "DETECTED",
+    "SNAPSHOT_FROZEN",
+    "ENTRY_ELIGIBILITY_EVALUATED",
+    "TARGET_LABELLED",
+    "MODEL_SCORED",
+    "UTILITY_EVALUATED",
+    "RISK_EVALUATED",
+    "PORTFOLIO_EVALUATED",
+    "SIMULATED_OR_ABSTAINED",
+    "LEDGER_FINALIZED"
+  ],
+  "no_trade_reasons": [
+    "MISSING_CRITICAL_FEATURE",
+    "UNKNOWN_REGIME",
+    "LOW_REGIME_CONFIDENCE",
+    "HIGH_UNCERTAINTY",
+    "SHIFT_TOO_HIGH",
+    "NONPOSITIVE_EXPECTED_UTILITY",
+    "RISK_VETO",
+    "PORTFOLIO_VETO",
+    "INVALID_EXECUTION_STATE",
+    "UNSUPPORTED_DIRECTION",
+    "INSUFFICIENT_PIT_DATA"
+  ]
+}
