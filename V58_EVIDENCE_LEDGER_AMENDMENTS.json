@@ -1,0 +1,15 @@
+{
+  "ledger": "V58_PROTOCOL_AMENDMENTS",
+  "hash_algorithm": "SHA-256",
+  "entries": [
+    {
+      "amendment_id": "V58-AMD-001",
+      "path": "V58_PROTOCOL_AMENDMENT_001_BARRIERS_AND_ARMS.md",
+      "amendment_sha256": "482eb0b22866f5ad57116007cbd7d79fe9eb3cc5ce1e300d8d789157de60a891",
+      "parent_protocol_sha256": "cf58fd4d6eabadfcc5e57e87e61e14ae3ad7d1c0bbb9378659dd79157d106798",
+      "baseline_commit": "fdaee2580f24997acd8122760dbf73a9f06a3141",
+      "frozen_at_utc": "2026-09-25T12:25:00Z",
+      "outcome_inspected_before_freeze": false
+    }
+  ]
+}
