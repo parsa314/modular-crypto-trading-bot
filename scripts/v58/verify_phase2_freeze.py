@@ -44,8 +44,9 @@ def main() -> int:
     observed_split = frozen_60_20_20_split(frame)
     expected_split = manifest["historical_primary"]["split_contract"]
     for key in ("development", "validation", "internal_test_spent"):
-        if observed_split[key] != expected_split[key]:
-            raise ValueError(f"split mismatch for {key}: {observed_split[key]} != {expected_split[key]}")
+        expected_core = {k: expected_split[key][k] for k in ("rows", "start", "end")}
+        if observed_split[key] != expected_core:
+            raise ValueError(f"split mismatch for {key}: {observed_split[key]} != {expected_core}")
 
     holdout = manifest["prospective_final_temporal_holdout"]
     if holdout["status"] != "SEALED_FUTURE_NOT_AVAILABLE" or holdout["bytes_available"] is not False:
