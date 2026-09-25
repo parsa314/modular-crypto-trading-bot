@@ -18,16 +18,18 @@ class OutcomeState(str, Enum):
 
 @dataclass(frozen=True)
 class BarrierPolicy:
-    atr_multiple: float = 1.5
-    minimum_distance_fraction: float = 0.0005
-    reward_r: float = 3.0
-    holding_horizon_bars: int = 30
+    atr_multiple: float = 1.0
+    minimum_distance_fraction: float = 0.0
+    reward_r: float = 1.5
+    holding_horizon_bars: int = 12
     ambiguity_policy: str = "STOP_FIRST"
 
     def __post_init__(self) -> None:
         for name in ("atr_multiple", "minimum_distance_fraction", "reward_r"):
             value = float(getattr(self, name))
             if not math.isfinite(value) or value <= 0:
+                if name == "minimum_distance_fraction" and value == 0:
+                    continue
                 raise ValueError(f"{name} must be finite and > 0")
         if isinstance(self.holding_horizon_bars, bool) or not isinstance(self.holding_horizon_bars, int):
             raise ValueError("holding_horizon_bars must be an integer")
@@ -83,6 +85,15 @@ class BarrierOutcome:
     exit_price: float | None
     exit_reason: str
     intrabar_ambiguity: bool
+    gross_return: float | None = None
+    gross_return_r: float | None = None
+
+    def after_cost(self, round_trip_cost_bps: float) -> float | None:
+        if not math.isfinite(float(round_trip_cost_bps)) or round_trip_cost_bps < 0:
+            raise ValueError("round_trip_cost_bps must be finite and non-negative")
+        if self.gross_return is None:
+            return None
+        return self.gross_return - float(round_trip_cost_bps) / 10_000.0
 
 
 def barrier_policy_hash(policy: BarrierPolicy) -> str:
@@ -134,6 +145,12 @@ def resolve_barriers(
     ordered = list(bars)
     if not ordered:
         return BarrierOutcome(OutcomeState.RIGHT_CENSORED, None, 0, None, None, "NO_FOLLOWUP", False)
+
+    def resolved(label: TargetClass, n: int, ts: datetime, price: float, reason: str, ambiguous: bool = False) -> BarrierOutcome:
+        sign = 1.0 if direction is Direction.LONG else -1.0
+        gross = sign * (price / entered.entry_price - 1.0)
+        gross_r = sign * (price - entered.entry_price) / entered.risk_distance
+        return BarrierOutcome(OutcomeState.RESOLVED, label, n, ts, price, reason, ambiguous, gross, gross_r)
     previous: datetime | None = None
     for i, bar in enumerate(ordered[: policy.holding_horizon_bars], start=1):
         timestamp = require_aware_utc(bar.timestamp, name="bar.timestamp")
@@ -144,20 +161,20 @@ def resolve_barriers(
         previous = timestamp
         if direction is Direction.LONG:
             if bar.open <= entered.stop_price:
-                return BarrierOutcome(OutcomeState.RESOLVED, TargetClass.SL, i, timestamp, bar.open, "GAP_STOP", False)
+                return resolved(TargetClass.SL, i, timestamp, bar.open, "GAP_STOP")
             if bar.open >= entered.target_price:
-                return BarrierOutcome(OutcomeState.RESOLVED, TargetClass.TP, i, timestamp, entered.target_price, "GAP_TARGET", False)
+                return resolved(TargetClass.TP, i, timestamp, entered.target_price, "GAP_TARGET")
             tp, sl = bar.high >= entered.target_price, bar.low <= entered.stop_price
         else:
             if bar.open >= entered.stop_price:
-                return BarrierOutcome(OutcomeState.RESOLVED, TargetClass.SL, i, timestamp, bar.open, "GAP_STOP", False)
+                return resolved(TargetClass.SL, i, timestamp, bar.open, "GAP_STOP")
             if bar.open <= entered.target_price:
-                return BarrierOutcome(OutcomeState.RESOLVED, TargetClass.TP, i, timestamp, entered.target_price, "GAP_TARGET", False)
+                return resolved(TargetClass.TP, i, timestamp, entered.target_price, "GAP_TARGET")
             tp, sl = bar.low <= entered.target_price, bar.high >= entered.stop_price
         if sl:
-            return BarrierOutcome(OutcomeState.RESOLVED, TargetClass.SL, i, timestamp, entered.stop_price, "STOP", tp)
+            return resolved(TargetClass.SL, i, timestamp, entered.stop_price, "STOP", tp)
         if tp:
-            return BarrierOutcome(OutcomeState.RESOLVED, TargetClass.TP, i, timestamp, entered.target_price, "TARGET", False)
+            return resolved(TargetClass.TP, i, timestamp, entered.target_price, "TARGET")
         if i == policy.holding_horizon_bars:
-            return BarrierOutcome(OutcomeState.RESOLVED, TargetClass.TIMEOUT, i, timestamp, bar.close, "TIMEOUT", False)
+            return resolved(TargetClass.TIMEOUT, i, timestamp, bar.close, "TIMEOUT")
     return BarrierOutcome(OutcomeState.RIGHT_CENSORED, None, len(ordered), None, None, "DATA_END", False)
