@@ -1,0 +1,30 @@
+{
+  "schema": "V58_DATA_MANIFEST",
+  "version": "58.0-phase1",
+  "status": "BLOCKED_PENDING_EXACT_DATA_FREEZE",
+  "institutional_research": true,
+  "paper_execution": false,
+  "live_execution": false,
+  "datasets": [],
+  "required_assets": ["BTC", "ETH", "SOL", "XRP", "DOGE"],
+  "required_fields_per_dataset": [
+    "source",
+    "symbol",
+    "venue",
+    "timeframe",
+    "data_version",
+    "rows",
+    "start",
+    "end",
+    "gap_count",
+    "frame_sha256",
+    "schema_sha256",
+    "pit_status"
+  ],
+  "training_authorized": false,
+  "blockers": [
+    "EXACT_DATASET_BYTES_NOT_YET_FROZEN",
+    "FINAL_HOLDOUT_IDENTITY_NOT_YET_RESEALED_FOR_V58",
+    "ARM_NUMERIC_STOP_TARGET_HORIZON_RULES_NOT_YET_FROZEN"
+  ]
+}
