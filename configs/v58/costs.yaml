@@ -1,0 +1,13 @@
+version: 58
+round_trip_cost_stress_bps:
+  - 0
+  - 24
+  - 36
+  - 50
+components:
+  fees: required
+  spread: required_where_measurable
+  slippage_proxy: required
+  latency: stress_only_with_valid_data
+  partial_fill: stress_only_with_valid_data
+  market_impact: stress_only_with_valid_data

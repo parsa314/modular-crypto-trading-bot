@@ -1,0 +1,25 @@
+version: 58
+entry_semantics: NEXT_EXECUTABLE_BAR_OPEN
+same_bar_tp_sl_policy: STOP_FIRST
+training_authorized: false
+arms:
+  ARM_A:
+    name: S6_TREND_BREAKOUT
+    numeric_barriers: BLOCKED_PENDING_FREEZE
+    holding_horizon: BLOCKED_PENDING_FREEZE
+  ARM_B:
+    name: ICHIMOKU_TREND_PULLBACK_REJECTION
+    numeric_barriers: BLOCKED_PENDING_FREEZE
+    holding_horizon: BLOCKED_PENDING_FREEZE
+  ARM_C:
+    name: ICT_SMC_SWEEP_DISPLACEMENT_MSS_FVG_OB
+    numeric_barriers: BLOCKED_PENDING_FREEZE
+    holding_horizon: BLOCKED_PENDING_FREEZE
+  ARM_D:
+    name: AL_BROOKS_PRICE_ACTION
+    numeric_barriers: BLOCKED_PENDING_FREEZE
+    holding_horizon: BLOCKED_PENDING_FREEZE
+  ARM_E:
+    name: FOUR_FRAMEWORK_CONFLUENCE
+    numeric_barriers: BLOCKED_PENDING_FREEZE
+    holding_horizon: BLOCKED_PENDING_FREEZE

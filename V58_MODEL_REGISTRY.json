@@ -1,0 +1,17 @@
+{
+  "schema": "V58_MODEL_REGISTRY",
+  "version": "58.0-phase1",
+  "training_authorized": false,
+  "models": [
+    {"id": "B0", "name": "strategy_only", "status": "PLANNED_NOT_TRAINED"},
+    {"id": "B1", "name": "logistic_multinomial_logistic", "status": "PLANNED_NOT_TRAINED"},
+    {"id": "B2", "name": "ridge_linear", "status": "PLANNED_NOT_TRAINED"},
+    {"id": "B3", "name": "hist_gradient_boosting", "status": "PLANNED_NOT_TRAINED"},
+    {"id": "B4", "name": "xgboost_lightgbm", "status": "DEPENDENCY_GATED_NOT_TRAINED"},
+    {"id": "B5", "name": "simple_survival_competing_risk", "status": "PLANNED_NOT_TRAINED"}
+  ],
+  "deep_learning_gate": "CLOSED",
+  "rl_gate": "CLOSED",
+  "paper_execution": false,
+  "live_execution": false
+}
