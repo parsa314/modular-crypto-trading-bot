@@ -1,0 +1,64 @@
+name: v53-rebuild-integrity
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - 'research_bot/candle_time_v53.py'
+      - 'research_bot/zone_lifecycle_v53.py'
+      - 'research_bot/multitimeframe_v53.py'
+      - 'research_bot/confluence_v53.py'
+      - 'research_bot/forward_multiframe_v53.py'
+      - 'research_bot/multiframework_features_v53.py'
+      - 'research_bot/ontology_v53.py'
+      - 'tests/test_multiframework_features_v53.py'
+      - 'tests/test_v53_candle_zone_mtf.py'
+      - 'tests/test_v53_confluence_forward.py'
+      - 'tests/test_v53_confluence_missing.py'
+      - '.github/workflows/v53-rebuild-integrity.yml'
+  push:
+    branches: ["rebuild/pr64-causal-mtf-v53"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v53-rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]'
+      - name: Compile rebuilt v0.53 modules
+        run: |
+          python -m compileall -q research_bot tests
+      - name: Focused causal, lifecycle and forward tests
+        run: |
+          pytest -q \
+            tests/test_multiframework_features_v53.py \
+            tests/test_v53_candle_zone_mtf.py \
+            tests/test_v53_confluence_forward.py \
+            tests/test_v53_confluence_missing.py
+      - name: Full repository suite
+        run: |
+          pytest -q
+      - name: Safety contract
+        run: |
+          ! grep -R -nE 'LIVE_EXECUTION *= *[Tt]rue|PAPER_EXECUTION *= *[Tt]rue' research_bot tests docs
+          python - <<'PY'
+          from pathlib import Path
+          src = Path('research_bot/multiframework_features_v53.py').read_text()
+          assert 'shift(-26)' not in src
+          assert 'shift(- 26)' not in src
+          forward = Path('research_bot/forward_multiframe_v53.py').read_text()
+          assert 'PaperExecutionEngine' not in forward
+          print('v0.53 safety contract preserved')
+          PY
