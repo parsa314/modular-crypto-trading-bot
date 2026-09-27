@@ -1,0 +1,78 @@
+name: v54-feature-audit-integrity
+
+on:
+  pull_request:
+    paths:
+      - 'research_bot/feature_audit_v54.py'
+      - 'research_bot/v54_integrity.py'
+      - 'research_bot/v54_promotion.py'
+      - 'research_bot/v54_completion.py'
+      - 'research_bot/multitimeframe_v53.py'
+      - 'scripts/run_v54_feature_audit.py'
+      - 'tests/test_feature_audit_v54.py'
+      - 'tests/test_v54_integrity.py'
+      - 'docs/V54_FEATURE_AUDIT_PROTOCOL.md'
+      - '.github/workflows/v54-feature-audit-integrity.yml'
+  push:
+    branches: ['research/v54-feature-audit-oos']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v54-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]'
+      - name: Compile v0.54 modules
+        run: |
+          python -m compileall -q research_bot scripts tests
+      - name: Focused causal, audit, reproducibility and completion tests
+        run: |
+          pytest -q \
+            tests/test_v53_candle_zone_mtf.py \
+            tests/test_v53_confluence_forward.py \
+            tests/test_v53_confluence_missing.py \
+            tests/test_feature_audit_v54.py \
+            tests/test_v54_integrity.py
+      - name: Full repository suite
+        run: pytest -q
+      - name: Audit safety and frozen-protocol contract
+        run: |
+          ! grep -R -nE 'LIVE_EXECUTION *= *[Tt]rue|PAPER_EXECUTION *= *[Tt]rue' \
+            research_bot/feature_audit_v54.py \
+            research_bot/v54_integrity.py \
+            research_bot/v54_promotion.py \
+            research_bot/v54_completion.py \
+            scripts/run_v54_feature_audit.py \
+            docs/V54_FEATURE_AUDIT_PROTOCOL.md
+          python - <<'PY'
+          from pathlib import Path
+          mtf = Path('research_bot/multitimeframe_v53.py').read_text()
+          assert 'decision_time_col="decision_at"' in mtf
+          assert 'shift(-26)' not in mtf
+          runner = Path('scripts/run_v54_feature_audit.py').read_text()
+          assert 'PaperExecutionEngine' not in runner
+          assert '--freeze-dir' in runner
+          assert '--replay-dir' in runner
+          assert 'assess_v54_completion' in runner
+          audit = Path('research_bot/feature_audit_v54.py').read_text()
+          assert 'moving_block_mean_ci_v54' in audit
+          assert 'turnover[-1] +=' in audit
+          completion = Path('research_bot/v54_completion.py').read_text()
+          assert 'V54_EMPIRICAL_COMPLETE' in completion
+          assert 'execution_authorized' in completion
+          protocol = Path('docs/V54_FEATURE_AUDIT_PROTOCOL.md').read_text()
+          assert 'V54_ENGINEERING_COMPLETE / V54_EMPIRICAL_RESULT_PENDING' in protocol
+          print('v0.54 complete engineering/safety contract preserved')
+          PY
