@@ -58,7 +58,7 @@ def test_arm_e_component_trace():
 
 def _decision(atr=2.0):
     return DecisionEvent("e"*64,"BTC/USDT","v",StrategyArm.ARM_A,Direction.LONG,
-                         datetime(2025,1,1,tzinfo=UTC),atr,"f"*64,"d","c","s")
+                         datetime(2025,1,1,4,tzinfo=UTC),atr,"f"*64,"d","c","s")
 
 
 def test_barrier_uses_event_time_atr():

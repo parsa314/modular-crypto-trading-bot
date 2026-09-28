@@ -16,9 +16,9 @@ def _decision(direction: Direction = Direction.LONG) -> DecisionEvent:
     return DecisionEvent(
         event_id="e" * 64, symbol="BTC/USDT", venue="coinex",
         strategy_arm=StrategyArm.ARM_A, direction=direction,
-        decision_time=datetime(2026, 1, 1, 0, tzinfo=UTC), decision_atr=2.0,
+        decision_time=datetime(2026, 1, 1, 1, tzinfo=UTC), decision_atr=2.0,
         feature_snapshot_id="f" * 64, data_version="d1", code_version="c1",
-        strategy_version="s1",
+        strategy_version="s1", bar_duration_seconds=3600,
     )
 
 
@@ -29,7 +29,7 @@ def _bar(hour: int, o: float, h: float, l: float, c: float) -> OHLCBar:
 def test_next_open_materializes_barriers_without_mutating_decision():
     event = _decision()
     entered = materialize_entry(event, entry_bar=_bar(1, 100, 101, 99, 100), policy=BarrierPolicy())
-    assert entered.entry_time > event.decision_time
+    assert entered.entry_time == event.decision_time
     assert entered.risk_distance == 2.0
     assert entered.stop_price == 98.0
     assert entered.target_price == 103.0
@@ -47,7 +47,10 @@ def test_stop_first_when_both_barriers_touch():
 def test_gap_target_is_conservative_and_precedes_intrabar_stop():
     policy = BarrierPolicy()
     entered = materialize_entry(_decision(), entry_bar=_bar(1, 100, 101, 99, 100), policy=policy)
-    outcome = resolve_barriers(entered, direction=Direction.LONG, bars=[_bar(1, 110, 111, 96, 100)], policy=policy)
+    outcome = resolve_barriers(
+        entered, direction=Direction.LONG,
+        bars=[_bar(1, 100, 101, 99, 100), _bar(2, 110, 111, 96, 100)], policy=policy,
+    )
     assert outcome.target_class is TargetClass.TP
     assert outcome.exit_price == entered.target_price
     assert outcome.exit_reason == "GAP_TARGET"
@@ -88,8 +91,8 @@ def test_invalid_policy_rejected(kwargs):
         BarrierPolicy(**kwargs)
 
 
-def test_entry_must_be_after_decision():
-    with pytest.raises(ValueError, match="strictly after"):
+def test_entry_must_use_immediate_next_open_boundary():
+    with pytest.raises(ValueError, match="immediate next bar open"):
         materialize_entry(_decision(), entry_bar=_bar(0, 100, 101, 99, 100), policy=BarrierPolicy())
 
 
