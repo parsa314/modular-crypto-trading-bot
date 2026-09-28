@@ -1,0 +1,48 @@
+name: bitpin-public-smoke
+
+on:
+  push:
+    branches:
+      - feature/bitpin-readonly-2026-09-14
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install project + test dependencies
+        run: python -m pip install -e '.[dev]'
+
+      - name: Focused Bitpin tests
+        run: python -m pytest -q tests/test_bitpin_public.py
+
+      - name: Live Bitpin public API smoke
+        env:
+          BITPIN_API_BASE_URL: https://api.bitpin.market/api/v1
+        run: python scripts/smoke_bitpin_public.py --symbol BTC/USDT
+
+      - name: 30-snapshot Bitpin microstructure probe
+        env:
+          BITPIN_API_BASE_URL: https://api.bitpin.market/api/v1
+        run: python scripts/probe_bitpin_microstructure.py --symbol BTC/USDT --samples 30 --interval 0.5 --depth 10 --out-dir artifacts
+
+      - name: Upload Bitpin microstructure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitpin-microstructure-probe
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 30
