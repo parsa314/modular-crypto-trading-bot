@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from .contracts import RegimeLabel
-from .features import add_v58_continuous_features
+from .features import add_v58_continuous_features, bar_duration
 
 
 @dataclass(frozen=True)
@@ -15,10 +15,21 @@ class RegimeConfig:
     vol_window: int = 72
     min_periods: int = 24
 
+    def __post_init__(self) -> None:
+        if not all(np.isfinite(v) and v > 0 for v in (self.trend_threshold_atr, self.transition_delta)):
+            raise ValueError("regime thresholds must be finite and positive")
+        if any(isinstance(v, bool) or not isinstance(v, int) or v <= 0 for v in (self.vol_window, self.min_periods)):
+            raise ValueError("regime windows must be positive integers")
+        if self.min_periods > self.vol_window:
+            raise ValueError("min_periods cannot exceed vol_window")
 
-def add_causal_regime(frame: pd.DataFrame, config: RegimeConfig | None = None) -> pd.DataFrame:
+
+def add_causal_regime(frame: pd.DataFrame, config: RegimeConfig | None = None, *, timeframe: str | None = None) -> pd.DataFrame:
     cfg = config or RegimeConfig()
-    x = add_v58_continuous_features(frame)
+    x = add_v58_continuous_features(frame, timeframe=timeframe)
+    if timeframe is None and len(x) < 2:
+        raise ValueError("timeframe required to establish bar-close availability")
+    duration = bar_duration(timeframe) if timeframe is not None else x["timestamp"].iloc[1] - x["timestamp"].iloc[0]
     rv = x["realized_volatility"]
     prior_rv = rv.shift(1)
     vol_med = prior_rv.rolling(cfg.vol_window, min_periods=cfg.min_periods).median()
@@ -63,5 +74,5 @@ def add_causal_regime(frame: pd.DataFrame, config: RegimeConfig | None = None) -
 
     x["regime"] = labels
     x["regime_confidence"] = confidence
-    x["regime_available_at"] = x["timestamp"]
+    x["regime_available_at"] = x["timestamp"] + duration
     return x

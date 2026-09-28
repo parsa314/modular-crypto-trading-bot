@@ -9,11 +9,11 @@ import numpy as np
 import pandas as pd
 
 from .contracts import Direction, StrategyArm
-from .events import stable_hash
+from .events import stable_hash, make_feature_snapshot_id
 from .features import add_v58_continuous_features
 
 
-FEATURE_SCHEMA_VERSION = "58.1"
+FEATURE_SCHEMA_VERSION = "58.2"
 
 
 @dataclass(frozen=True)
@@ -30,6 +30,10 @@ class CandidateEvent:
     contributing_families: tuple[str, ...]
     states: tuple[str, ...]
     row_index: int
+    atr_at_event: float = math.nan
+    feature_snapshot_id: str = ""
+    state_timestamps: tuple[tuple[str, str], ...] = ()
+    feature_values: tuple[tuple[str, float | None], ...] = ()
 
 
 def _duration(timeframe: str) -> timedelta:
@@ -58,8 +62,10 @@ def candidate_event_id(*, venue: str, symbol: str, timeframe: str, event_timesta
 
 
 def generate_candidates(frame: pd.DataFrame, *, venue: str, symbol: str, timeframe: str = "4h") -> list[CandidateEvent]:
-    x = add_v58_continuous_features(frame)
     duration = _duration(timeframe)
+    # Only the declared raw bar schema may feed a snapshot. Caller-supplied
+    # derived columns must neither override features nor inject future data.
+    x = add_v58_continuous_features(frame.loc[:, ["timestamp", "open", "high", "low", "close", "volume"]], timeframe=timeframe)
     o, h, l, c, v = (x[name].astype(float) for name in ("open", "high", "low", "close", "volume"))
     previous_close = c.shift(1)
     tr = pd.concat([h-l, (h-previous_close).abs(), (l-previous_close).abs()], axis=1).max(axis=1)
@@ -75,25 +81,46 @@ def generate_candidates(frame: pd.DataFrame, *, venue: str, symbol: str, timefra
 
     rows: list[tuple[int, StrategyArm, str, tuple[str, ...], tuple[str, ...]]] = []
     by_row: dict[int, set[StrategyArm]] = {}
+    chain_traces: dict[int, tuple[int, int, int]] = {}
+    sweep_index: int | None = None
+    displacement_index: int | None = None
+    mss_level = math.nan
     for i in range(len(x)):
         if i < 200 or not np.isfinite(atr.iat[i]):
             continue
+        bullish = c.iat[i] > o.iat[i]
         a = bool(c.iat[i] > prior20h.iat[i] and ema200.iat[i] > ema200.shift(6).iat[i])
-        b1 = bool(c.iat[i] > top.iat[i] and c.iat[i-1] <= top.iat[i-1])
-        b2 = bool(c.iat[i] > top.iat[i] and tenkan.iat[i] > kijun.iat[i] and x["tenkan_slope"].iat[i] > 0 and x["kijun_slope"].iat[i] >= 0)
+        b1 = bool(bullish and c.iat[i] > top.iat[i] and c.iat[i-1] <= top.iat[i-1])
+        b2 = bool(bullish and c.iat[i] > top.iat[i] and tenkan.iat[i] > kijun.iat[i] and x["tenkan_slope"].iat[i] > 0 and x["kijun_slope"].iat[i] >= 0)
         recent_reject = any(
             np.isfinite(kijun.iat[k]) and abs(l.iat[k]-kijun.iat[k]) <= 0.25*atr.iat[k]
             for k in range(max(0, i-2), i+1)
         )
         b3 = bool(c.iat[i] > top.iat[i] and c.iat[i] > o.iat[i] and clv01.iat[i] >= 0.75 and recent_reject)
-        c_arm = bool(
-            1 <= x["bars_since_sweep"].iat[i] <= 6 and x["sweep_depth_atr"].iloc[max(0, i-6):i+1].max() > 0
-            and x["displacement_body_ratio"].iat[i] >= 0.60 and x["displacement_range_atr"].iat[i] >= 1.0
-            and x["relative_volume"].iat[i] >= 1.0 and 0 <= x["bars_since_mss"].iat[i] <= 3
-            and x["mss_break_distance_atr"].iat[i] > 0
-        )
-        d1 = bool(x["trend_strength"].iat[i] >= 0.5 and x["signal_bar_quality"].iat[i] >= 0.5 and x["follow_through_strength"].iat[i] > 0)
-        d2 = bool(x["breakout_strength"].iat[i] >= 0.25 and x["signal_bar_quality"].iat[i] >= 0.5)
+        # One ordered, consumable long chain. Every reference is frozen when
+        # observed; three different closed bars must establish its states.
+        c_arm = False
+        if sweep_index is not None and i - sweep_index > 6:
+            sweep_index = displacement_index = None
+        if x["bull_sweep"].iat[i] == 1.0:
+            sweep_index, displacement_index = i, None
+            mss_level = float(prior20h.iat[i])
+        elif sweep_index is not None:
+            broke_level = c.iat[i] > mss_level
+            if broke_level:
+                if displacement_index is not None and bullish and c.iat[i-1] <= mss_level:
+                    c_arm = True
+                    chain_traces[i] = (sweep_index, displacement_index, i)
+                # An early break or a completed chain cannot be reused.
+                sweep_index = displacement_index = None
+            elif displacement_index is None and bullish and (
+                x["displacement_body_ratio"].iat[i] >= 0.60
+                and x["displacement_range_atr"].iat[i] >= 1.0
+                and x["relative_volume"].iat[i] >= 1.0
+            ):
+                displacement_index = i
+        d1 = bool(bullish and x["trend_strength"].iat[i] >= 0.5 and x["signal_bar_quality"].iat[i] >= 0.5 and x["follow_through_strength"].iat[i] > 0)
+        d2 = bool(bullish and x["breakout_strength"].iat[i] >= 0.25 and x["signal_bar_quality"].iat[i] >= 0.5)
         d3 = bool(x["failed_breakout_score"].iat[i] >= 0.25 and c.iat[i] > o.iat[i])
         d4 = bool(abs(x["trend_strength"].iat[i]) <= 0.25 and x["trading_range_position"].iat[i] <= 0.2 and c.iat[i] > o.iat[i])
         d5 = bool(x["trend_strength"].iat[i] >= 0.5 and 0.5 <= x["pullback_depth_atr"].iat[i] <= 2.0 and c.iat[i] > o.iat[i])
@@ -113,6 +140,7 @@ def generate_candidates(frame: pd.DataFrame, *, venue: str, symbol: str, timefra
 
     out: list[CandidateEvent] = []
     seen: set[str] = set()
+    feature_columns = sorted(set(x.columns) - {"timestamp"})
     for i, arm, subtype, families, states in rows:
         event_ts = x["timestamp"].iat[i].to_pydatetime() + duration
         eid = candidate_event_id(venue=venue,symbol=symbol,timeframe=timeframe,event_timestamp=event_ts,
@@ -120,6 +148,18 @@ def generate_candidates(frame: pd.DataFrame, *, venue: str, symbol: str, timefra
         if eid in seen:
             raise RuntimeError(f"duplicate candidate event: {eid}")
         seen.add(eid)
+        values = {name: float(x[name].iat[i]) if np.isfinite(x[name].iat[i]) else None for name in feature_columns}
+        values["atr_at_event"] = float(atr.iat[i])
+        state_times = tuple((state, event_ts.isoformat()) for state in states)
+        if arm in (StrategyArm.ARM_C, StrategyArm.ARM_E):
+            trace = chain_traces[i]
+            state_times = tuple((state, (x["timestamp"].iat[index].to_pydatetime() + duration).isoformat())
+                                for state, index in zip(("SWEEP_RECLAIM", "DISPLACEMENT", "MSS"), trace))
+            values.update({"sweep_row_index": float(trace[0]), "displacement_row_index": float(trace[1]),
+                           "mss_row_index": float(trace[2]),
+                           "chain_reclaim_strength_atr": float(x["sweep_reclaim_strength_atr"].iat[trace[0]]),
+                           "chain_mss_level": float(prior20h.iat[trace[0]])})
+        snapshot = make_feature_snapshot_id(event_timestamp=event_ts, feature_version=FEATURE_SCHEMA_VERSION, features=values)
         out.append(CandidateEvent(eid,venue,symbol,timeframe,event_ts,arm,subtype,Direction.LONG,
-                                  FEATURE_SCHEMA_VERSION,families,states,i))
+                                  FEATURE_SCHEMA_VERSION,families,states,i,float(atr.iat[i]),snapshot,state_times,tuple(sorted(values.items()))))
     return out

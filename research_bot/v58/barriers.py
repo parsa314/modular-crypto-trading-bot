@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 import math
 from typing import Iterable
@@ -14,6 +14,15 @@ from .targets import OHLCBar
 class OutcomeState(str, Enum):
     RESOLVED = "RESOLVED"
     RIGHT_CENSORED = "RIGHT_CENSORED"
+
+
+def _validate_execution_contract(direction: Direction, bar_duration_seconds: int, market_type: str) -> None:
+    if not isinstance(direction, Direction):
+        raise ValueError("direction must be a Direction enum")
+    if isinstance(bar_duration_seconds, bool) or not isinstance(bar_duration_seconds, int) or bar_duration_seconds <= 0:
+        raise ValueError("bar_duration_seconds must be a positive integer")
+    if market_type != "spot":
+        raise ValueError("V58 currently authorizes only spot research entries")
 
 
 @dataclass(frozen=True)
@@ -41,6 +50,8 @@ class BarrierPolicy:
 
 @dataclass(frozen=True)
 class DecisionEvent:
+    """Decision time is the closed signal bar's end, also the next bar's open."""
+
     event_id: str
     symbol: str
     venue: str
@@ -52,8 +63,11 @@ class DecisionEvent:
     data_version: str
     code_version: str
     strategy_version: str
+    bar_duration_seconds: int = 14_400
+    market_type: str = "spot"
 
     def __post_init__(self) -> None:
+        _validate_execution_contract(self.direction, self.bar_duration_seconds, self.market_type)
         require_aware_utc(self.decision_time, name="decision_time")
         require_finite_positive(self.decision_atr, name="decision_atr")
         for name in (
@@ -74,6 +88,19 @@ class EnteredEvent:
     target_price: float
     risk_distance: float
     policy_hash: str
+    direction: Direction = Direction.LONG
+    bar_duration_seconds: int = 14_400
+    market_type: str = "spot"
+
+    def __post_init__(self) -> None:
+        _validate_execution_contract(self.direction, self.bar_duration_seconds, self.market_type)
+        if self.direction is Direction.SHORT:
+            raise ValueError("spot short entries are not authorized")
+        require_aware_utc(self.entry_time, name="entry_time")
+        for name in ("entry_price", "stop_price", "target_price", "risk_distance"):
+            require_finite_positive(getattr(self, name), name=name)
+        if not self.stop_price < self.entry_price < self.target_price:
+            raise ValueError("LONG requires stop < entry < target")
 
 
 @dataclass(frozen=True)
@@ -112,9 +139,13 @@ def materialize_entry(
     entry_bar: OHLCBar,
     policy: BarrierPolicy,
 ) -> EnteredEvent:
+    if event.direction is Direction.SHORT:
+        raise ValueError("spot short entries are not authorized")
     entry_time = require_aware_utc(entry_bar.timestamp, name="entry_bar.timestamp")
-    if entry_time <= require_aware_utc(event.decision_time, name="decision_time"):
-        raise ValueError("entry bar must be strictly after decision time")
+    # The historical close-to-next-open model has zero latency. A later bar
+    # cannot stand in for a missing immediate open.
+    if entry_time != require_aware_utc(event.decision_time, name="decision_time"):
+        raise ValueError("entry must use the immediate next bar open at decision time")
     entry = require_finite_positive(entry_bar.open, name="entry_bar.open")
     distance = max(policy.atr_multiple * event.decision_atr, policy.minimum_distance_fraction * entry)
     if event.direction is Direction.LONG:
@@ -131,8 +162,12 @@ def materialize_entry(
         "entry_time": entry_time.isoformat(),
         "entry_price": entry,
         "policy_hash": policy_hash,
+        "direction": event.direction.value,
+        "bar_duration_seconds": event.bar_duration_seconds,
+        "market_type": event.market_type,
     })
-    return EnteredEvent(entry_id, event.event_id, entry_time, entry, stop, target, distance, policy_hash)
+    return EnteredEvent(entry_id, event.event_id, entry_time, entry, stop, target, distance, policy_hash,
+                        event.direction, event.bar_duration_seconds, event.market_type)
 
 
 def resolve_barriers(
@@ -142,6 +177,22 @@ def resolve_barriers(
     bars: Iterable[OHLCBar],
     policy: BarrierPolicy,
 ) -> BarrierOutcome:
+    """Resolve a contiguous path; resolved_at is when the outcome is knowable.
+
+    Gap fills are known at the open. With OHLC alone an intrabar touch has no
+    exact execution timestamp, so its label is available only at bar close.
+    """
+    if not isinstance(direction, Direction) or direction is not entered.direction:
+        raise ValueError("direction does not match the entered event")
+    if entered.policy_hash != barrier_policy_hash(policy):
+        raise ValueError("policy does not match the materialized entry")
+    if not math.isclose(entered.entry_price - entered.stop_price, entered.risk_distance, rel_tol=1e-10):
+        raise ValueError("entry stop does not match risk_distance")
+    if not math.isclose(entered.target_price - entered.entry_price,
+                        policy.reward_r * entered.risk_distance, rel_tol=1e-10):
+        raise ValueError("entry target does not match policy reward_r")
+    duration = timedelta(seconds=entered.bar_duration_seconds)
+    entry_time = require_aware_utc(entered.entry_time, name="entry_time")
     ordered = list(bars)
     if not ordered:
         return BarrierOutcome(OutcomeState.RIGHT_CENSORED, None, 0, None, None, "NO_FOLLOWUP", False)
@@ -151,14 +202,12 @@ def resolve_barriers(
         gross = sign * (price / entered.entry_price - 1.0)
         gross_r = sign * (price - entered.entry_price) / entered.risk_distance
         return BarrierOutcome(OutcomeState.RESOLVED, label, n, ts, price, reason, ambiguous, gross, gross_r)
-    previous: datetime | None = None
     for i, bar in enumerate(ordered[: policy.holding_horizon_bars], start=1):
         timestamp = require_aware_utc(bar.timestamp, name="bar.timestamp")
-        if timestamp < entered.entry_time:
-            raise ValueError("follow-up contains a pre-entry bar")
-        if previous is not None and timestamp <= previous:
-            raise ValueError("follow-up bars must be strictly chronological")
-        previous = timestamp
+        if timestamp != entry_time + (i - 1) * duration:
+            raise ValueError("follow-up bars must be contiguous starting at entry")
+        if i == 1 and bar.open != entered.entry_price:
+            raise ValueError("entry bar open does not match materialized entry price")
         if direction is Direction.LONG:
             if bar.open <= entered.stop_price:
                 return resolved(TargetClass.SL, i, timestamp, bar.open, "GAP_STOP")
@@ -172,9 +221,9 @@ def resolve_barriers(
                 return resolved(TargetClass.TP, i, timestamp, entered.target_price, "GAP_TARGET")
             tp, sl = bar.low <= entered.target_price, bar.high >= entered.stop_price
         if sl:
-            return resolved(TargetClass.SL, i, timestamp, entered.stop_price, "STOP", tp)
+            return resolved(TargetClass.SL, i, timestamp + duration, entered.stop_price, "STOP", tp)
         if tp:
-            return resolved(TargetClass.TP, i, timestamp, entered.target_price, "TARGET")
+            return resolved(TargetClass.TP, i, timestamp + duration, entered.target_price, "TARGET")
         if i == policy.holding_horizon_bars:
-            return resolved(TargetClass.TIMEOUT, i, timestamp, bar.close, "TIMEOUT")
+            return resolved(TargetClass.TIMEOUT, i, timestamp + duration, bar.close, "TIMEOUT")
     return BarrierOutcome(OutcomeState.RIGHT_CENSORED, None, len(ordered), None, None, "DATA_END", False)

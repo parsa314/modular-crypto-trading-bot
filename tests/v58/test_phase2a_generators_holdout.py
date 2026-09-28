@@ -51,4 +51,9 @@ def test_final_holdout_fails_closed_for_selection_and_training():
     for purpose in ("TRAIN", "CALIBRATE", "MODEL_SELECTION", "FIT_PREPROCESSOR"):
         with pytest.raises(PermissionError):
             authorize_partition_access(Partition.FINAL_HOLDOUT, purpose=purpose)
-    authorize_partition_access(Partition.FINAL_HOLDOUT, purpose="FINAL_EVALUATION")
+    with pytest.raises(PermissionError):
+        authorize_partition_access(Partition.FINAL_HOLDOUT, purpose="FINAL_EVALUATION")
+    authorize_partition_access(
+        Partition.FINAL_HOLDOUT, purpose="FINAL_EVALUATION",
+        final_evaluation_authorized=True,
+    )

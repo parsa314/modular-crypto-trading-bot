@@ -2,9 +2,17 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import re
 
 
 _REQUIRED = {"timestamp", "open", "high", "low", "close", "volume"}
+
+
+def bar_duration(timeframe: str) -> pd.Timedelta:
+    match = re.fullmatch(r"([1-9]\d*)([mhd])", timeframe.lower())
+    if not match:
+        raise ValueError("timeframe must match positive <integer>[m|h|d]")
+    return pd.Timedelta(int(match.group(1)), unit={"m": "min", "h": "h", "d": "d"}[match.group(2)])
 
 
 def _bars_since(flag: pd.Series) -> pd.Series:
@@ -48,15 +56,28 @@ def _micro_channel_length(high: pd.Series, low: pd.Series) -> pd.Series:
     return pd.Series(out, index=high.index)
 
 
-def add_v58_continuous_features(frame: pd.DataFrame) -> pd.DataFrame:
+def add_v58_continuous_features(frame: pd.DataFrame, *, timeframe: str | None = None) -> pd.DataFrame:
     missing = _REQUIRED - set(frame.columns)
     if missing:
         raise ValueError(f"missing columns: {sorted(missing)}")
     x = frame.copy()
+    for value in x["timestamp"]:
+        stamp = pd.Timestamp(value)
+        if pd.isna(stamp) or stamp.tzinfo is None or stamp.utcoffset().total_seconds() != 0:
+            raise ValueError("timestamps must be non-null and timezone-aware UTC")
     x["timestamp"] = pd.to_datetime(x["timestamp"], utc=True, errors="raise")
-    x = x.sort_values("timestamp", kind="mergesort").reset_index(drop=True)
+    x = x.reset_index(drop=True)
     if x["timestamp"].duplicated().any():
         raise ValueError("duplicate timestamps forbidden")
+    gaps = x["timestamp"].diff().iloc[1:]
+    duration = bar_duration(timeframe) if timeframe is not None else (gaps.iloc[0] if len(gaps) else None)
+    if len(gaps) and (duration <= pd.Timedelta(0) or not gaps.eq(duration).all()):
+        raise ValueError("timestamps must be ordered and contiguous at the decision timeframe")
+    numeric = x[["open", "high", "low", "close", "volume"]].astype(float)
+    if not np.isfinite(numeric.to_numpy()).all():
+        raise ValueError("OHLCV must be finite")
+    if (numeric["volume"] < 0).any():
+        raise ValueError("volume must be non-negative")
 
     o = x["open"].astype(float)
     h = x["high"].astype(float)
@@ -110,7 +131,7 @@ def add_v58_continuous_features(frame: pd.DataFrame) -> pd.DataFrame:
     x["bars_since_tk_cross"] = _bars_since(tk_cross)
     above = c > cloud_top
     below = c < cloud_bottom
-    cloud_break = (above & ~above.shift(1).fillna(False)) | (below & ~below.shift(1).fillna(False))
+    cloud_break = (above & ~above.shift(1, fill_value=False)) | (below & ~below.shift(1, fill_value=False))
     x["bars_since_cloud_break"] = _bars_since(cloud_break)
     width = (cloud_top - cloud_bottom).replace(0.0, np.nan)
     x["price_vs_cloud_percentile"] = (c - cloud_bottom) / width
@@ -124,6 +145,8 @@ def add_v58_continuous_features(frame: pd.DataFrame) -> pd.DataFrame:
     sweep_depth = sweep_depth.mask(bull_sweep, (prior_low - l) / atr_safe)
     sweep_depth = sweep_depth.mask(bear_sweep, -((h - prior_high) / atr_safe))
     x["sweep_depth_atr"] = sweep_depth
+    x["sweep_reclaim_strength_atr"] = ((c - prior_low) / atr_safe).where(bull_sweep, 0.0)
+    x["bull_sweep"] = bull_sweep.astype(float)
     x["liquidity_distance_atr"] = pd.concat([(prior_high - c).abs(), (c - prior_low).abs()], axis=1).min(axis=1) / atr_safe
     bar_range = (h - l).replace(0.0, np.nan)
     x["displacement_body_ratio"] = (c - o).abs() / bar_range
@@ -163,8 +186,10 @@ def add_v58_continuous_features(frame: pd.DataFrame) -> pd.DataFrame:
     prev_break_up = c.shift(1) > prior_high.shift(1)
     prev_break_dn = c.shift(1) < prior_low.shift(1)
     failed = pd.Series(0.0, index=x.index)
-    failed = failed.mask(prev_break_up & (c < prior_high), -((prior_high - c) / atr_safe))
-    failed = failed.mask(prev_break_dn & (c > prior_low), (c - prior_low) / atr_safe)
+    # Reclaim the level breached on the previous bar, not a rolling level
+    # that already includes the breach itself.
+    failed = failed.mask(prev_break_up & (c < prior_high.shift(1)), -((prior_high.shift(1) - c) / atr_safe))
+    failed = failed.mask(prev_break_dn & (c > prior_low.shift(1)), (c - prior_low.shift(1)) / atr_safe)
     x["failed_breakout_score"] = failed
     x["signal_bar_quality"] = body_quality * x["close_location_value"].abs()
     x["micro_channel_length"] = _micro_channel_length(h, l)

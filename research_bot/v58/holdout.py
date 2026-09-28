@@ -10,12 +10,20 @@ from .contracts import require_aware_utc
 class Partition(str, Enum):
     DEVELOPMENT = "DEVELOPMENT"
     VALIDATION = "VALIDATION"
+    TEST = "TEST"
     FINAL_HOLDOUT = "FINAL_HOLDOUT"
 
 
-_FORBIDDEN_HOLDOUT_PURPOSES = {
-    "TRAIN", "FIT_PREPROCESSOR", "FEATURE_SELECTION", "CALIBRATE",
-    "THRESHOLD_SELECTION", "HYPERPARAMETER_TUNING", "MODEL_SELECTION",
+_ALLOWED_PARTITIONS = {
+    "TRAIN": {Partition.DEVELOPMENT},
+    "FIT_PREPROCESSOR": {Partition.DEVELOPMENT},
+    "FEATURE_SELECTION": {Partition.DEVELOPMENT},
+    "CALIBRATE": {Partition.VALIDATION},
+    "THRESHOLD_SELECTION": {Partition.VALIDATION},
+    "HYPERPARAMETER_TUNING": {Partition.VALIDATION},
+    "MODEL_SELECTION": {Partition.VALIDATION},
+    "EVALUATE": {Partition.DEVELOPMENT, Partition.VALIDATION, Partition.TEST},
+    "FINAL_EVALUATION": {Partition.FINAL_HOLDOUT},
 }
 
 
@@ -32,7 +40,8 @@ class TemporalSeal:
         h = require_aware_utc(self.holdout_end, name="holdout_end")
         if not d < v < h:
             raise ValueError("temporal partitions must be strictly ordered")
-        if len(self.manifest_hash) != 64:
+        if (not isinstance(self.manifest_hash, str) or len(self.manifest_hash) != 64
+                or any(c not in "0123456789abcdefABCDEF" for c in self.manifest_hash)):
             raise ValueError("manifest_hash must be SHA-256 hex")
 
     def partition_for(self, timestamp: datetime) -> Partition:
@@ -46,9 +55,23 @@ class TemporalSeal:
         raise ValueError("timestamp outside sealed partitions")
 
 
-def authorize_partition_access(partition: Partition, *, purpose: str) -> None:
+def authorize_partition_access(partition: Partition | str, *, purpose: str,
+                               final_evaluation_authorized: bool = False) -> None:
+    """Validate caller-declared split metadata; this does not read or unlock data.
+
+    A final evaluation also requires the caller's explicit governance approval.
+    TEST is evaluation-only; the existing three-window TemporalSeal is unchanged.
+    """
+    try:
+        partition = Partition(partition)
+    except (ValueError, TypeError) as exc:
+        raise ValueError("unknown partition") from exc
+    if not isinstance(purpose, str):
+        raise ValueError("purpose must be a string")
     normalized = purpose.strip().upper()
-    if not normalized:
-        raise ValueError("purpose is required")
-    if partition is Partition.FINAL_HOLDOUT and normalized in _FORBIDDEN_HOLDOUT_PURPOSES:
-        raise PermissionError(f"final holdout access forbidden for {normalized}")
+    if normalized not in _ALLOWED_PARTITIONS:
+        raise ValueError(f"unknown partition access purpose: {normalized!r}")
+    if partition not in _ALLOWED_PARTITIONS[normalized]:
+        raise PermissionError(f"{partition.value} access forbidden for {normalized}")
+    if partition is Partition.FINAL_HOLDOUT and final_evaluation_authorized is not True:
+        raise PermissionError("final holdout evaluation requires explicit authorization")
