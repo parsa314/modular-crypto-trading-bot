@@ -1,9 +1,9 @@
 {
   "date_utc": "2026-09-28",
   "full_suite": {
-    "duration_seconds": 74.42,
+    "duration_seconds": 70.33,
     "failed": 0,
-    "passed": 331,
+    "passed": 332,
     "skip_reason": "TEST_DATABASE_URL not configured",
     "skipped": 1
   },
@@ -17,7 +17,18 @@
     "manifest_sha256": "1edbc5b10d320634ee14c696f2b95b4ca96be9c383cf5eed938ecaa48f42a3ff",
     "rows": 51100
   },
-  "scientific_status": "V58_PHASE2A_NO_GO_FINAL_HOLDOUT_NOT_SEALED",
+  "real_market_development_replay": {
+    "aggregate_file_map_sha256": "089431f74b59e06b4501de2f5104e114ad71352e9492e3a983bc962ab8703991",
+    "bars": 51100,
+    "binance_summary_hash": "96339f5fd8d6b5ed0aa3f4915d60bab4fdd952dc6f7983bc1465d80b452c8375",
+    "byte_identical_replays": true,
+    "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+    "coinex_summary_hash": "5b2138a8929a578c691b85830b4d109c1e90116599bc77d9a71545ace2b40fa9",
+    "events": 16563,
+    "files_compared": 32,
+    "scientific_alpha_claim_authorized": false
+  },
+  "scientific_status": "V58_PHASE2A_NO_GO_NO_INCREMENTAL_ALPHA_EVIDENCE",
   "synthetic_connected_run": {
     "arms": [
       "ARM_A",
@@ -32,6 +43,6 @@
   },
   "v58_tests": {
     "failed": 0,
-    "passed": 168
+    "passed": 169
   }
 }

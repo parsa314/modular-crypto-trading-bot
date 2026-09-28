@@ -5,7 +5,8 @@ import pytest
 from research_bot.v58.contracts import StrategyArm
 from research_bot.v58.generators import generate_candidates
 from research_bot.v58.pipeline import (
-    run_synthetic_engineering_pipeline, synthetic_integration_fixture, write_pipeline_result,
+    run_synthetic_engineering_pipeline, run_verified_development_pipeline,
+    synthetic_integration_fixture, write_pipeline_result,
 )
 
 
@@ -41,5 +42,19 @@ def test_pipeline_replay_is_byte_deterministic(tmp_path):
 
 
 def test_real_market_outcome_path_fails_closed():
-    with pytest.raises(PermissionError, match="blocked"):
+    with pytest.raises(PermissionError, match="verified development intake"):
         run_synthetic_engineering_pipeline(synthetic_integration_fixture(), venue="coinex")
+
+
+def test_real_development_path_requires_verified_manifest_and_hash():
+    frame = synthetic_integration_fixture()
+    with pytest.raises(PermissionError):
+        run_verified_development_pipeline(
+            frame, venue="coinex", symbol="BTC/USDT", dataset_sha256="a" * 64,
+            manifest_status="UNVERIFIED",
+        )
+    result = run_verified_development_pipeline(
+        frame, venue="coinex", symbol="BTC/USDT", dataset_sha256="a" * 64,
+        manifest_status="HISTORICAL_BYTES_VERIFIED_DEVELOPMENT_ONLY",
+    )
+    assert result.records and all(r["classification"] == "REAL_MARKET_DEVELOPMENT_EVIDENCE" for r in result.records)

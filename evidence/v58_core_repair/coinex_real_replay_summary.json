@@ -1,0 +1,375 @@
+{
+  "archive_sha256": "9830982bc8efc83168b7e36181e279846d1063a97015607d1bfef9695e0e657d",
+  "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+  "datasets": [
+    {
+      "arm_counts": {
+        "ARM_A": 249,
+        "ARM_B": 1629,
+        "ARM_C": 6,
+        "ARM_D": 730,
+        "ARM_E": 1
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 4,
+          "event_count": 249,
+          "mean_gross_return": 0.0008140019985937489,
+          "mean_net_return_24bps": -0.0015859980014062505,
+          "outcome_counts": {
+            "SL": 128,
+            "TIMEOUT": 20,
+            "TP": 101
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 20,
+          "event_count": 1629,
+          "mean_gross_return": 0.00045326320624099463,
+          "mean_net_return_24bps": -0.0019467367937590048,
+          "outcome_counts": {
+            "SL": 871,
+            "TIMEOUT": 134,
+            "TP": 624
+          }
+        },
+        "ARM_C": {
+          "ambiguous_bar_count": 0,
+          "event_count": 6,
+          "mean_gross_return": 0.0029996313962016483,
+          "mean_net_return_24bps": 0.0005996313962016488,
+          "outcome_counts": {
+            "SL": 3,
+            "TP": 3
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 6,
+          "event_count": 730,
+          "mean_gross_return": -0.0005399793719078786,
+          "mean_net_return_24bps": -0.002939979371907878,
+          "outcome_counts": {
+            "SL": 400,
+            "TIMEOUT": 65,
+            "TP": 265
+          }
+        },
+        "ARM_E": {
+          "ambiguous_bar_count": 0,
+          "event_count": 1,
+          "mean_gross_return": -0.007951186359453355,
+          "mean_net_return_24bps": -0.010351186359453354,
+          "outcome_counts": {
+            "SL": 1
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "a4758ed8899d80ccaa780c11b79c563911b7392d1f1df2cbe4317cfdc10ee513",
+      "dataset_id": "coinex_BTC_USDT_4h_a4758ed8899d80cc",
+      "end_timestamp": "2026-09-24T12:00:00+00:00",
+      "event_count": 2615,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 1403,
+        "TIMEOUT": 219,
+        "TP": 993
+      },
+      "replay_hash": "16f541d56dfb3940bf00ba5ef3e672fa6ab6b9248d013d883409ce68402d8128",
+      "row_count": 6572,
+      "start_timestamp": "2023-09-25T08:00:00+00:00",
+      "symbol": "BTC/USDT",
+      "venue": "coinex"
+    },
+    {
+      "arm_counts": {
+        "ARM_A": 189,
+        "ARM_B": 1354,
+        "ARM_C": 3,
+        "ARM_D": 536
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 2,
+          "event_count": 189,
+          "mean_gross_return": 0.005361045788560565,
+          "mean_net_return_24bps": 0.002961045788560566,
+          "outcome_counts": {
+            "SL": 103,
+            "TP": 86
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 8,
+          "event_count": 1354,
+          "mean_gross_return": 0.0023986272728591996,
+          "mean_net_return_24bps": -1.3727271407998632e-06,
+          "outcome_counts": {
+            "SL": 729,
+            "TIMEOUT": 43,
+            "TP": 582
+          }
+        },
+        "ARM_C": {
+          "ambiguous_bar_count": 0,
+          "event_count": 3,
+          "mean_gross_return": 0.0020387662901647507,
+          "mean_net_return_24bps": -0.0003612337098352486,
+          "outcome_counts": {
+            "SL": 2,
+            "TP": 1
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 1,
+          "event_count": 536,
+          "mean_gross_return": 0.0002869263556397264,
+          "mean_net_return_24bps": -0.002113073644360273,
+          "outcome_counts": {
+            "SL": 308,
+            "TIMEOUT": 15,
+            "TP": 213
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "84bdddae4f7876688a9985f3da6fe33123a7119f0f8cc09f4afa20260583e832",
+      "dataset_id": "coinex_DOGE_USDT_4h_84bdddae4f787668",
+      "end_timestamp": "2026-09-24T12:00:00+00:00",
+      "event_count": 2082,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 1142,
+        "TIMEOUT": 58,
+        "TP": 882
+      },
+      "replay_hash": "ce1de7212d6c29d4ff37391d6e89e3fba9ed4ec517ebce2f45c03d8821eda878",
+      "row_count": 6572,
+      "start_timestamp": "2023-09-25T08:00:00+00:00",
+      "symbol": "DOGE/USDT",
+      "venue": "coinex"
+    },
+    {
+      "arm_counts": {
+        "ARM_A": 235,
+        "ARM_B": 1457,
+        "ARM_C": 6,
+        "ARM_D": 608,
+        "ARM_E": 2
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 5,
+          "event_count": 235,
+          "mean_gross_return": -5.267390236865852e-05,
+          "mean_net_return_24bps": -0.002452673902368658,
+          "outcome_counts": {
+            "SL": 134,
+            "TIMEOUT": 8,
+            "TP": 93
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 12,
+          "event_count": 1457,
+          "mean_gross_return": 0.0005174652355045313,
+          "mean_net_return_24bps": -0.001882534764495468,
+          "outcome_counts": {
+            "SL": 797,
+            "TIMEOUT": 68,
+            "TP": 592
+          }
+        },
+        "ARM_C": {
+          "ambiguous_bar_count": 0,
+          "event_count": 6,
+          "mean_gross_return": 0.0004726027462899259,
+          "mean_net_return_24bps": -0.0019273972537100735,
+          "outcome_counts": {
+            "SL": 4,
+            "TP": 2
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 5,
+          "event_count": 608,
+          "mean_gross_return": -0.0003698742270148239,
+          "mean_net_return_24bps": -0.0027698742270148235,
+          "outcome_counts": {
+            "SL": 348,
+            "TIMEOUT": 29,
+            "TP": 231
+          }
+        },
+        "ARM_E": {
+          "ambiguous_bar_count": 0,
+          "event_count": 2,
+          "mean_gross_return": -0.016859556908461193,
+          "mean_net_return_24bps": -0.019259556908461192,
+          "outcome_counts": {
+            "SL": 2
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "5cbf3e798fd9608ae180ec229980fdbd7f3da8ffa229244bcbedca7b6ecba702",
+      "dataset_id": "coinex_ETH_USDT_4h_5cbf3e798fd9608a",
+      "end_timestamp": "2026-09-24T12:00:00+00:00",
+      "event_count": 2308,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 1285,
+        "TIMEOUT": 105,
+        "TP": 918
+      },
+      "replay_hash": "1056c5c2c1325d55eb9e81b73beb0dabf5ebf484b30a31b5457469f3d541d827",
+      "row_count": 6572,
+      "start_timestamp": "2023-09-25T08:00:00+00:00",
+      "symbol": "ETH/USDT",
+      "venue": "coinex"
+    },
+    {
+      "arm_counts": {
+        "ARM_A": 267,
+        "ARM_B": 1504,
+        "ARM_C": 5,
+        "ARM_D": 631
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 2,
+          "event_count": 267,
+          "mean_gross_return": 0.0027354666768220006,
+          "mean_net_return_24bps": 0.00033546667682200104,
+          "outcome_counts": {
+            "SL": 140,
+            "TIMEOUT": 8,
+            "TP": 119
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 5,
+          "event_count": 1504,
+          "mean_gross_return": 0.001023170773776967,
+          "mean_net_return_24bps": -0.0013768292262230323,
+          "outcome_counts": {
+            "SL": 826,
+            "TIMEOUT": 61,
+            "TP": 617
+          }
+        },
+        "ARM_C": {
+          "ambiguous_bar_count": 0,
+          "event_count": 5,
+          "mean_gross_return": 0.005765329960869625,
+          "mean_net_return_24bps": 0.003365329960869626,
+          "outcome_counts": {
+            "SL": 2,
+            "TIMEOUT": 1,
+            "TP": 2
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 3,
+          "event_count": 631,
+          "mean_gross_return": 0.0019177570409203194,
+          "mean_net_return_24bps": -0.0004822429590796798,
+          "outcome_counts": {
+            "SL": 345,
+            "TIMEOUT": 14,
+            "TP": 272
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "fb2dc725fbba5c8015a08d5637ebd314f30753cbc5e1931fc42e8214e3b82f59",
+      "dataset_id": "coinex_SOL_USDT_4h_fb2dc725fbba5c80",
+      "end_timestamp": "2026-09-24T12:00:00+00:00",
+      "event_count": 2407,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 1313,
+        "TIMEOUT": 84,
+        "TP": 1010
+      },
+      "replay_hash": "777120644400d523bc2de7389353d9eac3145542ab8d9fbaba165dadd9e2114d",
+      "row_count": 6572,
+      "start_timestamp": "2023-09-25T08:00:00+00:00",
+      "symbol": "SOL/USDT",
+      "venue": "coinex"
+    },
+    {
+      "arm_counts": {
+        "ARM_A": 168,
+        "ARM_B": 1330,
+        "ARM_C": 1,
+        "ARM_D": 513
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 5,
+          "event_count": 168,
+          "mean_gross_return": 0.0032508591427221887,
+          "mean_net_return_24bps": 0.0008508591427221894,
+          "outcome_counts": {
+            "SL": 96,
+            "TP": 72
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 15,
+          "event_count": 1330,
+          "mean_gross_return": 0.0006990296037160181,
+          "mean_net_return_24bps": -0.001700970396283981,
+          "outcome_counts": {
+            "SL": 729,
+            "TIMEOUT": 73,
+            "TP": 528
+          }
+        },
+        "ARM_C": {
+          "ambiguous_bar_count": 0,
+          "event_count": 1,
+          "mean_gross_return": -0.01206321997778792,
+          "mean_net_return_24bps": -0.01446321997778792,
+          "outcome_counts": {
+            "SL": 1
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 6,
+          "event_count": 513,
+          "mean_gross_return": -6.823895496004734e-05,
+          "mean_net_return_24bps": -0.002468238954960047,
+          "outcome_counts": {
+            "SL": 290,
+            "TIMEOUT": 26,
+            "TP": 197
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "1613e4606f6362f9525f7079ec0001aacaab64ce4912debeb659b373621b8a26",
+      "dataset_id": "coinex_XRP_USDT_4h_1613e4606f6362f9",
+      "end_timestamp": "2026-09-24T12:00:00+00:00",
+      "event_count": 2012,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 1116,
+        "TIMEOUT": 99,
+        "TP": 797
+      },
+      "replay_hash": "99ee5d1f981798432d52a31695470f6cdcbb9dd78f0badabb0fd59453eccbdec",
+      "row_count": 6572,
+      "start_timestamp": "2023-09-25T08:00:00+00:00",
+      "symbol": "XRP/USDT",
+      "venue": "coinex"
+    }
+  ],
+  "live_execution": false,
+  "model_training": false,
+  "paper_execution": false,
+  "scientific_alpha_claim_authorized": false,
+  "summary_hash": "5b2138a8929a578c691b85830b4d109c1e90116599bc77d9a71545ace2b40fa9",
+  "venue": "coinex"
+}

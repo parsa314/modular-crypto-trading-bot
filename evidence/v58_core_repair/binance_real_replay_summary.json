@@ -1,0 +1,344 @@
+{
+  "archive_sha256": "9e805305784a93008ec56b1f5add094df2f0c805289a3255def7f439e1606dff",
+  "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+  "datasets": [
+    {
+      "arm_counts": {
+        "ARM_A": 75,
+        "ARM_B": 696,
+        "ARM_C": 4,
+        "ARM_D": 325
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 3,
+          "event_count": 75,
+          "mean_gross_return": 0.00012074379636835145,
+          "mean_net_return_24bps": -0.002279256203631648,
+          "outcome_counts": {
+            "SL": 41,
+            "TIMEOUT": 1,
+            "TP": 33
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 8,
+          "event_count": 696,
+          "mean_gross_return": -0.00013089079155949632,
+          "mean_net_return_24bps": -0.0025308907915594955,
+          "outcome_counts": {
+            "SL": 391,
+            "TIMEOUT": 45,
+            "TP": 260
+          }
+        },
+        "ARM_C": {
+          "ambiguous_bar_count": 0,
+          "event_count": 4,
+          "mean_gross_return": -0.0020843097726494786,
+          "mean_net_return_24bps": -0.004484309772649478,
+          "outcome_counts": {
+            "SL": 3,
+            "TP": 1
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 8,
+          "event_count": 325,
+          "mean_gross_return": 0.001736810365391282,
+          "mean_net_return_24bps": -0.0006631896346087175,
+          "outcome_counts": {
+            "SL": 167,
+            "TIMEOUT": 18,
+            "TP": 140
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "09c4e39101cc3b0160d764e2f035606a443b0fd7fe2b2aad664298240ce4e569",
+      "dataset_id": "binance_BTC_USDT_4h_09c4e39101cc3b01",
+      "end_timestamp": "2023-08-31T20:00:00+00:00",
+      "event_count": 1100,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 602,
+        "TIMEOUT": 64,
+        "TP": 434
+      },
+      "replay_hash": "af1e1d61721c9a6dcdb6b23dc6d59c16db9cb201c04170e28f23b8060f1dc2b5",
+      "row_count": 3648,
+      "start_timestamp": "2022-01-01T00:00:00+00:00",
+      "symbol": "BTC/USDT",
+      "venue": "binance"
+    },
+    {
+      "arm_counts": {
+        "ARM_A": 51,
+        "ARM_B": 631,
+        "ARM_C": 2,
+        "ARM_D": 183
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 3,
+          "event_count": 51,
+          "mean_gross_return": -0.008682594487300072,
+          "mean_net_return_24bps": -0.011082594487300071,
+          "outcome_counts": {
+            "SL": 37,
+            "TP": 14
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 7,
+          "event_count": 631,
+          "mean_gross_return": 0.00016051888537058022,
+          "mean_net_return_24bps": -0.002239481114629419,
+          "outcome_counts": {
+            "SL": 374,
+            "TIMEOUT": 21,
+            "TP": 236
+          }
+        },
+        "ARM_C": {
+          "ambiguous_bar_count": 0,
+          "event_count": 2,
+          "mean_gross_return": -0.007466315441367721,
+          "mean_net_return_24bps": -0.00986631544136772,
+          "outcome_counts": {
+            "SL": 1,
+            "TP": 1
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 2,
+          "event_count": 183,
+          "mean_gross_return": -0.005234455863187018,
+          "mean_net_return_24bps": -0.007634455863187018,
+          "outcome_counts": {
+            "SL": 118,
+            "TIMEOUT": 14,
+            "TP": 51
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "857ba20479510b265618a9b0342a6c01dd2ca25c0225ee4700bef816a70cc979",
+      "dataset_id": "binance_DOGE_USDT_4h_857ba20479510b26",
+      "end_timestamp": "2023-08-31T20:00:00+00:00",
+      "event_count": 867,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 530,
+        "TIMEOUT": 35,
+        "TP": 302
+      },
+      "replay_hash": "04b6f05ac501c90bf06c160aa2450b44ef41f0225df6561a9d849cbf7571d403",
+      "row_count": 3648,
+      "start_timestamp": "2022-01-01T00:00:00+00:00",
+      "symbol": "DOGE/USDT",
+      "venue": "binance"
+    },
+    {
+      "arm_counts": {
+        "ARM_A": 92,
+        "ARM_B": 722,
+        "ARM_C": 2,
+        "ARM_D": 324
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 1,
+          "event_count": 92,
+          "mean_gross_return": -0.0006411696984611228,
+          "mean_net_return_24bps": -0.003041169698461122,
+          "outcome_counts": {
+            "SL": 51,
+            "TIMEOUT": 5,
+            "TP": 36
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 3,
+          "event_count": 722,
+          "mean_gross_return": -0.0020111770925831745,
+          "mean_net_return_24bps": -0.004411177092583174,
+          "outcome_counts": {
+            "SL": 452,
+            "TIMEOUT": 41,
+            "TP": 229
+          }
+        },
+        "ARM_C": {
+          "ambiguous_bar_count": 0,
+          "event_count": 2,
+          "mean_gross_return": 0.0021541384617768666,
+          "mean_net_return_24bps": -0.0002458615382231327,
+          "outcome_counts": {
+            "SL": 1,
+            "TP": 1
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 3,
+          "event_count": 324,
+          "mean_gross_return": -0.0016593885945397336,
+          "mean_net_return_24bps": -0.004059388594539733,
+          "outcome_counts": {
+            "SL": 198,
+            "TIMEOUT": 15,
+            "TP": 111
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "b7e95a0c0e8347852d700e705025d25e0f7c18dad7d8b63c9bc9fdf487c7906e",
+      "dataset_id": "binance_ETH_USDT_4h_b7e95a0c0e834785",
+      "end_timestamp": "2023-08-31T20:00:00+00:00",
+      "event_count": 1140,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 702,
+        "TIMEOUT": 61,
+        "TP": 377
+      },
+      "replay_hash": "2db209714317bf4ab3b985d71b021a70e9d2a80b0efc3ab8525c013f8e2174e6",
+      "row_count": 3648,
+      "start_timestamp": "2022-01-01T00:00:00+00:00",
+      "symbol": "ETH/USDT",
+      "venue": "binance"
+    },
+    {
+      "arm_counts": {
+        "ARM_A": 71,
+        "ARM_B": 678,
+        "ARM_C": 3,
+        "ARM_D": 332
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 0,
+          "event_count": 71,
+          "mean_gross_return": -0.002979357142766216,
+          "mean_net_return_24bps": -0.005379357142766215,
+          "outcome_counts": {
+            "SL": 45,
+            "TIMEOUT": 1,
+            "TP": 25
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 1,
+          "event_count": 678,
+          "mean_gross_return": -0.0009934686035773669,
+          "mean_net_return_24bps": -0.0033934686035773662,
+          "outcome_counts": {
+            "SL": 394,
+            "TIMEOUT": 36,
+            "TP": 248
+          }
+        },
+        "ARM_C": {
+          "ambiguous_bar_count": 0,
+          "event_count": 3,
+          "mean_gross_return": -0.006485016663446548,
+          "mean_net_return_24bps": -0.008885016663446548,
+          "outcome_counts": {
+            "SL": 2,
+            "TP": 1
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 2,
+          "event_count": 332,
+          "mean_gross_return": -0.005122413429280778,
+          "mean_net_return_24bps": -0.007522413429280777,
+          "outcome_counts": {
+            "SL": 198,
+            "TIMEOUT": 32,
+            "TP": 102
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "5314f3e6e7019b528f2b92b6873f6796573e8fa8b0810d0464392be2e7488735",
+      "dataset_id": "binance_SOL_USDT_4h_5314f3e6e7019b52",
+      "end_timestamp": "2023-08-31T20:00:00+00:00",
+      "event_count": 1084,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 639,
+        "TIMEOUT": 69,
+        "TP": 376
+      },
+      "replay_hash": "f024255753e5506b933d275c4f37c76d2c84e28d60a4fecece474d26d665a1d6",
+      "row_count": 3648,
+      "start_timestamp": "2022-01-01T00:00:00+00:00",
+      "symbol": "SOL/USDT",
+      "venue": "binance"
+    },
+    {
+      "arm_counts": {
+        "ARM_A": 64,
+        "ARM_B": 659,
+        "ARM_D": 225
+      },
+      "arm_statistics": {
+        "ARM_A": {
+          "ambiguous_bar_count": 0,
+          "event_count": 64,
+          "mean_gross_return": 0.00037664927294820023,
+          "mean_net_return_24bps": -0.002023350727051799,
+          "outcome_counts": {
+            "SL": 38,
+            "TP": 26
+          }
+        },
+        "ARM_B": {
+          "ambiguous_bar_count": 4,
+          "event_count": 659,
+          "mean_gross_return": -0.00220680451394175,
+          "mean_net_return_24bps": -0.004606804513941749,
+          "outcome_counts": {
+            "SL": 398,
+            "TIMEOUT": 36,
+            "TP": 225
+          }
+        },
+        "ARM_D": {
+          "ambiguous_bar_count": 2,
+          "event_count": 225,
+          "mean_gross_return": -0.005590664812374321,
+          "mean_net_return_24bps": -0.00799066481237432,
+          "outcome_counts": {
+            "SL": 145,
+            "TIMEOUT": 12,
+            "TP": 68
+          }
+        }
+      },
+      "classification": "REAL_MARKET_DEVELOPMENT_EVIDENCE",
+      "csv_sha256": "1c4f840cef8a64a6f84734092e6ac24ff6bd8f51ee2126daa5513768001445bf",
+      "dataset_id": "binance_XRP_USDT_4h_1c4f840cef8a64a6",
+      "end_timestamp": "2023-08-31T20:00:00+00:00",
+      "event_count": 948,
+      "ledger_valid": true,
+      "outcome_counts": {
+        "SL": 581,
+        "TIMEOUT": 48,
+        "TP": 319
+      },
+      "replay_hash": "ad6ac49cda1960265b5af80dbf20a8c04837ef3a3eef2ccbd5c15c88fafedac7",
+      "row_count": 3648,
+      "start_timestamp": "2022-01-01T00:00:00+00:00",
+      "symbol": "XRP/USDT",
+      "venue": "binance"
+    }
+  ],
+  "live_execution": false,
+  "model_training": false,
+  "paper_execution": false,
+  "scientific_alpha_claim_authorized": false,
+  "summary_hash": "96339f5fd8d6b5ed0aa3f4915d60bab4fdd952dc6f7983bc1465d80b452c8375",
+  "venue": "binance"
+}

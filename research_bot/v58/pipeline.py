@@ -55,9 +55,40 @@ def run_synthetic_engineering_pipeline(
     The name and venue check are intentional: this function is proof that the
     software path executes, not authorization to inspect historical outcomes.
     """
+    return _run_pipeline(
+        frame, venue=venue, symbol=symbol, timeframe=timeframe,
+        round_trip_cost_bps=round_trip_cost_bps, policy=policy,
+        classification="SYNTHETIC_ENGINEERING_ONLY", data_version="SYNTHETIC_ENGINEERING_ONLY",
+    )
+
+
+def run_verified_development_pipeline(
+    frame: pd.DataFrame, *, venue: str, symbol: str, dataset_sha256: str,
+    manifest_status: str, timeframe: str = "4h", round_trip_cost_bps: float = 24.0,
+    policy: BarrierPolicy | None = None,
+) -> PipelineResult:
+    """Run real historical bytes that passed intake, strictly as development evidence."""
+    if manifest_status != "HISTORICAL_BYTES_VERIFIED_DEVELOPMENT_ONLY":
+        raise PermissionError("dataset is not authorized by the development-only intake")
+    if venue.lower() not in {"binance", "coinex"}:
+        raise ValueError("unsupported audited venue")
+    if len(dataset_sha256) != 64 or any(c not in "0123456789abcdef" for c in dataset_sha256.lower()):
+        raise ValueError("dataset_sha256 must be SHA-256 hex")
+    return _run_pipeline(
+        frame, venue=venue, symbol=symbol, timeframe=timeframe,
+        round_trip_cost_bps=round_trip_cost_bps, policy=policy,
+        classification="REAL_MARKET_DEVELOPMENT_EVIDENCE", data_version=dataset_sha256.lower(),
+    )
+
+
+def _run_pipeline(
+    frame: pd.DataFrame, *, venue: str, symbol: str, timeframe: str,
+    round_trip_cost_bps: float, policy: BarrierPolicy | None,
+    classification: str, data_version: str,
+) -> PipelineResult:
     assert_research_only()
-    if venue.lower() != "synthetic":
-        raise PermissionError("real-market outcome generation is blocked until the data/split seal passes")
+    if classification == "SYNTHETIC_ENGINEERING_ONLY" and venue.lower() != "synthetic":
+        raise PermissionError("real-market outcome generation requires verified development intake")
     policy = policy or BarrierPolicy()
     candidates = generate_candidates(frame, venue=venue, symbol=symbol, timeframe=timeframe)
     regimes = add_causal_regime(frame, timeframe=timeframe)
@@ -71,7 +102,7 @@ def run_synthetic_engineering_pipeline(
             strategy_arm=event.strategy_arm, direction=event.direction,
             decision_time=event.event_timestamp, decision_atr=event.atr_at_event,
             feature_snapshot_id=event.feature_snapshot_id,
-            data_version="SYNTHETIC_ENGINEERING_ONLY", code_version="V58_CORE_REPAIR",
+            data_version=data_version, code_version="V58_CORE_REPAIR",
             strategy_version=event.feature_schema_version,
         )
         entry_bar = _bar(frame.iloc[event.row_index + 1])
@@ -80,7 +111,7 @@ def run_synthetic_engineering_pipeline(
         outcome = resolve_barriers(entered, direction=Direction.LONG, bars=path, policy=policy)
         regime_row = regimes.iloc[event.row_index]
         record = {
-            "classification": "SYNTHETIC_ENGINEERING_ONLY",
+            "classification": classification,
             "event_id": event.event_id, "venue": event.venue, "symbol": event.symbol,
             "timeframe": event.timeframe, "event_timestamp": event.event_timestamp.isoformat(),
             "strategy_arm": event.strategy_arm.value, "setup_subtype": event.setup_subtype,
@@ -121,8 +152,11 @@ def write_pipeline_result(result: PipelineResult, output: Path) -> None:
     events = "".join(json.dumps(row, sort_keys=True, allow_nan=False) + "\n" for row in result.records)
     (output / "synthetic_events.jsonl").write_text(events, encoding="utf-8")
     result.ledger.write_jsonl(output / "evidence_ledger.jsonl")
+    classifications = {row["classification"] for row in result.records}
+    if len(classifications) > 1:
+        raise ValueError("mixed evidence classifications")
     manifest = {
-        "classification": "SYNTHETIC_ENGINEERING_ONLY",
+        "classification": next(iter(classifications), "EMPTY_EVENT_SET"),
         "event_count": len(result.records), "ledger_valid": result.ledger.verify(),
         "replay_hash": result.replay_hash, "model_training": False,
         "paper_execution": False, "live_execution": False,
