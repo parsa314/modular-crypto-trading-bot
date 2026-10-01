@@ -8,6 +8,14 @@ from .development_sources import SOURCES
 from .real_replay import replay_archive
 
 
+def _archive_identity(venue: str) -> tuple[str, int, int]:
+    identities = {(row["archive_sha256"], row["source_run"], row["source_artifact"])
+                  for row in SOURCES if row["venue"] == venue}
+    if len(identities) != 1:
+        raise ValueError("venue must have exactly one frozen archive identity")
+    return identities.pop()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="V58 research-only engineering runner")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -21,6 +29,13 @@ def main() -> int:
     ai.add_argument("--output", type=Path, required=True)
     ai.add_argument("--bars", type=int, default=1600)
     ai.add_argument("--seed", type=int, default=58)
+    market = sub.add_parser(
+        "verified-market-audit",
+        help="run the frozen no-retuning model audit on an exact development archive",
+    )
+    market.add_argument("--archive", type=Path, required=True)
+    market.add_argument("--venue", choices=("binance", "coinex"), required=True)
+    market.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "synthetic-ai-demo":
@@ -35,15 +50,23 @@ def main() -> int:
             print(f"SYNTHETIC_ENGINEERING_ONLY events={len(result.records)} replay_hash={result.replay_hash}")
             return 0
         if args.command == "verified-replay":
-            identities = {(row["archive_sha256"], row["source_run"], row["source_artifact"])
-                          for row in SOURCES if row["venue"] == args.venue}
-            if len(identities) != 1:
-                raise ValueError("venue must have exactly one frozen archive identity")
-            archive_hash, source_run, source_artifact = identities.pop()
+            archive_hash, source_run, source_artifact = _archive_identity(args.venue)
             summary = replay_archive(path=args.archive, venue=args.venue, expected_sha256=archive_hash,
                                      source_run=source_run, source_artifact=source_artifact, output=args.output)
             print(f"REAL_MARKET_DEVELOPMENT_EVIDENCE datasets={len(summary['datasets'])} "
                   f"summary_hash={summary['summary_hash']}")
+            return 0
+        if args.command == "verified-market-audit":
+            from .market_audit import audit_verified_archive
+            summary = audit_verified_archive(path=args.archive, venue=args.venue, output=args.output)
+            aggregate = summary["aggregate"]
+            print(
+                "REAL_MARKET_DEVELOPMENT_MODEL_AUDIT "
+                f"test_events={aggregate['test_event_count']} "
+                f"admitted={aggregate['admitted_event_count']} "
+                f"gate={summary['development_gate']} "
+                f"artifact_hash={summary['artifact_map_sha256']}"
+            )
             return 0
     except (ValueError, PermissionError, OSError) as exc:
         parser.exit(2, f"error: {exc}\n")
