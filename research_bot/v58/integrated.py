@@ -19,6 +19,7 @@ from .immutable_io import write_immutable_bundle
 from .pipeline import run_synthetic_engineering_pipeline, pipeline_result_files, _source_fingerprint
 from .learning import LearningConfig, run_synthetic_walk_forward
 from .portfolio import PortfolioConfig, simulate_synthetic_portfolio
+from .finance_ai import coordinate_finance_ai_handoff
 
 
 FEATURE_NAMES = (
@@ -155,6 +156,7 @@ def utility_decision(record: dict, prediction: dict, config: UtilityConfig | Non
         "decision_at": record["entry_time"], "entry_price": entry,
         "stop_price": stop, "target_price": target, "horizon_bars": record["horizon_bars"],
         "expected_utility": expected, "admission_reason": reason,
+        "round_trip_cost_bps": cfg.round_trip_cost_bps,
         "entropy": entropy, "shift_score": shift, "regime_confidence": confidence,
     }
 
@@ -198,13 +200,21 @@ def run_synthetic_ai_demo(
     stress = []
     for cost_bps in (0.0, 24.0, 36.0, 50.0):
         cfg = replace(UtilityConfig(), round_trip_cost_bps=cost_bps)
-        decisions = [utility_decision(records[prediction["event_id"]], prediction, cfg)
-                     for prediction in learning["predictions"]]
+        portfolio_cfg = PortfolioConfig(round_trip_cost_bps=cost_bps)
+        handoffs = []
+        for prediction in learning["predictions"]:
+            economics = utility_decision(records[prediction["event_id"]], prediction, cfg)
+            handoffs.append(coordinate_finance_ai_handoff(
+                economics_decision=economics,
+                ai_prediction=prediction,
+                portfolio_config=portfolio_cfg,
+            ))
+        decisions = [handoff["portfolio_intent"] for handoff in handoffs]
         baseline = [{**decision, "expected_utility": 0.0, "policy": "STRATEGY_ONLY",
                      "admission_reason": "ADMITTED"} for decision in decisions]
-        portfolio_cfg = PortfolioConfig(round_trip_cost_bps=cost_bps)
         ml = simulate_synthetic_portfolio(test_bars, decisions, portfolio_cfg)
         strategy = simulate_synthetic_portfolio(test_bars, baseline, portfolio_cfg)
+        files[f"finance_ai_coordination_{int(cost_bps)}bps.json"] = json_bytes(handoffs)
         files[f"portfolio_ml_{int(cost_bps)}bps.json"] = json_bytes(ml)
         files[f"portfolio_strategy_{int(cost_bps)}bps.json"] = json_bytes(strategy)
         stress.append({"round_trip_cost_bps": cost_bps, "ml": ml["summary"],
@@ -223,6 +233,14 @@ def run_synthetic_ai_demo(
         "source_base_revision": "455014d2b146165b7edc13cf7bc9c61489447948",
         "dependencies": {name: version(name) for name in ("numpy", "pandas", "scikit-learn", "scipy")},
         "utility_config": asdict(UtilityConfig()), "portfolio_config": asdict(PortfolioConfig()),
+        "finance_ai_coordination": {
+            "schema": "V58_FINANCE_AI_HANDOFF_V1",
+            "ai_role": "FORECAST_ONLY",
+            "economics_role": "COST_AND_EXPECTED_UTILITY_GATE",
+            "finance_role": "INDEPENDENT_VETO_AND_SIZING",
+            "two_key_rule": "AI_ECONOMIC_ADMISSION_AND_FINANCIAL_RISK_APPROVAL_REQUIRED",
+            "paper_execution": False, "live_execution": False,
+        },
         "cost_stress": stress,
         "limitations": ["NON_MARKET_FIXTURES", "NO_EMPIRICAL_MODEL_TRAINING",
                         "NO_PROFITABILITY_OR_PROMOTION_EVIDENCE", "NO_MICROSTRUCTURE_OR_MARKET_IMPACT_DATA",
