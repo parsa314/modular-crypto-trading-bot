@@ -57,10 +57,16 @@ The two venue commands use separate output directories.
 Fresh detailed results and dependency identities are recorded in
 `evidence/v58_integrity_repair/verification.json`.
 Regression tests failed on the original implementation before the fixes.
-The completed integrated V58 suite passes 284 tests. The broader executable
-suite passes 436 tests with one skip and four explicitly excluded test files.
+The completed integrated V58 suite passes 284 tests. After network access was
+restored, the complete local repository suite passed 447 tests with one database
+skip and one dependency deprecation warning; no test files were excluded.
 The connected five-asset AI CLI is replayed twice with identical output;
 see the integrated runbook for its scope. Compilation and whitespace checks pass.
+
+GitHub Actions also passed the complete 447-test repository suite, the 284-test
+V58 suite and both integrated synthetic replays on implementation commit
+`7d3d6237af632c649fa65c8bb9e7c72e4a2890f2`. Run and downloadable artifact
+identities are recorded in `evidence/v58_integrity_repair/ci_verification.json`.
 
 The execution sandbox could not connect to its configured proxy, so ordinary
 clone/pip operations were unavailable. Repository files and the official
@@ -69,11 +75,13 @@ Only their build-generated version metadata was supplied locally; their test
 runner code was unchanged. Those temporary dependencies are outside the project
 and are not vendored into this repository.
 
-Two ccxt-dependent test files could not collect because ccxt is not installed
-in this sandbox. Two legacy service test files hang in the AnyIO/Starlette
-TestClient blocking portal in this environment and were excluded from the
-bounded broad run. These gaps are recorded by filename in verification.json;
-the broader result is not a claim that the complete repository suite passed.
+The initial bounded run passed 436 tests with one skip while excluding two
+ccxt-dependent files and two service files that hung in the sandbox's
+AnyIO/Starlette TestClient portal. After the execution environment gained network
+access, official ccxt and psycopg packages were installed into a separate local
+test dependency directory. The full suite then completed, including both service
+files. The initial exclusions are retained as historical diagnostics in
+verification.json; full_repository.txt records the successful complete run.
 
 When pytest is unavailable but NumPy and Pandas are installed, the new focused
 regressions also run with the standard library:

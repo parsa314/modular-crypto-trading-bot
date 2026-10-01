@@ -58,31 +58,60 @@
       "name": "diff_check",
       "transcript_path": "evidence/v58_integrity_repair/diff_check.txt",
       "transcript_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "PYTHONPATH": "/workspace/v58-test-extra:/workspace/test-deps",
+      "command": [
+        "timeout",
+        "--signal=INT",
+        "--kill-after=5s",
+        "150s",
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-o",
+        "faulthandler_timeout=25"
+      ],
+      "duration_seconds": 52.813,
+      "exit_code": 0,
+      "failed": 0,
+      "name": "full_repository",
+      "passed": 447,
+      "skip_reason": "TEST_DATABASE_URL not configured",
+      "skipped": 1,
+      "transcript_path": "evidence/v58_integrity_repair/full_repository.txt",
+      "transcript_sha256": "5d5900b560fcd180c815443fa27fa0d54efa87083c3d6a4c532111272525c5d7",
+      "warning": "Starlette TestClient httpx deprecation",
+      "warnings": 1
     }
   ],
   "classification": "SYNTHETIC_ENGINEERING_ONLY",
   "dependencies": {
     "anyio": "4.14.2",
+    "ccxt": "4.5.77",
     "fastapi": "0.141.1",
     "httpx": "0.28.1",
     "numpy": "2.3.5",
     "pandas": "2.2.3",
+    "psycopg": "3.3.6",
     "scikit-learn": "1.8.0",
     "scipy": "1.17.0",
     "starlette": "1.6.0"
   },
   "empirical_training": false,
-  "excluded_test_files": {
-    "tests/test_live_eligibility_v09.py": "ccxt unavailable; collection import blocked",
-    "tests/test_market_discovery_v08.py": "ccxt unavailable; collection import blocked",
-    "tests/test_service_v1.py": "AnyIO/Starlette TestClient blocking portal hangs in this sandbox; bounded attempt terminated",
-    "tests/test_v08_service.py": "Same TestClient environment limitation"
-  },
-  "full_repository_suite_passed": false,
+  "excluded_test_files": {},
+  "full_repository_suite_passed": true,
   "independent_review": {
     "focused_result": "284 passed in 12.75s",
     "remaining_material_findings": [],
     "scope": "v58 changed code and new integrated learning/portfolio APIs"
+  },
+  "initial_excluded_test_files": {
+    "tests/test_live_eligibility_v09.py": "ccxt unavailable; collection import blocked",
+    "tests/test_market_discovery_v08.py": "ccxt unavailable; collection import blocked",
+    "tests/test_service_v1.py": "AnyIO/Starlette TestClient blocking portal hangs in this sandbox; bounded attempt terminated",
+    "tests/test_v08_service.py": "Same TestClient environment limitation"
   },
   "integrated_replay": {
     "artifact_map_sha256": "d1ee21c10be53475518605a2c0923c0001ebea5c12ddb19df90fc3ef5d38332c",
@@ -108,7 +137,6 @@
   "limitations": [
     "No new real-market replay or empirical model validation",
     "Historical negative/frozen evidence retained",
-    "Local broad suite excludes four recorded files; full CI still required",
     "Synthetic PnL is not market profitability evidence"
   ],
   "live_execution": false,
@@ -118,6 +146,11 @@
   "source_base_revision": "455014d2b146165b7edc13cf7bc9c61489447948",
   "source_code_sha256": "2fc7fada36a51bd95eb34d28d559a7caa21781d01d1ba889b51369ae29772923",
   "test_runner": {
+    "additional_dependencies": {
+      "command": "python -m pip --timeout 10 --retries 0 install --target /workspace/v58-test-extra 'ccxt==4.5.77' 'psycopg[binary]>=3.2,<4'",
+      "local_path": "/workspace/v58-test-extra",
+      "method": "Official PyPI packages installed after network access became available"
+    },
     "iniconfig": {
       "commit": "34793a6417e35e511d0c17ffdd8a02ade0f9568e",
       "version": "2.1.0"
@@ -133,5 +166,6 @@
       "version": "8.4.1"
     }
   },
+  "verification_code_commit": "7d3d6237af632c649fa65c8bb9e7c72e4a2890f2",
   "verification_date_utc": "2026-10-01"
 }
