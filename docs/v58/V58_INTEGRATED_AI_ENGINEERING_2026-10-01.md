@@ -112,6 +112,13 @@ The recorded default run reported negative synthetic net returns at 24 bps: appr
 
 Git stores the compact summary, learning report, frozen model states and complete artifact manifest. Full raw bundles are generated in the named `results/` directory; the dedicated [CI workflow](../../.github/workflows/v58-integrated-ai-engineering.yml) uploads them when it completes successfully. The recorded local complete bundle is `/workspace/results/v58-ai-20261001-final`. The manifest describes that full bundle, so verify it against the full generated directory, not the compact Git evidence directory.
 
+The compact model export replaces training row-ID lists with their digest and
+records its own `inference_state_sha256` for that exported metadata.
+`source_inference_state_sha256` retains the original full-bundle identity.
+Coefficients, numerical preprocessing, temperature and availability bounds are
+unchanged. Reloading the committed compact export reproduces all 1,701 test
+predictions across its three folds, including entropy and shift diagnostics.
+
 Equivalent portfolio files are emitted for the other three fixed costs. Per-asset `events/` directories retain event records and their engineering evidence ledgers. Source bytes are fingerprinted across V58 Python modules and checked again before publication. Run metadata records dependency versions. Identical source, parameters and software environment are required when comparing byte-level reproducibility; a matching seed alone is insufficient.
 
 Publication stages a complete bundle and atomically renames it into place. An identical existing bundle is accepted. A partial or differing bundle is rejected without overwriting its bytes. Use a fresh output directory for a changed run and retain earlier results.

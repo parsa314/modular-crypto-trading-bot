@@ -87,6 +87,15 @@
     }
   ],
   "classification": "SYNTHETIC_ENGINEERING_ONLY",
+  "compact_frozen_export": {
+    "folds": 3,
+    "label_columns_removed": true,
+    "note": "Training row IDs compacted to their digest; exported preprocessing metadata has its own inference-state digest. Coefficients, scaling, temperature and model availability are unchanged.",
+    "probability_rtol": 1e-12,
+    "scored_events": 1701,
+    "source_state_digest_retained": true,
+    "status": "PASS"
+  },
   "dependencies": {
     "anyio": "4.14.2",
     "ccxt": "4.5.77",
