@@ -1,0 +1,375 @@
+{
+  "classification": "SYNTHETIC_ENGINEERING_ONLY",
+  "folds": [
+    {
+      "calibration": {
+        "bounds": [
+          0.25,
+          4.0
+        ],
+        "fit_scope": "VALIDATION_ONLY",
+        "method": "scalar_temperature",
+        "temperature": 0.8247980411050742
+      },
+      "classification": "SYNTHETIC_ENGINEERING_ONLY",
+      "config": {
+        "calibration_fraction": 0.2,
+        "embargo_seconds": 14400,
+        "min_calibration_events": 10,
+        "min_test_events": 10,
+        "min_train_events": 30,
+        "random_seed": 58,
+        "train_fraction": 0.6
+      },
+      "empirical_training": false,
+      "export_format": "COMPACT_FROZEN_JSON_V1",
+      "fold_index": 0,
+      "inference_state_sha256": "445f20157cd0ccb2999a47317cec53fd5082e73ca928f493358df447cf583124",
+      "live_execution": false,
+      "model": {
+        "C": 1.0,
+        "algorithm": "sklearn.linear_model.LogisticRegression multinomial softmax (lbfgs)",
+        "class_order": [
+          "TP",
+          "SL",
+          "TIMEOUT"
+        ],
+        "coefficients": [
+          [
+            -0.09369399903832128,
+            0.8769277556698251,
+            -0.3604665603085973,
+            0.6235558926069474,
+            -0.2182279753626166,
+            0.756020790631885,
+            0.0032294650263796827,
+            -0.05300688213505817
+          ],
+          [
+            0.75906828285425,
+            -0.5384519300657131,
+            0.23880839832412798,
+            0.7387990282282835,
+            -0.531005678648438,
+            -0.8239332229154355,
+            0.030731056535605136,
+            0.024256048384780887
+          ],
+          [
+            -0.6653742838159322,
+            -0.33847582560411793,
+            0.1216581619844611,
+            -1.362354920835224,
+            0.7492336540110563,
+            0.06791243228356478,
+            -0.033960521561977944,
+            0.028750833750276445
+          ]
+        ],
+        "feature_columns": [
+          "feature_returns_1",
+          "feature_ATR_percent",
+          "feature_past_volatility",
+          "feature_trend_strength",
+          "feature_tenkan_kijun_distance_atr",
+          "feature_displacement_body_ratio",
+          "feature_relative_volume",
+          "feature_trading_range_position"
+        ],
+        "intercepts": [
+          0.8108735689000579,
+          -0.32458983539727787,
+          -0.4862837335027557
+        ],
+        "name": "B1_MULTINOMIAL_LOGISTIC",
+        "random_seed": 58,
+        "sklearn_version": "1.8.0"
+      },
+      "model_available_at": "2025-07-13T20:00:00+00:00",
+      "model_training_on_synthetic": true,
+      "paper_execution": false,
+      "preprocessing": {
+        "fit_row_ids_sha256": "147bfff17c8ca32ea25657186d8f9086b7873110f6095bcf7edf06e16f145f1b",
+        "fit_scope": "TRAIN_ONLY",
+        "means": [
+          0.0022713004686980435,
+          0.004736477167346562,
+          0.0022018186303512217,
+          1.3215866942002688,
+          2.4040299605405067,
+          0.5577678927211458,
+          1.0026370828844466,
+          0.9562605543208524
+        ],
+        "medians": [
+          0.001123672438706258,
+          0.004357347101833062,
+          0.0026509541308132488,
+          0.9853231180253917,
+          1.8829619172863254,
+          0.5493288910265559,
+          0.9978226994178515,
+          1.0207341063687967
+        ],
+        "scales": [
+          0.0024951132058508153,
+          0.0028861971904785076,
+          0.0016978934599682853,
+          1.0226896994217816,
+          1.9195893384203573,
+          0.24336647622978436,
+          0.12357258448434323,
+          0.18411473707689793
+        ]
+      },
+      "source_inference_state_sha256": "b96c8150dc208ed418efb38395cd9d2282623f0bab4c5f3914e45dfb253a062e"
+    },
+    {
+      "calibration": {
+        "bounds": [
+          0.25,
+          4.0
+        ],
+        "fit_scope": "VALIDATION_ONLY",
+        "method": "scalar_temperature",
+        "temperature": 0.8422883498463036
+      },
+      "classification": "SYNTHETIC_ENGINEERING_ONLY",
+      "config": {
+        "calibration_fraction": 0.2,
+        "embargo_seconds": 14400,
+        "min_calibration_events": 10,
+        "min_test_events": 10,
+        "min_train_events": 30,
+        "random_seed": 58,
+        "train_fraction": 0.6
+      },
+      "empirical_training": false,
+      "export_format": "COMPACT_FROZEN_JSON_V1",
+      "fold_index": 1,
+      "inference_state_sha256": "96411c5110a1fe03d310756675836cc022352e4b05ea05378923a528fbe7c0fa",
+      "live_execution": false,
+      "model": {
+        "C": 1.0,
+        "algorithm": "sklearn.linear_model.LogisticRegression multinomial softmax (lbfgs)",
+        "class_order": [
+          "TP",
+          "SL",
+          "TIMEOUT"
+        ],
+        "coefficients": [
+          [
+            -0.15924164913767364,
+            1.0088966796026324,
+            -0.4844611047660141,
+            0.658621274122436,
+            -0.2536542509917788,
+            0.7088789690549411,
+            -0.009656174711651642,
+            -0.07847495995579593
+          ],
+          [
+            0.6799701317741741,
+            -0.5957136061989554,
+            0.37096117845935167,
+            0.6604902053940798,
+            -0.5170685578977481,
+            -0.773208141240217,
+            0.02767782505736171,
+            0.04454397263247017
+          ],
+          [
+            -0.5207284826365124,
+            -0.4131830734036921,
+            0.11349992630667446,
+            -1.3191114795165182,
+            0.7707228088895368,
+            0.06432917218526801,
+            -0.018021650345719304,
+            0.03393098732332382
+          ]
+        ],
+        "feature_columns": [
+          "feature_returns_1",
+          "feature_ATR_percent",
+          "feature_past_volatility",
+          "feature_trend_strength",
+          "feature_tenkan_kijun_distance_atr",
+          "feature_displacement_body_ratio",
+          "feature_relative_volume",
+          "feature_trading_range_position"
+        ],
+        "intercepts": [
+          0.7686471166757978,
+          -0.2572131698529018,
+          -0.5114339468229018
+        ],
+        "name": "B1_MULTINOMIAL_LOGISTIC",
+        "random_seed": 58,
+        "sklearn_version": "1.8.0"
+      },
+      "model_available_at": "2025-08-01T16:00:00+00:00",
+      "model_training_on_synthetic": true,
+      "paper_execution": false,
+      "preprocessing": {
+        "fit_row_ids_sha256": "03bae8f9a581e5e6c24d3279d4cdafc35bbfd81d2a0d60c8227798c8549f1e82",
+        "fit_scope": "TRAIN_ONLY",
+        "means": [
+          0.0024297146092217134,
+          0.004993387121647681,
+          0.002341481205250847,
+          1.2393235287396365,
+          2.250085375309845,
+          0.5439297524221884,
+          1.0014269264146929,
+          0.9503454704238239
+        ],
+        "medians": [
+          0.0011419663645684253,
+          0.005397456813406671,
+          0.0029103160948409333,
+          0.9070313100481654,
+          1.6879601509871072,
+          0.5346240478556064,
+          0.9978226994178515,
+          1.0156626075203434
+        ],
+        "scales": [
+          0.0025801201103057897,
+          0.0028949466344096223,
+          0.0016940657459285568,
+          1.0191152399283576,
+          1.9132148953391543,
+          0.24308096898845796,
+          0.12370585057662872,
+          0.2424324499353819
+        ]
+      },
+      "source_inference_state_sha256": "5e98575b22dccd178a640e5e9a5be7ca2287010ddb8bf15e5a3a53912df2e102"
+    },
+    {
+      "calibration": {
+        "bounds": [
+          0.25,
+          4.0
+        ],
+        "fit_scope": "VALIDATION_ONLY",
+        "method": "scalar_temperature",
+        "temperature": 1.1923045031691533
+      },
+      "classification": "SYNTHETIC_ENGINEERING_ONLY",
+      "config": {
+        "calibration_fraction": 0.2,
+        "embargo_seconds": 14400,
+        "min_calibration_events": 10,
+        "min_test_events": 10,
+        "min_train_events": 30,
+        "random_seed": 58,
+        "train_fraction": 0.6
+      },
+      "empirical_training": false,
+      "export_format": "COMPACT_FROZEN_JSON_V1",
+      "fold_index": 2,
+      "inference_state_sha256": "893660f4f8daf91dd8792a2ce58159b419f32759d3b4c2cdb8ebfedb9b0ae103",
+      "live_execution": false,
+      "model": {
+        "C": 1.0,
+        "algorithm": "sklearn.linear_model.LogisticRegression multinomial softmax (lbfgs)",
+        "class_order": [
+          "TP",
+          "SL",
+          "TIMEOUT"
+        ],
+        "coefficients": [
+          [
+            -0.21768918842783072,
+            0.951060441937221,
+            -0.45144729487540436,
+            0.629252898641773,
+            -0.22403507369314113,
+            0.8383375334200468,
+            0.018733167740951576,
+            -0.0296692100439414
+          ],
+          [
+            0.664859312448639,
+            -0.6208890844884943,
+            0.4201719721759904,
+            0.7753505305177816,
+            -0.4861123945972452,
+            -0.803398228758411,
+            0.03489417658645514,
+            0.004219344878491358
+          ],
+          [
+            -0.44717012402081757,
+            -0.3301713574487211,
+            0.03127532269941404,
+            -1.4046034291595606,
+            0.7101474682903806,
+            -0.03493930466164909,
+            -0.05362734432742327,
+            0.02544986516545577
+          ]
+        ],
+        "feature_columns": [
+          "feature_returns_1",
+          "feature_ATR_percent",
+          "feature_past_volatility",
+          "feature_trend_strength",
+          "feature_tenkan_kijun_distance_atr",
+          "feature_displacement_body_ratio",
+          "feature_relative_volume",
+          "feature_trading_range_position"
+        ],
+        "intercepts": [
+          1.1153203631060946,
+          -0.3945745124905209,
+          -0.7207458506155632
+        ],
+        "name": "B1_MULTINOMIAL_LOGISTIC",
+        "random_seed": 58,
+        "sklearn_version": "1.8.0"
+      },
+      "model_available_at": "2025-09-03T04:00:00+00:00",
+      "model_training_on_synthetic": true,
+      "paper_execution": false,
+      "preprocessing": {
+        "fit_row_ids_sha256": "efa938c855957327617788594a9669fbf530fe8be12667dfb990c064193e45fa",
+        "fit_scope": "TRAIN_ONLY",
+        "means": [
+          0.0022098271935423433,
+          0.004531550525932584,
+          0.002061891093980424,
+          1.4788666855400123,
+          2.6727965744636695,
+          0.5974992796044738,
+          1.0029593901340248,
+          0.9681302220490946
+        ],
+        "medians": [
+          0.0011064519027752517,
+          0.0036689451120058346,
+          0.002323444012158481,
+          1.1981554237877547,
+          2.2223279363532145,
+          0.616082651893632,
+          0.997853839299249,
+          1.032437721901302
+        ],
+        "scales": [
+          0.002378645384058149,
+          0.0028181331225225507,
+          0.0016882171010482489,
+          1.0943268780431779,
+          1.9955225733293815,
+          0.24874633321823922,
+          0.12433153337120854,
+          0.21651568945140082
+        ]
+      },
+      "source_inference_state_sha256": "c72c85ee6e57fdac74e2d04bd693dfa1db1e71eb17cb1eece6b4976cf0d26237"
+    }
+  ],
+  "source_learning_sha256": "adcc1344506b52c45b9f034798ab2b64b08fbf27bf65d73974b9dba739567ebd"
+}

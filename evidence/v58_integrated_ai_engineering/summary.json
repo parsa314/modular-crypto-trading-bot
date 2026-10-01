@@ -1,0 +1,191 @@
+{
+  "bars_per_asset": 1600,
+  "class_counts": {
+    "SL": 1208,
+    "TIMEOUT": 789,
+    "TP": 3717
+  },
+  "classification": "SYNTHETIC_ENGINEERING_ONLY",
+  "cost_stress": [
+    {
+      "ml": {
+        "admitted_count": 150,
+        "cvar_95": 0.002785485255592347,
+        "drawdown_kill_triggered": false,
+        "final_equity": 10487.612474342397,
+        "initial_equity": 10000.0,
+        "max_drawdown": 0.04165644691074488,
+        "max_gross_exposure": 0.7011601948371223,
+        "net_return": 0.048761247434239596,
+        "total_costs": 0.0,
+        "trade_count": 150
+      },
+      "no_trade": {
+        "max_drawdown": 0.0,
+        "net_return": 0.0,
+        "total_costs": 0.0
+      },
+      "round_trip_cost_bps": 0.0,
+      "strategy_only": {
+        "admitted_count": 178,
+        "cvar_95": 0.0029450623749283948,
+        "drawdown_kill_triggered": false,
+        "final_equity": 10179.795040522076,
+        "initial_equity": 10000.0,
+        "max_drawdown": 0.04909577256024189,
+        "max_gross_exposure": 0.7013061222657363,
+        "net_return": 0.017979504052207718,
+        "total_costs": 0.0,
+        "trade_count": 178
+      }
+    },
+    {
+      "ml": {
+        "admitted_count": 94,
+        "cvar_95": 0.002599294546943182,
+        "drawdown_kill_triggered": true,
+        "final_equity": 9830.48866205326,
+        "initial_equity": 10000.0,
+        "max_drawdown": 0.050712987133839316,
+        "max_gross_exposure": 0.7009105083036514,
+        "net_return": -0.016951133794674056,
+        "total_costs": 456.38326536025033,
+        "trade_count": 94
+      },
+      "no_trade": {
+        "max_drawdown": 0.0,
+        "net_return": 0.0,
+        "total_costs": 0.0
+      },
+      "round_trip_cost_bps": 24.0,
+      "strategy_only": {
+        "admitted_count": 109,
+        "cvar_95": 0.0026631091239307718,
+        "drawdown_kill_triggered": true,
+        "final_equity": 9771.928410751096,
+        "initial_equity": 10000.0,
+        "max_drawdown": 0.0540097950644538,
+        "max_gross_exposure": 0.701065403423332,
+        "net_return": -0.02280715892489038,
+        "total_costs": 611.9418271545421,
+        "trade_count": 109
+      }
+    },
+    {
+      "ml": {
+        "admitted_count": 82,
+        "cvar_95": 0.0024558802626250794,
+        "drawdown_kill_triggered": true,
+        "final_equity": 9686.3251390811,
+        "initial_equity": 10000.0,
+        "max_drawdown": 0.05100272462492461,
+        "max_gross_exposure": 0.7005949047149986,
+        "net_return": -0.031367486091889996,
+        "total_costs": 579.0942109461366,
+        "trade_count": 82
+      },
+      "no_trade": {
+        "max_drawdown": 0.0,
+        "net_return": 0.0,
+        "total_costs": 0.0
+      },
+      "round_trip_cost_bps": 36.0,
+      "strategy_only": {
+        "admitted_count": 109,
+        "cvar_95": 0.0027144870719679696,
+        "drawdown_kill_triggered": true,
+        "final_equity": 9741.342386460341,
+        "initial_equity": 10000.0,
+        "max_drawdown": 0.05373435964294304,
+        "max_gross_exposure": 0.7006246360608976,
+        "net_return": -0.0258657613539659,
+        "total_costs": 796.0239838070938,
+        "trade_count": 109
+      }
+    },
+    {
+      "ml": {
+        "admitted_count": 61,
+        "cvar_95": 0.002042508157444702,
+        "drawdown_kill_triggered": false,
+        "final_equity": 9788.791144362975,
+        "initial_equity": 10000.0,
+        "max_drawdown": 0.03648178892427356,
+        "max_gross_exposure": 0.7002671470217282,
+        "net_return": -0.021120885563702507,
+        "total_costs": 567.4349800272338,
+        "trade_count": 61
+      },
+      "no_trade": {
+        "max_drawdown": 0.0,
+        "net_return": 0.0,
+        "total_costs": 0.0
+      },
+      "round_trip_cost_bps": 50.0,
+      "strategy_only": {
+        "admitted_count": 94,
+        "cvar_95": 0.00295163898332487,
+        "drawdown_kill_triggered": true,
+        "final_equity": 9574.71479614871,
+        "initial_equity": 10000.0,
+        "max_drawdown": 0.054776133899760104,
+        "max_gross_exposure": 0.7007152020440784,
+        "net_return": -0.042528520385129,
+        "total_costs": 926.3857340591272,
+        "trade_count": 94
+      }
+    }
+  ],
+  "dataset_sha256": "bb99387b8e0767a7732ca35e446bbdb1a787d135d208d8f1ca0f32c71afda920",
+  "dependencies": {
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.17.0"
+  },
+  "empirical_training": false,
+  "excluded_terminal_events": 220,
+  "fold_count": 3,
+  "learning_event_count": 5714,
+  "limitations": [
+    "NON_MARKET_FIXTURES",
+    "NO_EMPIRICAL_MODEL_TRAINING",
+    "NO_PROFITABILITY_OR_PROMOTION_EVIDENCE",
+    "NO_MICROSTRUCTURE_OR_MARKET_IMPACT_DATA",
+    "ENTROPY_AND_SHIFT_ARE_DIAGNOSTICS_NOT_CERTIFIED_UNCERTAINTY"
+  ],
+  "live_execution": false,
+  "model_training_on_synthetic": true,
+  "paper_execution": false,
+  "portfolio_config": {
+    "drawdown_kill": 0.05,
+    "initial_equity": 10000.0,
+    "max_asset_weight": 0.35,
+    "max_cvar95": 0.035,
+    "max_gross_exposure": 0.7,
+    "risk_per_trade": 0.0025,
+    "round_trip_cost_bps": 24.0
+  },
+  "promotion_authorized": false,
+  "seed": 58,
+  "source_base_revision": "455014d2b146165b7edc13cf7bc9c61489447948",
+  "source_code_sha256": "2fc7fada36a51bd95eb34d28d559a7caa21781d01d1ba889b51369ae29772923",
+  "symbols": [
+    "BTC/USDT",
+    "ETH/USDT",
+    "SOL/USDT",
+    "XRP/USDT",
+    "DOGE/USDT"
+  ],
+  "test_event_count": 1701,
+  "test_start": "2025-07-13T20:00:00+00:00",
+  "utility_config": {
+    "max_entropy": 0.98,
+    "max_shift_score": 8.0,
+    "min_regime_confidence": 0.2,
+    "round_trip_cost_bps": 24.0,
+    "safety_margin": 0.0,
+    "timeout_loss_multiple": 0.25,
+    "uncertainty_loss_multiple": 0.05
+  }
+}

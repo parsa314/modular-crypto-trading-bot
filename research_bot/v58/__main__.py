@@ -4,6 +4,8 @@ import argparse
 from pathlib import Path
 
 from .pipeline import run_synthetic_engineering_pipeline, synthetic_integration_fixture, write_pipeline_result
+from .development_sources import SOURCES
+from .real_replay import replay_archive
 
 
 def main() -> int:
@@ -11,12 +13,40 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     demo = sub.add_parser("synthetic-demo", help="execute the connected pipeline on a non-market fixture")
     demo.add_argument("--output", type=Path, required=True)
+    replay = sub.add_parser("verified-replay", help="replay an exact frozen development archive")
+    replay.add_argument("--archive", type=Path, required=True)
+    replay.add_argument("--venue", choices=("binance", "coinex"), required=True)
+    replay.add_argument("--output", type=Path, required=True)
+    ai = sub.add_parser("synthetic-ai-demo", help="exercise causal events, walk-forward ML, utility and shared-capital risk")
+    ai.add_argument("--output", type=Path, required=True)
+    ai.add_argument("--bars", type=int, default=1600)
+    ai.add_argument("--seed", type=int, default=58)
     args = parser.parse_args()
-    if args.command == "synthetic-demo":
-        result = run_synthetic_engineering_pipeline(synthetic_integration_fixture())
-        write_pipeline_result(result, args.output)
-        print(f"SYNTHETIC_ENGINEERING_ONLY events={len(result.records)} replay_hash={result.replay_hash}")
-        return 0
+    try:
+        if args.command == "synthetic-ai-demo":
+            from .integrated import run_synthetic_ai_demo
+            summary = run_synthetic_ai_demo(output=args.output, bars_per_asset=args.bars, seed=args.seed)
+            print(f"SYNTHETIC_ENGINEERING_ONLY folds={summary['fold_count']} "
+                  f"test_events={summary['test_event_count']} artifact_hash={summary['artifact_map_sha256']}")
+            return 0
+        if args.command == "synthetic-demo":
+            result = run_synthetic_engineering_pipeline(synthetic_integration_fixture())
+            write_pipeline_result(result, args.output)
+            print(f"SYNTHETIC_ENGINEERING_ONLY events={len(result.records)} replay_hash={result.replay_hash}")
+            return 0
+        if args.command == "verified-replay":
+            identities = {(row["archive_sha256"], row["source_run"], row["source_artifact"])
+                          for row in SOURCES if row["venue"] == args.venue}
+            if len(identities) != 1:
+                raise ValueError("venue must have exactly one frozen archive identity")
+            archive_hash, source_run, source_artifact = identities.pop()
+            summary = replay_archive(path=args.archive, venue=args.venue, expected_sha256=archive_hash,
+                                     source_run=source_run, source_artifact=source_artifact, output=args.output)
+            print(f"REAL_MARKET_DEVELOPMENT_EVIDENCE datasets={len(summary['datasets'])} "
+                  f"summary_hash={summary['summary_hash']}")
+            return 0
+    except (ValueError, PermissionError, OSError) as exc:
+        parser.exit(2, f"error: {exc}\n")
     raise AssertionError("unreachable")
 
 

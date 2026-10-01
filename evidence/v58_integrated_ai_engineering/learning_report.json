@@ -1,0 +1,194 @@
+{
+  "classification": "SYNTHETIC_ENGINEERING_ONLY",
+  "clock_budget": {
+    "calibration_clocks_per_fold": 221,
+    "calibration_fraction": 0.2,
+    "initial_train_clocks": 557,
+    "test_clocks_per_fold": 110,
+    "total_test_fraction": 0.3,
+    "unique_clocks": 1108
+  },
+  "empirical_training": false,
+  "fold_count": 3,
+  "folds": [
+    {
+      "fold_index": 0,
+      "inference_state_sha256": "b96c8150dc208ed418efb38395cd9d2282623f0bab4c5f3914e45dfb253a062e",
+      "metrics": {
+        "calibration": {
+          "calibrated": {
+            "brier": 0.3028915380637993,
+            "event_count": 1307,
+            "log_loss": 0.5541596186634747
+          },
+          "raw": {
+            "brier": 0.30841368809655795,
+            "event_count": 1307,
+            "log_loss": 0.5625227802207882
+          }
+        },
+        "test": {
+          "calibrated": {
+            "brier": 0.531530348353897,
+            "event_count": 749,
+            "log_loss": 0.8820955849908357
+          },
+          "raw": {
+            "brier": 0.5343715240419373,
+            "event_count": 749,
+            "log_loss": 0.8761864294566235
+          }
+        }
+      },
+      "model_available_at": "2025-07-13T20:00:00+00:00",
+      "split": {
+        "calibration": {
+          "end": "2025-07-13T16:00:00+00:00",
+          "event_count": 1307,
+          "purged_count": 22,
+          "purged_row_ids_sha256": "008ac87cace3f9a34ee1bc49cf779a950ffbd5a0ed29a494891e027ecb0b3e68",
+          "row_ids_sha256": "f16bc171514a6935ce1f227ddd083bfa54f6cd7d71294656d9ea2d481976530a",
+          "start": "2025-05-19T20:00:00+00:00"
+        },
+        "test": {
+          "end": "2025-08-01T12:00:00+00:00",
+          "event_count": 749,
+          "purged_count": 0,
+          "purged_row_ids_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "row_ids_sha256": "5d16cea4f05e3081914f9a829c69a0e8b44b23efb025db86d27ac29386a5bbfa",
+          "start": "2025-07-13T20:00:00+00:00"
+        },
+        "train": {
+          "end": "2025-05-19T12:00:00+00:00",
+          "event_count": 2679,
+          "purged_count": 5,
+          "purged_row_ids_sha256": "4593ee44b3331067dc09877891f6ead5d41519d10c5df5a4b78ad2caba1fe9b1",
+          "row_ids_sha256": "147bfff17c8ca32ea25657186d8f9086b7873110f6095bcf7edf06e16f145f1b",
+          "start": "2025-02-03T12:00:00+00:00"
+        }
+      },
+      "temperature": 0.8247980411050742
+    },
+    {
+      "fold_index": 1,
+      "inference_state_sha256": "5e98575b22dccd178a640e5e9a5be7ca2287010ddb8bf15e5a3a53912df2e102",
+      "metrics": {
+        "calibration": {
+          "calibrated": {
+            "brier": 0.35534728431589613,
+            "event_count": 1732,
+            "log_loss": 0.6192736282714616
+          },
+          "raw": {
+            "brier": 0.36022920984988943,
+            "event_count": 1732,
+            "log_loss": 0.6256665145881012
+          }
+        },
+        "test": {
+          "calibrated": {
+            "brier": 0.6461451169456299,
+            "event_count": 318,
+            "log_loss": 1.0394458513896627
+          },
+          "raw": {
+            "brier": 0.6295488063762357,
+            "event_count": 318,
+            "log_loss": 1.0168941067682562
+          }
+        }
+      },
+      "model_available_at": "2025-08-01T16:00:00+00:00",
+      "split": {
+        "calibration": {
+          "end": "2025-08-01T12:00:00+00:00",
+          "event_count": 1732,
+          "purged_count": 69,
+          "purged_row_ids_sha256": "9307b9b0343996e54a8576eb0fe26e3064761d413521313bcf97761a3980e03e",
+          "row_ids_sha256": "40119139d4f664632588600d1d3febecf191e3eb1577edea367448482fcebc65",
+          "start": "2025-06-25T04:00:00+00:00"
+        },
+        "test": {
+          "end": "2025-09-02T08:00:00+00:00",
+          "event_count": 318,
+          "purged_count": 0,
+          "purged_row_ids_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "row_ids_sha256": "65f690b453199c6221c3c911387686cc79d018f117db438089c5bd13bfd843d7",
+          "start": "2025-08-01T16:00:00+00:00"
+        },
+        "train": {
+          "end": "2025-06-25T00:00:00+00:00",
+          "event_count": 2947,
+          "purged_count": 14,
+          "purged_row_ids_sha256": "06ce66815648e4e5bfbf24a78c56c083fcf1bb531df1459b9cf036d5c1642400",
+          "row_ids_sha256": "03bae8f9a581e5e6c24d3279d4cdafc35bbfd81d2a0d60c8227798c8549f1e82",
+          "start": "2025-02-03T12:00:00+00:00"
+        }
+      },
+      "temperature": 0.8422883498463036
+    },
+    {
+      "fold_index": 2,
+      "inference_state_sha256": "c72c85ee6e57fdac74e2d04bd693dfa1db1e71eb17cb1eece6b4976cf0d26237",
+      "metrics": {
+        "calibration": {
+          "calibrated": {
+            "brier": 0.5450062601768809,
+            "event_count": 1067,
+            "log_loss": 0.9025011311780193
+          },
+          "raw": {
+            "brier": 0.545004653005878,
+            "event_count": 1067,
+            "log_loss": 0.9076229785330812
+          }
+        },
+        "test": {
+          "calibrated": {
+            "brier": 0.2809743041702045,
+            "event_count": 634,
+            "log_loss": 0.5346123628579924
+          },
+          "raw": {
+            "brier": 0.2657189077712762,
+            "event_count": 634,
+            "log_loss": 0.5051006639188318
+          }
+        }
+      },
+      "model_available_at": "2025-09-03T04:00:00+00:00",
+      "split": {
+        "calibration": {
+          "end": "2025-09-02T08:00:00+00:00",
+          "event_count": 1067,
+          "purged_count": 6,
+          "purged_row_ids_sha256": "a668fc945d899ee9996f582cf471e564981132aad1482c1ac17e3907dc5d7946",
+          "row_ids_sha256": "db9fc8a57bef407471295fdff532d32e18a4b8e23afa0dc5e1e4c99da9ab12b9",
+          "start": "2025-07-13T16:00:00+00:00"
+        },
+        "test": {
+          "end": "2025-09-22T16:00:00+00:00",
+          "event_count": 634,
+          "purged_count": 0,
+          "purged_row_ids_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "row_ids_sha256": "aa0ebbc5b046e363e8f048dbb18cb23c249c83662ac5fd3bab435cafe4b65ffb",
+          "start": "2025-09-03T04:00:00+00:00"
+        },
+        "train": {
+          "end": "2025-07-13T12:00:00+00:00",
+          "event_count": 3989,
+          "purged_count": 18,
+          "purged_row_ids_sha256": "b15afcfdfc21d5726944d0c7285049db1a11e38b58bf0857ba5c669b908ab36c",
+          "row_ids_sha256": "efa938c855957327617788594a9669fbf530fe8be12667dfb990c064193e45fa",
+          "start": "2025-02-03T12:00:00+00:00"
+        }
+      },
+      "temperature": 1.1923045031691533
+    }
+  ],
+  "live_execution": false,
+  "paper_execution": false,
+  "source_code_sha256": "2fc7fada36a51bd95eb34d28d559a7caa21781d01d1ba889b51369ae29772923",
+  "source_learning_sha256": "adcc1344506b52c45b9f034798ab2b64b08fbf27bf65d73974b9dba739567ebd",
+  "validation_method": "EXPANDING_TRAIN_SLIDING_CALIBRATION_DISJOINT_TEST"
+}

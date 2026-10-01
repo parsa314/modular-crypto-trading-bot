@@ -6,29 +6,36 @@ import gzip
 import json
 from pathlib import Path
 
-from .data_audit import audit_archive, canonical_json, inspect_csv, write_new
+from .data_audit import audit_archive, canonical_json
+from .development_sources import SOURCES
 from .events import stable_hash
-from .pipeline import run_verified_development_pipeline, write_pipeline_result
+from .immutable_io import write_immutable_bundle
+from .pipeline import run_verified_development_pipeline, pipeline_result_files
 
 
 def replay_archive(*, path: Path, venue: str, expected_sha256: str, source_run: int,
                    source_artifact: int, output: Path) -> dict:
+    if not any(row["venue"] == venue and row["archive_sha256"] == expected_sha256
+               and row["source_run"] == source_run and row["source_artifact"] == source_artifact
+               for row in SOURCES):
+        raise PermissionError("archive provenance is not a frozen development source")
     report, members = audit_archive(
         path, venue=venue, expected_sha256=expected_sha256,
         source_run=source_run, source_artifact=source_artifact,
     )
     summaries = []
+    files = {}
     for dataset in report["datasets"]:
-        frame, quality = inspect_csv(gzip.decompress(members[dataset["file"]]))
-        if quality["csv_sha256"] != dataset["csv_sha256"]:
-            raise RuntimeError("verified CSV identity changed before replay")
         result = run_verified_development_pipeline(
-            frame, venue=venue, symbol=dataset["symbol"],
+            gzip.decompress(members[dataset["file"]]), venue=venue, symbol=dataset["symbol"],
             dataset_sha256=dataset["csv_sha256"],
             manifest_status="HISTORICAL_BYTES_VERIFIED_DEVELOPMENT_ONLY",
         )
-        dataset_dir = output / dataset["dataset_id"]
-        write_pipeline_result(result, dataset_dir)
+        for name, content in pipeline_result_files(result).items():
+            key = f"{dataset['dataset_id']}/{name}"
+            if key in files:
+                raise ValueError("duplicate dataset output identity")
+            files[key] = content
         arm_counts = Counter(row["strategy_arm"] for row in result.records)
         outcome_counts = Counter(row["outcome"] or row["outcome_state"] for row in result.records)
         arm_statistics = {}
@@ -59,5 +66,6 @@ def replay_archive(*, path: Path, venue: str, expected_sha256: str, source_run: 
         "scientific_alpha_claim_authorized": False, "paper_execution": False, "live_execution": False,
     }
     summary["summary_hash"] = stable_hash(summary)
-    write_new(output / f"{venue}_real_replay_summary.json", canonical_json(summary))
+    files[f"{venue}_real_replay_summary.json"] = canonical_json(summary)
+    write_immutable_bundle(output, files)
     return summary
