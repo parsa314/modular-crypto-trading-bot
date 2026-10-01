@@ -1,0 +1,60 @@
+name: V58 integrated AI engineering
+
+on:
+  pull_request:
+    paths:
+      - 'research_bot/v58/**'
+      - 'tests/v58/**'
+      - 'pyproject.toml'
+      - '.github/workflows/v58-integrated-ai-engineering.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LIVE_EXECUTION: 'false'
+      PAPER_EXECUTION: 'false'
+      BOT_FORWARD_PAPER_ENABLED: 'false'
+      BOT_PAPER_EXECUTION_ENABLED: 'false'
+      EXECUTION_MODE: RESEARCH_ONLY
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m compileall -q research_bot/v58 tests/v58
+      - run: python -m pytest -q tests/v58
+      - name: Five-asset synthetic replay, twice
+        run: |
+          python -m research_bot.v58 synthetic-ai-demo --output results/v58-ai-a
+          python -m research_bot.v58 synthetic-ai-demo --output results/v58-ai-b
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          a, b = Path('results/v58-ai-a'), Path('results/v58-ai-b')
+          manifest = json.loads((a / 'artifact_manifest.json').read_text())
+          assert manifest == json.loads((b / 'artifact_manifest.json').read_text())
+          for name, digest in manifest['files'].items():
+              content = (a / name).read_bytes()
+              assert hashlib.sha256(content).hexdigest() == digest
+              assert content == (b / name).read_bytes()
+          summary = json.loads((a / 'summary.json').read_text())
+          assert summary['classification'] == 'SYNTHETIC_ENGINEERING_ONLY'
+          assert not any(summary[k] for k in ('empirical_training', 'paper_execution', 'live_execution', 'promotion_authorized'))
+          PY
+      - name: Preserve complete engineering evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: v58-synthetic-ai-${{ github.sha }}
+          path: results/v58-ai-a
+          if-no-files-found: error
+          retention-days: 30

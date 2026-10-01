@@ -13,6 +13,16 @@
 
 ## Canonical current state
 
+The V58 engineering continuation connects causal events, three-fold walk-forward
+ML, frozen JSON scoring, cost-adjusted abstention and shared-capital risk on
+synthetic fixtures. Run `python -m research_bot.v58 synthetic-ai-demo --output results/v58-ai-new`.
+See the [integrated AI runbook](docs/v58/V58_INTEGRATED_AI_ENGINEERING_2026-10-01.md)
+and [recorded engineering results](evidence/v58_integrated_ai_engineering/summary.json).
+The synthetic/verified-archive runner also includes evidence integrity repairs. See the
+[2026-09-30 repair report and runbook](docs/v58/V58_ENGINEERING_REPAIR_2026-09-30.md)
+for tested behavior, the exact PR #89 base, output compatibility and remaining
+validation gaps. This engineering branch does not promote a trading strategy.
+
 Use [`docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md`](docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md) as the current navigation record. It distinguishes:
 
 - the moving default branch and deployment surface;

@@ -1,0 +1,137 @@
+{
+  "branch": "rebuild/v58-integrated-ai-20261001",
+  "checks": [
+    {
+      "command": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/v58"
+      ],
+      "duration_seconds": 14.495,
+      "exit_code": 0,
+      "name": "v58",
+      "transcript_path": "evidence/v58_integrity_repair/v58.txt",
+      "transcript_sha256": "a66741916415caaa330884f5689309178b8700d525ed8e541a6a11ebae28048b"
+    },
+    {
+      "command": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--ignore=tests/test_live_eligibility_v09.py",
+        "--ignore=tests/test_market_discovery_v08.py",
+        "--ignore=tests/test_service_v1.py",
+        "--ignore=tests/test_v08_service.py"
+      ],
+      "duration_seconds": 53.449,
+      "exit_code": 0,
+      "name": "broad",
+      "transcript_path": "evidence/v58_integrity_repair/broad.txt",
+      "transcript_sha256": "b089e7c42a0a4f47d9d18ff635ed43f2a02ab1f2d3fc2dd7387f4892979d6fea"
+    },
+    {
+      "command": [
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "research_bot",
+        "tests"
+      ],
+      "duration_seconds": 0.03,
+      "exit_code": 0,
+      "name": "compile",
+      "transcript_path": "evidence/v58_integrity_repair/compile.txt",
+      "transcript_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "duration_seconds": 0.008,
+      "exit_code": 0,
+      "name": "diff_check",
+      "transcript_path": "evidence/v58_integrity_repair/diff_check.txt",
+      "transcript_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "classification": "SYNTHETIC_ENGINEERING_ONLY",
+  "dependencies": {
+    "anyio": "4.14.2",
+    "fastapi": "0.141.1",
+    "httpx": "0.28.1",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.17.0",
+    "starlette": "1.6.0"
+  },
+  "empirical_training": false,
+  "excluded_test_files": {
+    "tests/test_live_eligibility_v09.py": "ccxt unavailable; collection import blocked",
+    "tests/test_market_discovery_v08.py": "ccxt unavailable; collection import blocked",
+    "tests/test_service_v1.py": "AnyIO/Starlette TestClient blocking portal hangs in this sandbox; bounded attempt terminated",
+    "tests/test_v08_service.py": "Same TestClient environment limitation"
+  },
+  "full_repository_suite_passed": false,
+  "independent_review": {
+    "focused_result": "284 passed in 12.75s",
+    "remaining_material_findings": [],
+    "scope": "v58 changed code and new integrated learning/portfolio APIs"
+  },
+  "integrated_replay": {
+    "artifact_map_sha256": "d1ee21c10be53475518605a2c0923c0001ebea5c12ddb19df90fc3ef5d38332c",
+    "assets": 5,
+    "bars_per_asset": 1600,
+    "byte_identical": true,
+    "command": [
+      "python",
+      "-m",
+      "research_bot.v58",
+      "synthetic-ai-demo",
+      "--output",
+      "/workspace/results/v58-ai-20261001-final"
+    ],
+    "event_count": 5714,
+    "fold_count": 3,
+    "repeat_output": "/workspace/results/v58-ai-20261001-final-repeat",
+    "seed": 58,
+    "test_event_count": 1701,
+    "validated_payload_files": 26
+  },
+  "kraken_sealed": true,
+  "limitations": [
+    "No new real-market replay or empirical model validation",
+    "Historical negative/frozen evidence retained",
+    "Local broad suite excludes four recorded files; full CI still required",
+    "Synthetic PnL is not market profitability evidence"
+  ],
+  "live_execution": false,
+  "paper_execution": false,
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "source_base_revision": "455014d2b146165b7edc13cf7bc9c61489447948",
+  "source_code_sha256": "2fc7fada36a51bd95eb34d28d559a7caa21781d01d1ba889b51369ae29772923",
+  "test_runner": {
+    "iniconfig": {
+      "commit": "34793a6417e35e511d0c17ffdd8a02ade0f9568e",
+      "version": "2.1.0"
+    },
+    "local_path": "/workspace/test-deps",
+    "method": "Official source via connected GitHub API; generated version metadata supplied locally; runner code unchanged; not vendored",
+    "pluggy": {
+      "commit": "fd08ab5f811a9b2fa9124ae8cbbd393221151e2c",
+      "version": "1.6.0"
+    },
+    "pytest": {
+      "commit": "8d99211f0ce3927eb7ee579f7b4f969da06dc787",
+      "version": "8.4.1"
+    }
+  },
+  "verification_date_utc": "2026-10-01"
+}

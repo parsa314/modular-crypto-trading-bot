@@ -53,8 +53,8 @@ def test_real_development_path_requires_verified_manifest_and_hash():
             frame, venue="coinex", symbol="BTC/USDT", dataset_sha256="a" * 64,
             manifest_status="UNVERIFIED",
         )
-    result = run_verified_development_pipeline(
-        frame, venue="coinex", symbol="BTC/USDT", dataset_sha256="a" * 64,
-        manifest_status="HISTORICAL_BYTES_VERIFIED_DEVELOPMENT_ONLY",
-    )
-    assert result.records and all(r["classification"] == "REAL_MARKET_DEVELOPMENT_EVIDENCE" for r in result.records)
+    with pytest.raises(PermissionError, match="original CSV bytes"):
+        run_verified_development_pipeline(
+            frame, venue="coinex", symbol="BTC/USDT", dataset_sha256="a" * 64,
+            manifest_status="HISTORICAL_BYTES_VERIFIED_DEVELOPMENT_ONLY",
+        )
