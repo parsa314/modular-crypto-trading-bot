@@ -6,6 +6,9 @@ from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 
+import pandas as pd
+
+from .artifacts import ImmutableArtifactStore
 from .config import V59Config
 from .contracts import (
     Direction,
@@ -15,13 +18,25 @@ from .contracts import (
     SignalCandidate,
     UncertaintyAssessment,
 )
+from .data_plane import ingest_ohlcv
+from .fixtures import DeterministicFixtureProvider, fixture_request
 from .hashing import canonical_json, stable_hash
+from .market_data import MarketDataRequest, normalize_and_audit
+from .multitimeframe import build_timeframe_views
 from .orchestrator import V59DecisionOrchestrator
 from .registry import ComponentRegistry
+from .source_registry import SourceRegistry
 from .think_tank import StageFinding, prioritize
 
 
-def _demo(output: Path) -> dict:
+def _iso_utc(value: str) -> datetime:
+    stamp = pd.Timestamp(value)
+    if pd.isna(stamp) or stamp.tzinfo is None or stamp.utcoffset().total_seconds() != 0:
+        raise ValueError("time values must be timezone-aware UTC ISO-8601")
+    return stamp.to_pydatetime()
+
+
+def _integrity_demo(output: Path) -> dict:
     output.mkdir(parents=True, exist_ok=True)
     decision_at = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)
     entry_at = decision_at + timedelta(minutes=5)
@@ -106,7 +121,7 @@ def _demo(output: Path) -> dict:
     (output / "think_tank_phase1.json").write_bytes(canonical_json(think_tank) + b"\n")
     summary = {
         "classification": "V59_PHASE1_RESEARCH_KERNEL",
-        "final_decision": asdict(final),
+        "final_decision": {**asdict(final), "status": final.status.value},
         "ledger_verified": engine.ledger.verify(),
         "ledger_hash": engine.ledger.ledger_hash,
         "registry_hash": registry["registry_hash"],
@@ -122,26 +137,160 @@ def _demo(output: Path) -> dict:
     return summary
 
 
+def _data_fixture_demo(output: Path) -> dict:
+    store = ImmutableArtifactStore(output)
+    request = fixture_request()
+    provider = DeterministicFixtureProvider()
+    bundle = ingest_ohlcv(
+        provider=provider,
+        request=request,
+        store=store,
+        run_id="fixture-ingest",
+    )
+    raw = provider.fetch_ohlcv(request)
+    frame, quality = normalize_and_audit(raw, request)
+    views, metadata = build_timeframe_views(
+        frame,
+        source_timeframe="1m",
+        targets=("5m", "15m"),
+    )
+    for timeframe, view in views.items():
+        store.write_bytes(
+            f"fixture-ingest/multitimeframe/{timeframe}.csv",
+            view.to_csv(index=False).encode("utf-8"),
+        )
+    source_registry = SourceRegistry().snapshot()
+    store.write_json("fixture-ingest/source_registry.json", source_registry)
+    stage_review = prioritize(
+        (
+            StageFinding(
+                "REALISTIC_EXECUTION_ECONOMICS",
+                "BLOCKER",
+                "Market-data integrity exists; spread, slippage, impact, latency and partial-fill modeling are the next blocking realism layer.",
+            ),
+            StageFinding(
+                "DERIVATIVES_AND_ORDER_BOOK_EVIDENCE",
+                "HIGH",
+                "Stage 2 generic OHLCV is spot-only; derivatives, depth and venue-specific microstructure require typed source adapters.",
+            ),
+            StageFinding(
+                "MODEL_STRATEGY_TOURNAMENT",
+                "MEDIUM",
+                "Model promotion remains premature before execution-economics evidence is wired.",
+            ),
+        )
+    )
+    store.write_json("fixture-ingest/think_tank_stage2.json", stage_review)
+    summary = {
+        "classification": "V59_STAGE2_DATA_PLANE",
+        "dataset_id": bundle.dataset_id,
+        "dataset_hash": bundle.dataset_hash,
+        "quality_hash": bundle.quality_hash,
+        "rows": bundle.rows,
+        "quality_pass": bundle.quality_pass,
+        "timeframes": [asdict(row) for row in metadata],
+        "source_registry_hash": source_registry["registry_hash"],
+        "think_tank_next_priority": stage_review["next_priority"],
+        "paper_execution": False,
+        "live_execution": False,
+    }
+    store.write_json("fixture-ingest/stage2_summary.json", summary)
+    return summary
+
+
+def _public_ohlcv(args: argparse.Namespace) -> dict:
+    from .adapters.ccxt_public import CCXTPublicOHLCVProvider
+
+    request = MarketDataRequest(
+        exchange=args.exchange,
+        symbol=args.symbol,
+        timeframe=args.timeframe,
+        market_type="spot",
+        since=_iso_utc(args.since),
+        until=_iso_utc(args.until),
+        as_of=_iso_utc(args.as_of),
+        limit=args.limit,
+    )
+    store = ImmutableArtifactStore(args.output)
+    provider = CCXTPublicOHLCVProvider(args.exchange)
+    bundle = ingest_ohlcv(
+        provider=provider,
+        request=request,
+        store=store,
+        run_id=args.run_id,
+    )
+    return {
+        "classification": "V59_REAL_PUBLIC_MARKET_DATA",
+        "dataset_id": bundle.dataset_id,
+        "dataset_hash": bundle.dataset_hash,
+        "quality_hash": bundle.quality_hash,
+        "rows": bundle.rows,
+        "quality_pass": bundle.quality_pass,
+        "paper_execution": False,
+        "live_execution": False,
+    }
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="V59 research-only kernel")
+    parser = argparse.ArgumentParser(description="V59 research-only trading system")
     sub = parser.add_subparsers(dest="command", required=True)
+
     demo = sub.add_parser("integrity-demo", help="run deterministic V59 phase-1 decision kernel")
     demo.add_argument("--output", type=Path, required=True)
+
+    fixture = sub.add_parser("data-fixture-demo", help="run deterministic V59 stage-2 market-data pipeline")
+    fixture.add_argument("--output", type=Path, required=True)
+
+    public = sub.add_parser("public-ohlcv", help="fetch and freeze credential-free real public spot OHLCV")
+    public.add_argument("--exchange", required=True)
+    public.add_argument("--symbol", default="BTC/USDT")
+    public.add_argument("--timeframe", default="1m")
+    public.add_argument("--since", required=True, help="UTC ISO-8601")
+    public.add_argument("--until", required=True, help="UTC ISO-8601")
+    public.add_argument("--as-of", required=True, help="UTC ISO-8601")
+    public.add_argument("--limit", type=int, default=10_000)
+    public.add_argument("--run-id", required=True)
+    public.add_argument("--output", type=Path, required=True)
+
     sub.add_parser("registry", help="print the V59 component registry")
+    sub.add_parser("source-registry", help="print the V59 read-only market source registry")
     args = parser.parse_args()
 
-    if args.command == "integrity-demo":
-        summary = _demo(args.output)
-        print(
-            "V59_PHASE1_RESEARCH_KERNEL "
-            f"action={summary['final_decision']['action']} "
-            f"ledger={summary['ledger_hash']} "
-            f"next={summary['think_tank_next_priority']}"
-        )
-        return 0
-    if args.command == "registry":
-        print(json.dumps(ComponentRegistry().snapshot(), sort_keys=True, indent=2))
-        return 0
+    try:
+        if args.command == "integrity-demo":
+            summary = _integrity_demo(args.output)
+            print(
+                "V59_PHASE1_RESEARCH_KERNEL "
+                f"action={summary['final_decision']['action']} "
+                f"ledger={summary['ledger_hash']} "
+                f"next={summary['think_tank_next_priority']}"
+            )
+            return 0
+        if args.command == "data-fixture-demo":
+            summary = _data_fixture_demo(args.output)
+            print(
+                "V59_STAGE2_DATA_PLANE "
+                f"rows={summary['rows']} "
+                f"dataset={summary['dataset_hash']} "
+                f"next={summary['think_tank_next_priority']}"
+            )
+            return 0
+        if args.command == "public-ohlcv":
+            summary = _public_ohlcv(args)
+            print(
+                "V59_REAL_PUBLIC_MARKET_DATA "
+                f"rows={summary['rows']} "
+                f"dataset={summary['dataset_hash']}"
+            )
+            return 0
+        if args.command == "registry":
+            print(json.dumps(ComponentRegistry().snapshot(), sort_keys=True, indent=2))
+            return 0
+        if args.command == "source-registry":
+            print(json.dumps(SourceRegistry().snapshot(), sort_keys=True, indent=2))
+            return 0
+    except (ValueError, RuntimeError, OSError) as exc:
+        parser.exit(2, f"error: {exc}\n")
     raise AssertionError("unreachable")
 
 

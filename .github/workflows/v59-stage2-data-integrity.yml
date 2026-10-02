@@ -1,0 +1,50 @@
+name: v59 stage2 market data integrity
+
+on:
+  push:
+    branches:
+      - research/v59-stage2-real-market-data-20261002
+    paths:
+      - 'research_bot/v59/**'
+      - 'tests/v59/**'
+      - 'configs/v59_stage2_data.yaml'
+      - 'docs/v59/**'
+      - '.github/workflows/v59-stage2-data-integrity.yml'
+  pull_request:
+    paths:
+      - 'research_bot/v59/**'
+      - 'tests/v59/**'
+      - 'configs/v59_stage2_data.yaml'
+      - 'docs/v59/**'
+      - '.github/workflows/v59-stage2-data-integrity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LIVE_EXECUTION: 'false'
+      PAPER_EXECUTION: 'false'
+      EXECUTION_MODE: RESEARCH_ONLY
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Compile V59 Stage 2
+        run: python -m compileall -q research_bot/v59 tests/v59
+      - name: V59 Stage 2 focused tests
+        run: python -m pytest -q tests/v59
+      - name: Deterministic market data plane replay twice
+        run: |
+          rm -rf /tmp/v59-data-a /tmp/v59-data-b
+          python -m research_bot.v59 data-fixture-demo --output /tmp/v59-data-a
+          python -m research_bot.v59 data-fixture-demo --output /tmp/v59-data-b
+          diff -r /tmp/v59-data-a /tmp/v59-data-b
+      - name: Full repository regression suite
+        run: python -m pytest -q

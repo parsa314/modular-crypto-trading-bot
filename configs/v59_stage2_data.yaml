@@ -1,0 +1,62 @@
+version: V59_STAGE2
+mode: STRICT_SCIENTIFIC_RESEARCH
+paper_execution: false
+live_execution: false
+
+market_data:
+  timestamp_semantics: BAR_OPEN_UTC
+  require_closed_bar: true
+  duplicate_policy: REJECT
+  gap_policy: REJECT
+  off_grid_policy: REJECT
+  invalid_candle_policy: REJECT
+  raw_evidence_retention: true
+  immutable_artifacts: true
+  current_partial_bar_allowed: false
+  source_relabeling_allowed: false
+
+generic_public_sources:
+  - source_id: CCXT_BINANCE_PUBLIC
+    venue: binance
+    market_type: spot
+    priority: 1
+  - source_id: CCXT_COINEX_PUBLIC
+    venue: coinex
+    market_type: spot
+    priority: 2
+  - source_id: CCXT_BYBIT_PUBLIC
+    venue: bybit
+    market_type: spot
+    priority: 3
+
+multitimeframe:
+  source_candidates:
+    - 1m
+    - 5m
+  target_candidates:
+    - 5m
+    - 15m
+    - 1h
+    - 4h
+  require_integer_multiple: true
+  require_complete_bucket: true
+
+artifacts:
+  create_only: true
+  dataset_hash_required: true
+  quality_hash_required: true
+  source_registry_hash_required: true
+  rejection_manifest_required: true
+
+stage2_boundaries:
+  exchange_credentials_allowed: false
+  private_exchange_endpoints_allowed: false
+  order_creation_allowed: false
+  order_cancel_allowed: false
+  withdrawals_allowed: false
+  execution_simulation_allowed: false
+
+next_stage_priority:
+  - REALISTIC_EXECUTION_ECONOMICS
+  - DERIVATIVES_AND_ORDER_BOOK_EVIDENCE
+  - MODEL_STRATEGY_TOURNAMENT

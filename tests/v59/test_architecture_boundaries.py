@@ -29,13 +29,22 @@ def test_v59_kernel_does_not_depend_on_v58_implementation():
     assert offenders == []
 
 
-def test_v59_phase1_has_no_exchange_or_execution_connector_imports():
+def test_v59_kernel_has_no_exchange_or_execution_connector_imports():
     forbidden = ("ccxt", "binance", "coinex", "bybit", "nobitex", "metatrader")
+    kernel_files = {
+        "hashing.py", "config.py", "contracts.py", "decision.py", "finance.py",
+        "evidence.py", "orchestrator.py", "registry.py", "think_tank.py",
+        "market_data.py", "data_plane.py", "multitimeframe.py",
+        "source_registry.py", "artifacts.py",
+    }
     offenders = []
-    for path in ROOT.glob("*.py"):
-        for name in _imports(path):
-            if any(token in name.lower() for token in forbidden):
-                offenders.append((str(path), name))
+    for name in sorted(kernel_files):
+        path = ROOT / name
+        if not path.exists():
+            continue
+        for imported in _imports(path):
+            if any(token in imported.lower() for token in forbidden):
+                offenders.append((str(path), imported))
     assert offenders == []
 
 
@@ -55,3 +64,13 @@ def test_v59_package_has_explicit_core_modules():
         "compat_v58.py",
     }
     assert required.issubset({path.name for path in ROOT.glob("*.py")})
+
+
+def test_stage2_source_adapters_are_isolated_from_kernel_and_read_only():
+    adapter = Path("research_bot/v59/adapters/ccxt_public.py")
+    source = adapter.read_text(encoding="utf-8").lower()
+    assert "create_order" not in source
+    assert "cancel_order" not in source
+    assert "fetch_balance" not in source
+    assert "withdraw" not in source
+    assert "private" not in source
