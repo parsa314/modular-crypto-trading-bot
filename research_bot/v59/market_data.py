@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import math
 from typing import Any, Mapping, Protocol
 
+import numpy as np
 import pandas as pd
 
 from .hashing import stable_hash
@@ -196,7 +197,7 @@ def normalize_and_audit(
         reasons.append("NULL_VALUES")
     if invalid_candle_count:
         reasons.append("INVALID_CANDLES")
-    if not frame.empty and not numeric.applymap(lambda x: math.isfinite(float(x))).all().all():
+    if not frame.empty and not np.isfinite(numeric.to_numpy(dtype=float)).all():
         reasons.append("NON_FINITE_VALUES")
 
     spacing_ns = int(delta.value)
