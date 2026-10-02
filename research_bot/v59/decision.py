@@ -24,31 +24,31 @@ def economic_gate(
         raise ValueError("prediction was not available at decision time")
     if config.require_calibration and not prediction.calibrated:
         return EconomicDecision(
-            candidate.event_id, GateStatus.ABSTAIN, -math.inf,
+            candidate.event_id, GateStatus.ABSTAIN, 0.0,
             config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
             "UNCALIBRATED_PREDICTION",
         )
     if candidate.regime_confidence < config.min_regime_confidence:
         return EconomicDecision(
-            candidate.event_id, GateStatus.ABSTAIN, -math.inf,
+            candidate.event_id, GateStatus.ABSTAIN, 0.0,
             config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
             "LOW_REGIME_CONFIDENCE",
         )
     if prediction.entropy > config.max_entropy:
         return EconomicDecision(
-            candidate.event_id, GateStatus.ABSTAIN, -math.inf,
+            candidate.event_id, GateStatus.ABSTAIN, 0.0,
             config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
             "HIGH_ENTROPY",
         )
     if prediction.shift_score > config.max_shift_score:
         return EconomicDecision(
-            candidate.event_id, GateStatus.ABSTAIN, -math.inf,
+            candidate.event_id, GateStatus.ABSTAIN, 0.0,
             config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
             "DISTRIBUTION_SHIFT",
         )
     if uncertainty.abstain or len(uncertainty.prediction_set) > config.conformal_max_set_size:
         return EconomicDecision(
-            candidate.event_id, GateStatus.ABSTAIN, -math.inf,
+            candidate.event_id, GateStatus.ABSTAIN, 0.0,
             config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
             "CONFORMAL_UNCERTAINTY",
         )
