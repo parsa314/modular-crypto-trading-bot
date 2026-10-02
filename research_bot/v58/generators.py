@@ -11,7 +11,6 @@ import pandas as pd
 from .contracts import Direction, StrategyArm
 from .events import stable_hash, make_feature_snapshot_id
 from .features import add_v58_continuous_features
-from .confluence10 import FAMILIES as CONFLUENCE_FAMILIES, evaluate_confluence10
 
 
 FEATURE_SCHEMA_VERSION = "58.2"
@@ -138,10 +137,6 @@ def generate_candidates(frame: pd.DataFrame, *, venue: str, symbol: str, timefra
             rows.append((i,arm,subtype,families,states)); by_row.setdefault(i,set()).add(arm)
         if {StrategyArm.ARM_A,StrategyArm.ARM_B,StrategyArm.ARM_C,StrategyArm.ARM_D}.issubset(by_row.get(i,set())):
             rows.append((i,StrategyArm.ARM_E,"E1_FOUR_FRAMEWORK_CONFLUENCE",("S6","ICHIMOKU","ICT_SMC","BROOKS_PROXY"),("ALL_FOUR_PRESENT","CORRELATED_COMPONENTS")))
-        # Ten separately named, pre-registered long-spot hypotheses. These
-        # predicates use only the causal feature row available at decision time.
-        for hit in evaluate_confluence10(x.iloc[i].to_dict()):
-            rows.append((i, StrategyArm.ARM_E, hit.strategy_id, CONFLUENCE_FAMILIES, hit.states))
 
     out: list[CandidateEvent] = []
     seen: set[str] = set()
@@ -156,7 +151,7 @@ def generate_candidates(frame: pd.DataFrame, *, venue: str, symbol: str, timefra
         values = {name: float(x[name].iat[i]) if np.isfinite(x[name].iat[i]) else None for name in feature_columns}
         values["atr_at_event"] = float(atr.iat[i])
         state_times = tuple((state, event_ts.isoformat()) for state in states)
-        if arm in (StrategyArm.ARM_C, StrategyArm.ARM_E) and i in chain_traces:
+        if arm in (StrategyArm.ARM_C, StrategyArm.ARM_E):
             trace = chain_traces[i]
             state_times = tuple((state, (x["timestamp"].iat[index].to_pydatetime() + duration).isoformat())
                                 for state, index in zip(("SWEEP_RECLAIM", "DISPLACEMENT", "MSS"), trace))
