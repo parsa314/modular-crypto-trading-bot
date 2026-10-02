@@ -66,11 +66,19 @@ def test_v59_package_has_explicit_core_modules():
     assert required.issubset({path.name for path in ROOT.glob("*.py")})
 
 
-def test_stage2_source_adapters_are_isolated_from_kernel_and_read_only():
-    adapter = Path("research_bot/v59/adapters/ccxt_public.py")
-    source = adapter.read_text(encoding="utf-8").lower()
-    assert "create_order" not in source
-    assert "cancel_order" not in source
-    assert "fetch_balance" not in source
-    assert "withdraw" not in source
-    assert "private" not in source
+def test_external_source_adapters_are_isolated_and_have_no_order_api_calls():
+    forbidden_calls = (
+        "create_order(",
+        "cancel_order(",
+        "cancel_all_orders(",
+        "fetch_balance(",
+        "withdraw(",
+        "transfer(",
+    )
+    offenders = []
+    for adapter in Path("research_bot/v59/adapters").glob("*.py"):
+        source = adapter.read_text(encoding="utf-8").lower()
+        for token in forbidden_calls:
+            if token in source:
+                offenders.append((str(adapter), token))
+    assert offenders == []

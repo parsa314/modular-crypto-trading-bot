@@ -1,0 +1,41 @@
+version: V59_STAGE4
+mode: STRICT_SCIENTIFIC_RESEARCH
+paper_execution: false
+live_execution: false
+
+order_book:
+  timestamp_semantics: OBSERVED_AT_UTC
+  crossed_or_locked_policy: REJECT
+  bid_sort: DESCENDING
+  ask_sort: ASCENDING
+  depth_band_bps: 10
+  conservative_depth: MIN_BID_ASK_DEPTH
+  max_snapshot_age_seconds: 30
+  future_snapshot_allowed: false
+
+derivatives:
+  prospective_only_by_default: true
+  historical_pit_backfill_allowed: false
+  unavailable_data_token: UNAVAILABLE_DATA
+  required_time_fields:
+    - effective_at
+    - available_at
+    - observed_at
+  source_hash_required: true
+
+public_adapters:
+  ccxt_orderbook:
+    credentials_allowed: false
+    order_api_allowed: false
+  coinex_prospective:
+    endpoint: /v2/futures/market
+    metrics:
+      - open_interest_volume
+      - maker_fee_rate
+      - taker_fee_rate
+    availability_policy: OBSERVED_NOW_ONLY
+
+next_stage_priority:
+  - EXECUTION_MODEL_CALIBRATION
+  - MODEL_STRATEGY_TOURNAMENT
+  - PAPER_RUNTIME

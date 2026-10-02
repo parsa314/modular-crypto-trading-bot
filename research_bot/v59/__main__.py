@@ -19,10 +19,16 @@ from .contracts import (
     UncertaintyAssessment,
 )
 from .data_plane import ingest_ohlcv
-from .fixtures import DeterministicFixtureProvider, fixture_request
+from .fixtures import (
+    DeterministicFixtureProvider,
+    DeterministicOrderBookProvider,
+    DeterministicDerivativeMetricProvider,
+    fixture_request,
+)
 from .execution import ExecutionAssumptions, LiquiditySnapshot, estimate_execution_cost
 from .hashing import canonical_json, stable_hash
 from .market_data import MarketDataRequest, normalize_and_audit
+from .microstructure_plane import ingest_metrics, ingest_order_book
 from .multitimeframe import build_timeframe_views
 from .orchestrator import V59DecisionOrchestrator
 from .registry import ComponentRegistry
@@ -295,6 +301,56 @@ def _execution_demo(output: Path) -> dict:
     return summary
 
 
+
+def _microstructure_demo(output: Path) -> dict:
+    store = ImmutableArtifactStore(output)
+    book_bundle = ingest_order_book(
+        provider=DeterministicOrderBookProvider(),
+        symbol="BTC/USDT",
+        limit=50,
+        store=store,
+        run_id="fixture-orderbook",
+    )
+    metric_bundle = ingest_metrics(
+        provider=DeterministicDerivativeMetricProvider(),
+        symbol="BTC/USDT",
+        store=store,
+        run_id="fixture-derivatives",
+    )
+    stage_review = prioritize(
+        (
+            StageFinding(
+                "EXECUTION_MODEL_CALIBRATION",
+                "BLOCKER",
+                "Prospective depth and derivative evidence now exists; execution stress parameters still require calibration against forward observations/fills.",
+            ),
+            StageFinding(
+                "MODEL_STRATEGY_TOURNAMENT",
+                "HIGH",
+                "Tournament infrastructure can begin after execution-model calibration protocol is frozen.",
+            ),
+            StageFinding(
+                "PAPER_RUNTIME",
+                "MEDIUM",
+                "Paper runtime remains blocked until data, execution and model evidence are all connected prospectively.",
+            ),
+        )
+    )
+    store.write_json("stage4_think_tank.json", stage_review)
+    summary = {
+        "classification": "V59_STAGE4_MICROSTRUCTURE_EVIDENCE",
+        "order_book_snapshot_hash": book_bundle.snapshot_hash,
+        "order_book_bundle_hash": book_bundle.bundle_hash,
+        "metric_bundle_hash": metric_bundle["bundle_hash"],
+        "metric_count": metric_bundle["metric_count"],
+        "think_tank_next_priority": stage_review["next_priority"],
+        "paper_execution": False,
+        "live_execution": False,
+    }
+    store.write_json("stage4_summary.json", summary)
+    return summary
+
+
 def _public_ohlcv(args: argparse.Namespace) -> dict:
     from .adapters.ccxt_public import CCXTPublicOHLCVProvider
 
@@ -341,6 +397,21 @@ def main() -> int:
     execution = sub.add_parser("execution-demo", help="run deterministic V59 stage-3 execution economics")
     execution.add_argument("--output", type=Path, required=True)
 
+    micro = sub.add_parser("microstructure-demo", help="run deterministic V59 stage-4 microstructure evidence")
+    micro.add_argument("--output", type=Path, required=True)
+
+    orderbook = sub.add_parser("public-orderbook", help="capture a credential-free public order-book snapshot")
+    orderbook.add_argument("--exchange", required=True)
+    orderbook.add_argument("--symbol", default="BTC/USDT")
+    orderbook.add_argument("--limit", type=int, default=50)
+    orderbook.add_argument("--run-id", required=True)
+    orderbook.add_argument("--output", type=Path, required=True)
+
+    derivatives = sub.add_parser("coinex-prospective-metrics", help="capture prospective CoinEx futures metrics")
+    derivatives.add_argument("--symbol", default="BTC/USDT")
+    derivatives.add_argument("--run-id", required=True)
+    derivatives.add_argument("--output", type=Path, required=True)
+
     public = sub.add_parser("public-ohlcv", help="fetch and freeze credential-free real public spot OHLCV")
     public.add_argument("--exchange", required=True)
     public.add_argument("--symbol", default="BTC/USDT")
@@ -382,6 +453,46 @@ def main() -> int:
                 f"cost_bps={summary['cost_estimate']['total_round_trip_bps']:.6f} "
                 f"action={summary['final_decision']['action']} "
                 f"ledger={summary['ledger_hash']}"
+            )
+            return 0
+        if args.command == "microstructure-demo":
+            summary = _microstructure_demo(args.output)
+            print(
+                "V59_STAGE4_MICROSTRUCTURE_EVIDENCE "
+                f"book={summary['order_book_snapshot_hash']} "
+                f"metrics={summary['metric_count']} "
+                f"next={summary['think_tank_next_priority']}"
+            )
+            return 0
+        if args.command == "public-orderbook":
+            from .adapters.ccxt_orderbook import CCXTPublicOrderBookProvider
+            store = ImmutableArtifactStore(args.output)
+            bundle = ingest_order_book(
+                provider=CCXTPublicOrderBookProvider(args.exchange),
+                symbol=args.symbol,
+                limit=args.limit,
+                store=store,
+                run_id=args.run_id,
+            )
+            print(
+                "V59_REAL_PUBLIC_ORDERBOOK "
+                f"snapshot={bundle.snapshot_hash} "
+                f"bundle={bundle.bundle_hash}"
+            )
+            return 0
+        if args.command == "coinex-prospective-metrics":
+            from .adapters.coinex_prospective import CoinExProspectiveDerivativesProvider
+            store = ImmutableArtifactStore(args.output)
+            summary = ingest_metrics(
+                provider=CoinExProspectiveDerivativesProvider(),
+                symbol=args.symbol,
+                store=store,
+                run_id=args.run_id,
+            )
+            print(
+                "V59_PROSPECTIVE_DERIVATIVES "
+                f"metrics={summary['metric_count']} "
+                f"bundle={summary['bundle_hash']}"
             )
             return 0
         if args.command == "public-ohlcv":

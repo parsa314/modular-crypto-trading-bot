@@ -1,0 +1,50 @@
+name: v59 stage4 microstructure evidence
+
+on:
+  push:
+    branches:
+      - research/v59-stage4-microstructure-evidence-20261002
+    paths:
+      - 'research_bot/v59/**'
+      - 'tests/v59/**'
+      - 'configs/v59_stage4_microstructure.yaml'
+      - 'docs/v59/**'
+      - '.github/workflows/v59-stage4-microstructure-integrity.yml'
+  pull_request:
+    paths:
+      - 'research_bot/v59/**'
+      - 'tests/v59/**'
+      - 'configs/v59_stage4_microstructure.yaml'
+      - 'docs/v59/**'
+      - '.github/workflows/v59-stage4-microstructure-integrity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage4:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LIVE_EXECUTION: 'false'
+      PAPER_EXECUTION: 'false'
+      EXECUTION_MODE: RESEARCH_ONLY
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Compile V59 Stage 4
+        run: python -m compileall -q research_bot/v59 tests/v59
+      - name: V59 Stage 4 focused tests
+        run: python -m pytest -q tests/v59
+      - name: Deterministic microstructure replay twice
+        run: |
+          rm -rf /tmp/v59-micro-a /tmp/v59-micro-b
+          python -m research_bot.v59 microstructure-demo --output /tmp/v59-micro-a
+          python -m research_bot.v59 microstructure-demo --output /tmp/v59-micro-b
+          diff -r /tmp/v59-micro-a /tmp/v59-micro-b
+      - name: Full repository regression suite
+        run: python -m pytest -q
