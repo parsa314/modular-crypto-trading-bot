@@ -1,0 +1,41 @@
+version: V59_STAGE3
+mode: STRICT_SCIENTIFIC_RESEARCH
+paper_execution: false
+live_execution: false
+
+execution_economics:
+  observed_inputs:
+    - BEST_BID
+    - BEST_ASK
+    - DEPTH_NOTIONAL_10BPS
+  stress_components:
+    taker_fee_bps_per_side: 5.0
+    slippage_bps_per_side: 2.0
+    latency_bps_per_side: 1.0
+    impact_coefficient_bps: 8.0
+    max_impact_bps_per_side: 50.0
+  capacity:
+    max_depth_participation: 0.20
+    min_fill_fraction: 0.80
+  snapshot:
+    max_age_seconds: 30
+    future_snapshot_allowed: false
+    symbol_relabeling_allowed: false
+
+cost_contract:
+  economic_gate_must_match_financial_gate: true
+  cost_identity_bound_to_event: true
+  dynamic_cost_can_veto_signal: true
+  liquidity_capacity_can_veto_signal: true
+  ai_can_override_cost_veto: false
+  finance_can_override_cost_veto: false
+
+impact_model:
+  form: SQRT_PARTICIPATION_STRESS
+  empirical_calibration_status: NOT_YET_CALIBRATED
+  claim_policy: STRESS_MODEL_NOT_TRUE_MARKET_IMPACT
+
+next_stage_priority:
+  - DERIVATIVES_AND_ORDER_BOOK_EVIDENCE
+  - EXECUTION_MODEL_CALIBRATION
+  - MODEL_STRATEGY_TOURNAMENT
