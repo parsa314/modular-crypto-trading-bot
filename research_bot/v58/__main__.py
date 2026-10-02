@@ -36,6 +36,19 @@ def main() -> int:
     market.add_argument("--archive", type=Path, required=True)
     market.add_argument("--venue", choices=("binance", "coinex"), required=True)
     market.add_argument("--output", type=Path, required=True)
+    scan = sub.add_parser(
+        "signal-scan",
+        help="run unified V58 confluence + MTF FVG/ICT/TSI research signal discovery",
+    )
+    scan.add_argument("--csv", type=Path, required=True)
+    scan.add_argument("--symbol", required=True)
+    scan.add_argument("--venue", default="research_csv")
+    scan.add_argument("--htf", default="1h")
+    scan.add_argument("--ltf", default="5min")
+    scan.add_argument("--confirmation", choices=("tsi", "structure", "either", "both"), default="either")
+    scan.add_argument("--stop-mode", choices=("midpoint", "zone_edge", "swing"), default="zone_edge")
+    scan.add_argument("--rr", type=float, default=2.0)
+    scan.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "synthetic-ai-demo":
@@ -55,6 +68,32 @@ def main() -> int:
                                      source_run=source_run, source_artifact=source_artifact, output=args.output)
             print(f"REAL_MARKET_DEVELOPMENT_EVIDENCE datasets={len(summary['datasets'])} "
                   f"summary_hash={summary['summary_hash']}")
+            return 0
+        if args.command == "signal-scan":
+            import pandas as pd
+            from .signal_finder import CombinedSignalConfig, scan_combined_signals, write_signal_scan
+            config = CombinedSignalConfig(
+                htf=args.htf,
+                ltf=args.ltf,
+                confirmation=args.confirmation,
+                stop_mode=args.stop_mode,
+                reward_risk=args.rr,
+            )
+            result = scan_combined_signals(
+                pd.read_csv(args.csv),
+                config,
+                symbol=args.symbol,
+                venue=args.venue,
+            )
+            write_signal_scan(result, args.output)
+            summary = result["summary"]
+            print(
+                "V58_RESEARCH_SIGNAL_DISCOVERY "
+                f"combined={summary['combined_count']} "
+                f"confluence10={summary['confluence10_count']} "
+                f"fvg_ict_tsi={summary['fvg_ict_tsi_count']} "
+                f"short_signal_only={summary['short_count']}"
+            )
             return 0
         if args.command == "verified-market-audit":
             from .market_audit import audit_verified_archive
