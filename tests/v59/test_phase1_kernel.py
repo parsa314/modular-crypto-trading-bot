@@ -277,3 +277,14 @@ def test_think_tank_has_all_requested_expert_roles_and_prioritizes_blocker():
 
 def test_hashing_is_stable_across_dictionary_order():
     assert stable_hash({"a": 1, "b": 2}) == stable_hash({"b": 2, "a": 1})
+
+
+def test_evidence_ledger_records_cannot_mutate_internal_chain():
+    ledger = EvidenceLedger()
+    source = {"nested": {"value": 1}}
+    ledger.append(record_type="A", payload=source, recorded_at=DECISION_AT)
+    source["nested"]["value"] = 99
+    exposed = ledger.records
+    exposed[0]["payload"]["nested"]["value"] = 42
+    assert ledger.records[0]["payload"]["nested"]["value"] == 1
+    assert ledger.verify()
