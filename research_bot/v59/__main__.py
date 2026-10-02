@@ -165,7 +165,7 @@ def _data_fixture_demo(output: Path) -> dict:
         (
             StageFinding(
                 "REALISTIC_EXECUTION_ECONOMICS",
-                "HIGH",
+                "BLOCKER",
                 "Market-data integrity exists; spread, slippage, impact, latency and partial-fill modeling are the next blocking realism layer.",
             ),
             StageFinding(
