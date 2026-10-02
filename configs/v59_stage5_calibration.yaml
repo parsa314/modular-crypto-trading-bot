@@ -1,0 +1,39 @@
+version: V59_STAGE5
+mode: STRICT_SCIENTIFIC_RESEARCH
+paper_execution: false
+live_execution: false
+
+calibration:
+  split: CHRONOLOGICAL
+  train_fraction: 0.70
+  min_total_samples: 100
+  min_validation_samples: 20
+  max_validation_mae_bps: 5.0
+  max_p90_underprediction_bps: 8.0
+  max_validation_underprediction_rate: 0.50
+  duplicate_sample_policy: REJECT
+  same_test_retuning_forbidden: true
+
+model:
+  response: RESIDUAL_ADVERSE_FILL_BPS_AFTER_HALF_SPREAD
+  predictors:
+    - INTERCEPT
+    - SQRT_PARTICIPATION
+  fitted_parameters:
+    - BASE_BPS_PER_SIDE
+    - IMPACT_COEFFICIENT_BPS
+  estimator: NONNEGATIVE_CLIPPED_OLS
+
+promotion:
+  real_data_required: true
+  deterministic_fixture_can_authorize_live: false
+  deterministic_fixture_can_authorize_paper: false
+  candidate_pass_required: true
+  report_hash_required: true
+  sample_hash_required: true
+  config_hash_required: true
+
+next_stage_priority:
+  - MODEL_STRATEGY_TOURNAMENT
+  - REAL_PROSPECTIVE_CALIBRATION_SAMPLE
+  - PAPER_RUNTIME

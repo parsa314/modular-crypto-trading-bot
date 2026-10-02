@@ -26,6 +26,12 @@ from .fixtures import (
     fixture_request,
 )
 from .execution import ExecutionAssumptions, LiquiditySnapshot, estimate_execution_cost
+from .execution_calibration import (
+    ExecutionCalibrationSample,
+    assumptions_from_calibration,
+    fit_execution_calibration,
+    samples_from_frame,
+)
 from .hashing import canonical_json, stable_hash
 from .market_data import MarketDataRequest, normalize_and_audit
 from .microstructure_plane import ingest_metrics, ingest_order_book
@@ -351,6 +357,88 @@ def _microstructure_demo(output: Path) -> dict:
     return summary
 
 
+
+def _calibration_demo(output: Path) -> dict:
+    store = ImmutableArtifactStore(output)
+    start = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)
+    samples = []
+    for i in range(140):
+        participation = 0.01 + (i % 20) * 0.005
+        depth = 100_000.0
+        notional = participation * depth
+        spread_bps = 2.0
+        residual = 2.0 + 8.0 * participation ** 0.5
+        adverse = spread_bps / 2.0 + residual
+        mid = 100.0
+        side = "BUY" if i % 2 == 0 else "SELL"
+        fill = mid * (1.0 + adverse / 10_000.0) if side == "BUY" else mid * (1.0 - adverse / 10_000.0)
+        samples.append(
+            ExecutionCalibrationSample(
+                sample_id=f"fixture-{i:04d}",
+                timestamp=start + timedelta(minutes=i),
+                side=side,
+                reference_mid=mid,
+                fill_price=fill,
+                notional=notional,
+                depth_notional_10bps=depth,
+                spread_bps=spread_bps,
+                fee_bps_per_side=5.0,
+                source_hash=stable_hash({"fixture_fill": i}),
+            )
+        )
+    report = fit_execution_calibration(samples)
+    promoted = assumptions_from_calibration(report)
+    review = prioritize(
+        (
+            StageFinding(
+                "MODEL_STRATEGY_TOURNAMENT",
+                "BLOCKER",
+                "Execution calibration protocol is now explicit; the next blocker is a leakage-resistant tournament over deterministic strategies and baseline models.",
+            ),
+            StageFinding(
+                "REAL_PROSPECTIVE_CALIBRATION_SAMPLE",
+                "HIGH",
+                "The calibration demo proves machinery only; real parameter promotion still requires prospective fill observations.",
+            ),
+            StageFinding(
+                "PAPER_RUNTIME",
+                "MEDIUM",
+                "Paper runtime remains downstream of model/strategy promotion and prospective evidence.",
+            ),
+        )
+    )
+    summary = {
+        "classification": "V59_STAGE5_EXECUTION_CALIBRATION",
+        "report": asdict(report),
+        "report_hash": report.report_hash,
+        "promoted_fixture_assumptions": asdict(promoted),
+        "think_tank_next_priority": review["next_priority"],
+        "paper_execution": False,
+        "live_execution": False,
+        "fixture_only": True,
+    }
+    store.write_json("stage5_calibration_report.json", summary)
+    store.write_json("stage5_think_tank.json", review)
+    return summary
+
+
+def _calibrate_csv(args: argparse.Namespace) -> dict:
+    frame = pd.read_csv(args.csv)
+    samples = samples_from_frame(frame)
+    report = fit_execution_calibration(samples)
+    store = ImmutableArtifactStore(args.output)
+    payload = {
+        "classification": "V59_EXECUTION_CALIBRATION_REPORT",
+        "run_id": args.run_id,
+        "report": asdict(report),
+        "report_hash": report.report_hash,
+        "paper_execution": False,
+        "live_execution": False,
+    }
+    store.write_json(f"{args.run_id}/execution_calibration_report.json", payload)
+    return payload
+
+
 def _public_ohlcv(args: argparse.Namespace) -> dict:
     from .adapters.ccxt_public import CCXTPublicOHLCVProvider
 
@@ -399,6 +487,14 @@ def main() -> int:
 
     micro = sub.add_parser("microstructure-demo", help="run deterministic V59 stage-4 microstructure evidence")
     micro.add_argument("--output", type=Path, required=True)
+
+    calibration = sub.add_parser("calibration-demo", help="run deterministic V59 stage-5 execution calibration")
+    calibration.add_argument("--output", type=Path, required=True)
+
+    calibrate = sub.add_parser("calibrate-execution", help="fit execution calibration from a prospective CSV")
+    calibrate.add_argument("--csv", type=Path, required=True)
+    calibrate.add_argument("--run-id", required=True)
+    calibrate.add_argument("--output", type=Path, required=True)
 
     orderbook = sub.add_parser("public-orderbook", help="capture a credential-free public order-book snapshot")
     orderbook.add_argument("--exchange", required=True)
@@ -453,6 +549,25 @@ def main() -> int:
                 f"cost_bps={summary['cost_estimate']['total_round_trip_bps']:.6f} "
                 f"action={summary['final_decision']['action']} "
                 f"ledger={summary['ledger_hash']}"
+            )
+            return 0
+        if args.command == "calibration-demo":
+            summary = _calibration_demo(args.output)
+            report = summary["report"]
+            print(
+                "V59_STAGE5_EXECUTION_CALIBRATION "
+                f"status={report['status']} "
+                f"base_bps={report['fitted_base_bps_per_side']:.6f} "
+                f"impact={report['fitted_impact_coefficient_bps']:.6f} "
+                f"next={summary['think_tank_next_priority']}"
+            )
+            return 0
+        if args.command == "calibrate-execution":
+            summary = _calibrate_csv(args)
+            print(
+                "V59_EXECUTION_CALIBRATION_REPORT "
+                f"status={summary['report']['status']} "
+                f"hash={summary['report_hash']}"
             )
             return 0
         if args.command == "microstructure-demo":
