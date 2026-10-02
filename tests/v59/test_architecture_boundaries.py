@@ -55,3 +55,13 @@ def test_v59_package_has_explicit_core_modules():
         "compat_v58.py",
     }
     assert required.issubset({path.name for path in ROOT.glob("*.py")})
+
+
+def test_stage2_source_adapters_are_isolated_from_kernel_and_read_only():
+    adapter = Path("research_bot/v59/adapters/ccxt_public.py")
+    source = adapter.read_text(encoding="utf-8").lower()
+    assert "create_order" not in source
+    assert "cancel_order" not in source
+    assert "fetch_balance" not in source
+    assert "withdraw" not in source
+    assert "private" not in source
