@@ -81,7 +81,10 @@ def ingest_ohlcv(
             "market_type": result.market_type,
             "request_since": request.since,
             "request_until": request.until,
-            "rows": frame.to_dict(orient="records"),
+            "rows": [
+                {**row, "timestamp": pd.Timestamp(row["timestamp"]).isoformat()}
+                for row in frame.to_dict(orient="records")
+            ],
         }
     )
     dataset_id = f"{result.exchange}:{result.market_type}:{result.symbol}:{result.timeframe}:{dataset_hash[:16]}"
