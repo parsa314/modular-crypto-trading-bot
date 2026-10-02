@@ -109,6 +109,10 @@ def test_connected_cli_bundle_is_reproducible_and_frozen_scoreable(tmp_path):
     assert not any(summary[name] for name in ("empirical_training", "paper_execution", "live_execution", "promotion_authorized"))
     assert [row["round_trip_cost_bps"] for row in summary["cost_stress"]] == [0, 24, 36, 50]
     assert all(row["no_trade"]["net_return"] == 0 for row in summary["cost_stress"])
+    assert len(summary["confluence10_strategy_ids"]) == 10
+    strategy_registry = json.loads((first / "confluence10_registry.json").read_text())
+    assert [row["strategy_id"] for row in strategy_registry] == summary["confluence10_strategy_ids"]
+    assert all(row["financial_gate_required"] for row in strategy_registry)
     manifest = json.loads((first / "artifact_manifest.json").read_text())
     assert stable_hash(manifest["files"]) == summary["artifact_map_sha256"]
     for name, digest in manifest["files"].items():
