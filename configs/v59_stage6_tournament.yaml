@@ -1,0 +1,53 @@
+version: V59_STAGE6
+mode: STRICT_SCIENTIFIC_RESEARCH
+paper_execution: false
+live_execution: false
+
+tournament:
+  classes:
+    - TP
+    - SL
+    - TIMEOUT
+  models:
+    - PRIOR
+    - LOGISTIC
+    - HIST_GRADIENT_BOOSTING
+  cost_scenarios_bps:
+    - 0
+    - 24
+    - 36
+    - 50
+  walk_forward:
+    min_train_rows: 240
+    validation_rows: 80
+    test_rows: 80
+    step_rows: 80
+    embargo_rows: 1
+    max_folds: 8
+  calibration:
+    method: PER_CLASS_ISOTONIC_ON_VALIDATION
+    train_only_model_fit: true
+    test_fit_forbidden: true
+  abstention:
+    normalized_entropy_max: 0.98
+  promotion:
+    tournament_auto_promotion_forbidden: true
+    separate_promotion_review_required: true
+    engineering_fixture_promotable: false
+    min_test_events_per_trial: 40
+  multiplicity:
+    record_every_attempted_fold: true
+    attempted_fold_hash_required: true
+    prediction_hash_required: true
+    result_hash_required: true
+
+engineering_fixture:
+  strategies:
+    - C10_03_CLOUD_BREAK_FVG_CONTINUATION
+    - FVG_ICT_TSI_MTF
+  claim_policy: ENGINEERING_ONLY
+
+next_stage_priority:
+  - V59_NATIVE_STRATEGY_ENGINE
+  - REAL_MULTI_ASSET_EVENT_DATASET
+  - PROSPECTIVE_PAPER_RUNTIME
