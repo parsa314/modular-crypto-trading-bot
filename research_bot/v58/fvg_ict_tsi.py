@@ -617,7 +617,7 @@ def backtest(
         trade.slippage_costs = float(slippage_costs)
         trade.total_costs = float(total_costs)
         trade.net_pnl = float(net_pnl)
-        trade.r_multiple = float(net_pnl / risk_cash) if risk_cash > 0 else 0.0
+        trade.r_multiple = float(net_pnl / stop_budget_used) if stop_budget_used > 0 else 0.0
         trades.append(trade)
         equity_rows.append(
             {
