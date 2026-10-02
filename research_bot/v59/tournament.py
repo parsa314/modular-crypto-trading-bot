@@ -182,7 +182,6 @@ def _fit_model(model_id: str, X: pd.DataFrame, y: pd.Series, seed: int):
                     LogisticRegression(
                         max_iter=1000,
                         random_state=seed,
-                        multi_class="auto",
                     ),
                 ),
             ]
@@ -297,7 +296,7 @@ def _profit_factor(returns: np.ndarray) -> float:
     wins = float(returns[returns > 0].sum())
     losses = float(-returns[returns < 0].sum())
     if losses == 0:
-        return float("inf") if wins > 0 else 0.0
+        return 0.0 if wins == 0 else wins / 1e-12
     return wins / losses
 
 
