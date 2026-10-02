@@ -1,0 +1,50 @@
+name: v59 stage3 execution economics
+
+on:
+  push:
+    branches:
+      - research/v59-stage3-execution-economics-20261002
+    paths:
+      - 'research_bot/v59/**'
+      - 'tests/v59/**'
+      - 'configs/v59_stage3_execution.yaml'
+      - 'docs/v59/**'
+      - '.github/workflows/v59-stage3-execution-integrity.yml'
+  pull_request:
+    paths:
+      - 'research_bot/v59/**'
+      - 'tests/v59/**'
+      - 'configs/v59_stage3_execution.yaml'
+      - 'docs/v59/**'
+      - '.github/workflows/v59-stage3-execution-integrity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LIVE_EXECUTION: 'false'
+      PAPER_EXECUTION: 'false'
+      EXECUTION_MODE: RESEARCH_ONLY
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Compile V59 Stage 3
+        run: python -m compileall -q research_bot/v59 tests/v59
+      - name: V59 Stage 3 focused tests
+        run: python -m pytest -q tests/v59
+      - name: Deterministic execution economics replay twice
+        run: |
+          rm -rf /tmp/v59-exec-a /tmp/v59-exec-b
+          python -m research_bot.v59 execution-demo --output /tmp/v59-exec-a
+          python -m research_bot.v59 execution-demo --output /tmp/v59-exec-b
+          diff -r /tmp/v59-exec-a /tmp/v59-exec-b
+      - name: Full repository regression suite
+        run: python -m pytest -q

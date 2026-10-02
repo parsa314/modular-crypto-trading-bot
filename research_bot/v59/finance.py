@@ -12,6 +12,7 @@ from .contracts import (
     PortfolioState,
     SignalCandidate,
 )
+from .execution import ExecutionCostEstimate
 
 
 def historical_cvar95(returns: tuple[float, ...]) -> float | None:
@@ -28,12 +29,15 @@ def financial_gate(
     economics: EconomicDecision,
     state: PortfolioState,
     config: V59Config,
+    execution_cost: ExecutionCostEstimate | None = None,
 ) -> FinancialDecision:
     if candidate.event_id != economics.event_id:
         raise ValueError("event identity mismatch between economics and finance")
     if state.timestamp != candidate.entry_time:
         raise ValueError("portfolio state must be stamped at exact candidate entry time")
     constitution = config.constitution
+    if execution_cost is not None and execution_cost.event_id != candidate.event_id:
+        raise ValueError("execution-cost event identity mismatch")
 
     def veto(reason: str, *, cvar: float | None = None, stop_risk: float = 0.0) -> FinancialDecision:
         return FinancialDecision(
@@ -51,6 +55,8 @@ def financial_gate(
 
     if economics.status is not GateStatus.PASS:
         return veto("UPSTREAM_GATE_NOT_PASSED")
+    if execution_cost is not None and not execution_cost.liquidity_pass:
+        return veto("INSUFFICIENT_LIQUIDITY_CAPACITY")
     if candidate.direction is Direction.SHORT:
         return veto("SHORT_NOT_AUTHORIZED_PHASE1")
     if state.drawdown >= constitution.drawdown_kill:
@@ -63,7 +69,10 @@ def financial_gate(
     entry = float(candidate.entry_price)
     stop = float(candidate.stop_price)
     stop_distance = abs(entry - stop) / entry
-    cost_fraction = float(config.round_trip_cost_bps) / 10_000.0
+    cost_bps = float(config.round_trip_cost_bps) if execution_cost is None else float(execution_cost.total_round_trip_bps)
+    if not math.isclose(float(economics.round_trip_cost_bps), cost_bps, abs_tol=1e-12):
+        raise ValueError("economic and financial execution-cost assumptions must match")
+    cost_fraction = cost_bps / 10_000.0
     effective_stop_risk = stop_distance + cost_fraction
     if effective_stop_risk <= 0:
         return veto("INVALID_STOP_RISK", cvar=cvar)
@@ -77,7 +86,8 @@ def financial_gate(
     cash_capacity = max(0.0, state.cash - constitution.min_cash_buffer * state.equity)
     turnover_capacity = constitution.max_turnover_per_step * state.equity
 
-    approved = min(requested_notional, asset_capacity, gross_capacity, cash_capacity, turnover_capacity)
+    liquidity_capacity = math.inf if execution_cost is None else float(execution_cost.max_fillable_notional)
+    approved = min(requested_notional, asset_capacity, gross_capacity, cash_capacity, turnover_capacity, liquidity_capacity)
     if approved <= 0:
         if cash_capacity <= 0:
             reason = "INSUFFICIENT_CASH_BUFFER"
@@ -85,8 +95,10 @@ def financial_gate(
             reason = "MAX_ASSET_WEIGHT"
         elif gross_capacity <= 0:
             reason = "MAX_GROSS_EXPOSURE"
-        else:
+        elif turnover_capacity <= 0:
             reason = "TURNOVER_LIMIT"
+        else:
+            reason = "INSUFFICIENT_LIQUIDITY_CAPACITY"
         return veto(reason, cvar=cvar, stop_risk=effective_stop_risk)
 
     projected_asset_weight = (current_asset + approved) / state.equity

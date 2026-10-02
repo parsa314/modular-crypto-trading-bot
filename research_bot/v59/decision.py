@@ -10,6 +10,15 @@ from .contracts import (
     SignalCandidate,
     UncertaintyAssessment,
 )
+from .execution import ExecutionCostEstimate
+
+
+def _effective_cost_bps(candidate: SignalCandidate, config: V59Config, execution_cost: ExecutionCostEstimate | None) -> float:
+    if execution_cost is None:
+        return float(config.round_trip_cost_bps)
+    if execution_cost.event_id != candidate.event_id:
+        raise ValueError("execution-cost event identity mismatch")
+    return float(execution_cost.total_round_trip_bps)
 
 
 def economic_gate(
@@ -17,39 +26,41 @@ def economic_gate(
     prediction: ModelPrediction,
     uncertainty: UncertaintyAssessment,
     config: V59Config,
+    execution_cost: ExecutionCostEstimate | None = None,
 ) -> EconomicDecision:
     if candidate.event_id != prediction.event_id or candidate.event_id != uncertainty.event_id:
         raise ValueError("event identity mismatch across strategy/model/uncertainty layers")
+    cost_bps = _effective_cost_bps(candidate, config, execution_cost)
     if prediction.available_at > candidate.decision_at:
         raise ValueError("prediction was not available at decision time")
     if config.require_calibration and not prediction.calibrated:
         return EconomicDecision(
             candidate.event_id, GateStatus.ABSTAIN, 0.0,
-            config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
+            cost_bps, 0.0, 0.0, 0.0, 0.0,
             "UNCALIBRATED_PREDICTION",
         )
     if candidate.regime_confidence < config.min_regime_confidence:
         return EconomicDecision(
             candidate.event_id, GateStatus.ABSTAIN, 0.0,
-            config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
+            cost_bps, 0.0, 0.0, 0.0, 0.0,
             "LOW_REGIME_CONFIDENCE",
         )
     if prediction.entropy > config.max_entropy:
         return EconomicDecision(
             candidate.event_id, GateStatus.ABSTAIN, 0.0,
-            config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
+            cost_bps, 0.0, 0.0, 0.0, 0.0,
             "HIGH_ENTROPY",
         )
     if prediction.shift_score > config.max_shift_score:
         return EconomicDecision(
             candidate.event_id, GateStatus.ABSTAIN, 0.0,
-            config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
+            cost_bps, 0.0, 0.0, 0.0, 0.0,
             "DISTRIBUTION_SHIFT",
         )
     if uncertainty.abstain or len(uncertainty.prediction_set) > config.conformal_max_set_size:
         return EconomicDecision(
             candidate.event_id, GateStatus.ABSTAIN, 0.0,
-            config.round_trip_cost_bps, 0.0, 0.0, 0.0, 0.0,
+            cost_bps, 0.0, 0.0, 0.0, 0.0,
             "CONFORMAL_UNCERTAINTY",
         )
 
@@ -59,7 +70,7 @@ def economic_gate(
     loss_fraction = abs(entry - float(candidate.stop_price)) / entry
     timeout_penalty = 0.25 * loss_fraction
     uncertainty_penalty = 0.05 * loss_fraction * float(prediction.entropy)
-    cost_fraction = float(config.round_trip_cost_bps) / 10_000.0
+    cost_fraction = cost_bps / 10_000.0
     utility = (
         p["TP"] * reward_fraction
         - p["SL"] * loss_fraction
@@ -74,7 +85,7 @@ def economic_gate(
         event_id=candidate.event_id,
         status=status,
         expected_utility=float(utility),
-        round_trip_cost_bps=float(config.round_trip_cost_bps),
+        round_trip_cost_bps=float(cost_bps),
         reward_fraction=float(reward_fraction),
         loss_fraction=float(loss_fraction),
         timeout_penalty_fraction=float(timeout_penalty),
