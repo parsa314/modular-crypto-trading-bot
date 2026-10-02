@@ -84,6 +84,7 @@ def test_invalid_or_untrusted_inputs_fail_closed(mutation):
     elif mutation == "duplicate_id":
         events.loc[1, "event_id"] = events.loc[0, "event_id"]
     elif mutation == "bad_clock":
+        events["decision_at"] = events["decision_at"].astype(object)
         events.loc[0, "decision_at"] = pd.Timestamp("2025-01-01")
     elif mutation == "future_label":
         events.loc[0, "label_available_at"] = events.loc[0, "decision_at"]
