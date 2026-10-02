@@ -69,7 +69,7 @@ def test_predictions_are_deterministic():
     assert first["attempted_folds_hash"] == second["attempted_folds_hash"]
 
 
-def test_cost_stress_never_increases_realized_return_for_same_prediction_path():
+def test_cost_stress_never_increases_coverage_for_same_prediction_path():
     result = run_tournament(tournament_fixture_events(), feature_columns=FEATURES)
     grouped = {}
     for row in result["trial_results"]:
@@ -77,8 +77,8 @@ def test_cost_stress_never_increases_realized_return_for_same_prediction_path():
         grouped.setdefault(key, []).append(row)
     for rows in grouped.values():
         rows = sorted(rows, key=lambda x: x["cost_bps"])
-        returns = [row["compounded_return"] for row in rows]
-        assert returns == sorted(returns, reverse=True)
+        coverage = [row["coverage"] for row in rows]
+        assert coverage == sorted(coverage, reverse=True)
 
 
 def test_missing_feature_and_bad_label_fail_closed():
@@ -114,7 +114,8 @@ def test_nonfixture_evidence_is_only_marked_for_separate_review_not_auto_promote
     cfg = TournamentConfig(evidence_class="REAL_OOS_DEVELOPMENT")
     result = run_tournament(tournament_fixture_events(), feature_columns=FEATURES, config=cfg)
     assert result["trial_results"]
-    assert any(row["promotable"] for row in result["trial_results"])
+    assert all(row["promotable"] is False for row in result["trial_results"])
+    assert any(row["promotion_review_eligible"] for row in result["trial_results"])
     assert all(
         row["reason"] in {
             "ELIGIBLE_FOR_SEPARATE_PROMOTION_REVIEW",
