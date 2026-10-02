@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+import numpy as np
+import pandas as pd
+
 from .hashing import canonical_json
 from .market_data import MarketDataRequest, ProviderOHLCVResult
 from .microstructure import OrderBookLevel, OrderBookSnapshot, PITMetric
@@ -130,3 +133,54 @@ class DeterministicDerivativeMetricProvider:
             raw_payload=canonical_json({"symbol": symbol, "metrics": [m.metric for m in metrics]}),
             provider_metadata={"availability_policy": "FIXED_FIXTURE"},
         )
+
+
+def tournament_fixture_events(rows_per_strategy: int = 720, seed: int = 59) -> pd.DataFrame:
+    """Deterministic event-classification fixture for V59 tournament plumbing.
+
+    It is engineering evidence only and must never be interpreted as alpha.
+    """
+    if not isinstance(rows_per_strategy, int) or rows_per_strategy < 500:
+        raise ValueError("rows_per_strategy must be >= 500")
+    rng = np.random.default_rng(seed)
+    start = pd.Timestamp("2025-01-01T00:00:00Z")
+    records = []
+    strategies = (
+        "C10_03_CLOUD_BREAK_FVG_CONTINUATION",
+        "FVG_ICT_TSI_MTF",
+    )
+    for s_index, strategy_id in enumerate(strategies):
+        latent = 0.0
+        for i in range(rows_per_strategy):
+            f_trend = float(rng.normal(0.0, 1.0))
+            f_vol = float(abs(rng.normal(0.8 + 0.1 * s_index, 0.35)))
+            f_structure = float(rng.normal(0.1 * s_index, 1.0))
+            latent = 0.75 * latent + 0.25 * f_trend + float(rng.normal(0, 0.25))
+            score = 0.85 * f_trend + 0.55 * f_structure - 0.35 * f_vol + 0.25 * latent
+            noise = float(rng.normal(0.0, 0.85))
+            z = score + noise
+            if z > 0.65:
+                label = "TP"
+            elif z < -0.55:
+                label = "SL"
+            else:
+                label = "TIMEOUT"
+            timestamp = start + pd.Timedelta(minutes=5 * i)
+            records.append(
+                {
+                    "event_id": stable_hash(
+                        {"strategy": strategy_id, "timestamp": timestamp.isoformat(), "fixture": True}
+                    ),
+                    "timestamp": timestamp,
+                    "strategy_id": strategy_id,
+                    "label": label,
+                    "reward_fraction": 0.015,
+                    "loss_fraction": 0.010,
+                    "timeout_loss_fraction": 0.0025,
+                    "f_trend": f_trend,
+                    "f_vol": f_vol,
+                    "f_structure": f_structure,
+                    "f_memory": latent,
+                }
+            )
+    return pd.DataFrame(records)
