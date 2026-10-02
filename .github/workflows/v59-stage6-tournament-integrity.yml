@@ -1,0 +1,50 @@
+name: v59 stage6 model strategy tournament
+
+on:
+  push:
+    branches:
+      - research/v59-stage6-model-strategy-tournament-20261002
+    paths:
+      - 'research_bot/v59/**'
+      - 'tests/v59/**'
+      - 'configs/v59_stage6_tournament.yaml'
+      - 'docs/v59/**'
+      - '.github/workflows/v59-stage6-tournament-integrity.yml'
+  pull_request:
+    paths:
+      - 'research_bot/v59/**'
+      - 'tests/v59/**'
+      - 'configs/v59_stage6_tournament.yaml'
+      - 'docs/v59/**'
+      - '.github/workflows/v59-stage6-tournament-integrity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LIVE_EXECUTION: 'false'
+      PAPER_EXECUTION: 'false'
+      EXECUTION_MODE: RESEARCH_ONLY
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Compile V59 Stage 6
+        run: python -m compileall -q research_bot/v59 tests/v59
+      - name: V59 Stage 6 focused tests
+        run: python -m pytest -q tests/v59
+      - name: Deterministic tournament replay twice
+        run: |
+          rm -rf /tmp/v59-tournament-a /tmp/v59-tournament-b
+          python -m research_bot.v59 tournament-demo --output /tmp/v59-tournament-a
+          python -m research_bot.v59 tournament-demo --output /tmp/v59-tournament-b
+          diff -r /tmp/v59-tournament-a /tmp/v59-tournament-b
+      - name: Full repository regression suite
+        run: python -m pytest -q
