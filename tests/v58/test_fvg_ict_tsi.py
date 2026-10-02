@@ -161,3 +161,55 @@ def test_combined_signal_registry_contains_ten_confluence_hypotheses_plus_suppli
     assert result["summary"]["financial_gate_required"] is True
     assert result["summary"]["paper_execution"] is False
     assert result["summary"]["live_execution"] is False
+
+
+def test_fvg_age_is_counted_in_htf_bars():
+    cfg = FVGICTTSIConfig(htf="1h", ltf="5min", max_fvg_age_htf_bars=2)
+    fvg = FVG(
+        1, "long", pd.Timestamp("2026-01-01T10:00:00Z"),
+        99.0, 100.0, 99.5, 1.0, 10, 1.0,
+    )
+    assert strategy.fvg_age_htf_bars(fvg, pd.Timestamp("2026-01-01T12:00:00Z"), cfg) == 2
+    assert strategy.fvg_age_htf_bars(fvg, pd.Timestamp("2026-01-01T13:00:00Z"), cfg) == 3
+
+
+def test_backtest_sizes_stop_risk_after_fees_and_slippage_and_respects_asset_cap(monkeypatch):
+    idx = pd.date_range("2026-01-01", periods=3, freq="5min", tz="UTC")
+    ltf = pd.DataFrame(
+        {
+            "open": [100.0, 100.0, 99.0],
+            "high": [100.1, 100.2, 99.5],
+            "low": [99.9, 98.5, 98.0],
+            "close": [100.0, 99.0, 98.5],
+            "volume": [100.0, 100.0, 100.0],
+            "atr": [1.0, 1.0, 1.0],
+        },
+        index=idx,
+    )
+    signal = pd.DataFrame(
+        [{
+            "signal_id": "s1",
+            "fvg_id": 1,
+            "direction": "long",
+            "signal_time": idx[1].isoformat(),
+            "entry_time": idx[1].isoformat(),
+            "stop_price": 99.0,
+        }]
+    )
+    monkeypatch.setattr(
+        strategy,
+        "scan_signals",
+        lambda *args, **kwargs: {
+            "ltf": ltf,
+            "signals": signal,
+            "fvgs": pd.DataFrame(),
+        },
+    )
+    cfg = FVGICTTSIConfig(htf="1h", ltf="5min")
+    out = strategy.backtest(raw_minutes(10), cfg, symbol="BTC/USDT")
+    assert len(out["trades"]) == 1
+    trade = out["trades"].iloc[0]
+    assert float(trade["stop_loss_budget_used"]) <= float(trade["risk_cash_budget"]) + 1e-9
+    assert float(trade["notional"]) <= cfg.initial_equity * cfg.max_asset_weight + 1e-9
+    assert float(trade["slippage_costs"]) > 0
+    assert float(trade["total_costs"]) > float(trade["fee_costs"])
