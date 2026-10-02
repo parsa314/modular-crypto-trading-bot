@@ -194,7 +194,7 @@ def fit_execution_calibration(
 
     mae = float(np.mean(abs_error))
     p90_under = float(np.quantile(underprediction, 0.90))
-    under_rate = float(np.mean(error > 0))
+    under_rate = float(np.mean(error > 1e-9))
     passed = (
         mae <= cfg.max_validation_mae_bps
         and p90_under <= cfg.max_p90_underprediction_bps
