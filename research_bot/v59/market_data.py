@@ -203,8 +203,12 @@ def normalize_and_audit(
     spacing_ns = int(delta.value)
     off_grid_count = 0
     if not frame.empty:
-        epoch_ns = frame["timestamp"].astype("int64")
-        off_grid_count = int((epoch_ns % spacing_ns != 0).sum())
+        # pandas 3 may store datetime64 columns at microsecond resolution;
+        # Timestamp.value is always nanoseconds and keeps this grid test stable.
+        off_grid_count = sum(
+            1 for stamp in frame["timestamp"]
+            if pd.Timestamp(stamp).value % spacing_ns != 0
+        )
         if off_grid_count:
             reasons.append("OFF_GRID_TIMESTAMPS")
 
