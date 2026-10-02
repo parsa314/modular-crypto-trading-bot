@@ -24,14 +24,14 @@ class EvidenceLedger:
             raise ValueError("record_type is required")
         if recorded_at.tzinfo is None or recorded_at.utcoffset() is None:
             raise ValueError("recorded_at must be timezone-aware")
-        normalized_payload = asdict(payload) if is_dataclass(payload) else payload
+        normalized_payload = asdict(payload) if is_dataclass(payload) else deepcopy(payload)
         previous_hash = self._records[-1]["record_hash"] if self._records else "GENESIS"
         envelope = {
             "sequence": len(self._records),
             "record_type": record_type,
             "recorded_at": recorded_at.astimezone(timezone.utc).isoformat(),
             "previous_hash": previous_hash,
-            "payload": normalized_payload,
+            "payload": deepcopy(normalized_payload),
         }
         envelope["record_hash"] = stable_hash(envelope)
         self._records.append(envelope)
@@ -39,7 +39,7 @@ class EvidenceLedger:
 
     @property
     def records(self) -> tuple[dict[str, Any], ...]:
-        return tuple(dict(row) for row in self._records)
+        return tuple(deepcopy(row) for row in self._records)
 
     @property
     def ledger_hash(self) -> str:
