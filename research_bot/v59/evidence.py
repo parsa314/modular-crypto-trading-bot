@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
-import json
 from pathlib import Path
 from typing import Any
 
@@ -12,8 +12,9 @@ from .hashing import canonical_json, stable_hash
 class EvidenceLedger:
     """Append-only decision ledger with chained hashes.
 
-    The class does not mutate previous records. Each record contains the hash of
-    its predecessor so accidental reordering or deletion is detectable.
+    Payloads are deep-copied at ingress and egress so callers cannot mutate the
+    internal chain through shared references. Existing evidence files are never
+    overwritten.
     """
 
     def __init__(self) -> None:
@@ -34,8 +35,8 @@ class EvidenceLedger:
             "payload": deepcopy(normalized_payload),
         }
         envelope["record_hash"] = stable_hash(envelope)
-        self._records.append(envelope)
-        return dict(envelope)
+        self._records.append(deepcopy(envelope))
+        return deepcopy(envelope)
 
     @property
     def records(self) -> tuple[dict[str, Any], ...]:
@@ -50,7 +51,7 @@ class EvidenceLedger:
         for index, row in enumerate(self._records):
             if row["sequence"] != index or row["previous_hash"] != previous:
                 return False
-            copy = dict(row)
+            copy = deepcopy(row)
             observed = copy.pop("record_hash")
             if stable_hash(copy) != observed:
                 return False
@@ -62,7 +63,7 @@ class EvidenceLedger:
             raise FileExistsError(f"refusing to overwrite evidence ledger: {path}")
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
-            "records": self._records,
+            "records": deepcopy(self._records),
             "ledger_hash": self.ledger_hash,
         }
         path.write_bytes(canonical_json(payload) + b"\n")
