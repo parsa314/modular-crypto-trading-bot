@@ -24,6 +24,7 @@ from .fixtures import (
     DeterministicOrderBookProvider,
     DeterministicDerivativeMetricProvider,
     fixture_request,
+    tournament_fixture_events,
 )
 from .execution import ExecutionAssumptions, LiquiditySnapshot, estimate_execution_cost
 from .execution_calibration import (
@@ -40,6 +41,7 @@ from .orchestrator import V59DecisionOrchestrator
 from .registry import ComponentRegistry
 from .source_registry import SourceRegistry
 from .think_tank import StageFinding, prioritize
+from .tournament import TournamentConfig, run_tournament
 
 
 def _iso_utc(value: str) -> datetime:
@@ -439,6 +441,82 @@ def _calibrate_csv(args: argparse.Namespace) -> dict:
     return payload
 
 
+
+def _tournament_demo(output: Path) -> dict:
+    store = ImmutableArtifactStore(output)
+    events = tournament_fixture_events()
+    features = ("f_trend", "f_vol", "f_structure", "f_memory")
+    registry = run_tournament(
+        events,
+        feature_columns=features,
+        config=TournamentConfig(evidence_class="ENGINEERING_FIXTURE"),
+    )
+    review = prioritize(
+        (
+            StageFinding(
+                "V59_NATIVE_STRATEGY_ENGINE",
+                "BLOCKER",
+                "Tournament infrastructure is operational, but clean V59-native Ichimoku/ICT/SMC/Al-Brooks/FVG signal generation must replace compatibility dependence before prospective paper runtime.",
+            ),
+            StageFinding(
+                "REAL_MULTI_ASSET_EVENT_DATASET",
+                "HIGH",
+                "The fixture validates tournament mechanics only; real multi-asset point-in-time events are required for empirical model comparison.",
+            ),
+            StageFinding(
+                "PROSPECTIVE_PAPER_RUNTIME",
+                "MEDIUM",
+                "Paper runtime remains blocked until native signal generation and real OOS tournament evidence exist.",
+            ),
+        )
+    )
+    store.write_json("stage6_tournament_registry.json", registry)
+    store.write_json("stage6_think_tank.json", review)
+    summary = {
+        "classification": "V59_STAGE6_MODEL_STRATEGY_TOURNAMENT",
+        "registry_hash": registry["registry_hash"],
+        "trial_count": len(registry["trial_results"]),
+        "attempted_fold_count": len(registry["attempted_folds"]),
+        "strategy_count": len(registry["strategy_ids"]),
+        "model_count": len(registry["config"]["models"]),
+        "promoted_count": sum(1 for row in registry["trial_results"] if row["promotable"]),
+        "think_tank_next_priority": review["next_priority"],
+        "fixture_only": True,
+        "paper_execution": False,
+        "live_execution": False,
+    }
+    store.write_json("stage6_summary.json", summary)
+    return summary
+
+
+def _tournament_csv(args: argparse.Namespace) -> dict:
+    events = pd.read_csv(args.csv)
+    features = tuple(value.strip() for value in args.features.split(",") if value.strip())
+    if not features:
+        raise ValueError("--features must contain at least one feature name")
+    registry = run_tournament(
+        events,
+        feature_columns=features,
+        config=TournamentConfig(evidence_class=args.evidence_class),
+    )
+    store = ImmutableArtifactStore(args.output)
+    store.write_json(f"{args.run_id}/tournament_registry.json", registry)
+    summary = {
+        "classification": "V59_TOURNAMENT_RUN",
+        "run_id": args.run_id,
+        "registry_hash": registry["registry_hash"],
+        "trial_count": len(registry["trial_results"]),
+        "promotion_review_eligible_count": sum(
+            1 for row in registry["trial_results"] if row["promotion_review_eligible"]
+        ),
+        "promoted_count": 0,
+        "paper_execution": False,
+        "live_execution": False,
+    }
+    store.write_json(f"{args.run_id}/tournament_summary.json", summary)
+    return summary
+
+
 def _public_ohlcv(args: argparse.Namespace) -> dict:
     from .adapters.ccxt_public import CCXTPublicOHLCVProvider
 
@@ -490,6 +568,16 @@ def main() -> int:
 
     calibration = sub.add_parser("calibration-demo", help="run deterministic V59 stage-5 execution calibration")
     calibration.add_argument("--output", type=Path, required=True)
+
+    tournament = sub.add_parser("tournament-demo", help="run deterministic V59 stage-6 model/strategy tournament")
+    tournament.add_argument("--output", type=Path, required=True)
+
+    tournament_csv = sub.add_parser("run-tournament", help="run V59 tournament from an event CSV")
+    tournament_csv.add_argument("--csv", type=Path, required=True)
+    tournament_csv.add_argument("--features", required=True, help="comma-separated feature columns")
+    tournament_csv.add_argument("--evidence-class", default="REAL_OOS_DEVELOPMENT")
+    tournament_csv.add_argument("--run-id", required=True)
+    tournament_csv.add_argument("--output", type=Path, required=True)
 
     calibrate = sub.add_parser("calibrate-execution", help="fit execution calibration from a prospective CSV")
     calibrate.add_argument("--csv", type=Path, required=True)
@@ -549,6 +637,28 @@ def main() -> int:
                 f"cost_bps={summary['cost_estimate']['total_round_trip_bps']:.6f} "
                 f"action={summary['final_decision']['action']} "
                 f"ledger={summary['ledger_hash']}"
+            )
+            return 0
+        if args.command == "tournament-demo":
+            summary = _tournament_demo(args.output)
+            print(
+                "V59_STAGE6_MODEL_STRATEGY_TOURNAMENT "
+                f"trials={summary['trial_count']} "
+                f"strategies={summary['strategy_count']} "
+                f"models={summary['model_count']} "
+                f"promoted={summary['promoted_count']} "
+                f"registry={summary['registry_hash']} "
+                f"next={summary['think_tank_next_priority']}"
+            )
+            return 0
+        if args.command == "run-tournament":
+            summary = _tournament_csv(args)
+            print(
+                "V59_TOURNAMENT_RUN "
+                f"trials={summary['trial_count']} "
+                f"review_eligible={summary['promotion_review_eligible_count']} "
+                f"promoted=0 "
+                f"registry={summary['registry_hash']}"
             )
             return 0
         if args.command == "calibration-demo":
