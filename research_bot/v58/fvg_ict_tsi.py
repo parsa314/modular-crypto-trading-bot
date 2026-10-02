@@ -130,6 +130,8 @@ class FVGSignal:
     fee_bps_per_side: float
     slippage_bps_per_side: float
     risk_per_trade: float
+    ai_gate_required: bool
+    economic_gate_required: bool
     financial_gate_required: bool
     portfolio_execution_eligible: bool
     execution_note: str
@@ -465,6 +467,8 @@ def scan_signals(
                     fee_bps_per_side=config.fee_bps_per_side,
                     slippage_bps_per_side=config.slippage_bps_per_side,
                     risk_per_trade=config.risk_per_trade,
+                    ai_gate_required=True,
+                    economic_gate_required=True,
                     financial_gate_required=True,
                     portfolio_execution_eligible=long_eligible,
                     execution_note=(
