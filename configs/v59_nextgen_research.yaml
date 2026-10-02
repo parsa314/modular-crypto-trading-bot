@@ -1,0 +1,164 @@
+version: V59
+mode: STRICT_SCIENTIFIC_RESEARCH
+
+execution:
+  paper: false
+  live: false
+  llm_direct_order_authorized: false
+  rl_direct_signal_authorized: false
+
+strategy_families:
+  preserve:
+    - S6
+    - ICHIMOKU
+    - ICT_SMC
+    - AL_BROOKS
+    - FOUR_FRAMEWORK_CONFLUENCE
+    - C10_01_TO_C10_10
+    - FVG_ICT_TSI_MTF
+
+model_tiers:
+  baseline:
+    enabled: true
+    candidates:
+      - LOGISTIC
+      - HIST_GRADIENT_BOOSTING
+      - XGBOOST
+      - LIGHTGBM
+  temporal_supervised:
+    enabled: false
+    promotion_required: true
+    candidates:
+      - DIFF_LSTM
+      - GRU
+      - TCN
+      - CNN_LSTM
+  attention_and_foundation:
+    enabled: false
+    promotion_required: true
+    candidates:
+      - PATCHTST
+      - ITRANSFORMER
+      - TIMESFM
+      - MOIRAI
+      - CHRONOS
+  multimodal:
+    enabled: false
+    promotion_required: true
+    evidence_pit_required: true
+    modalities:
+      - TECHNICAL
+      - MARKET_STRUCTURE
+      - ONCHAIN
+      - WHALES
+      - FUNDAMENTAL
+      - MACRO
+      - NEWS
+      - SENTIMENT
+
+uncertainty:
+  calibration_required: true
+  conformal_candidate: true
+  selective_prediction: true
+  shift_detection: true
+  allow_no_trade_uncertain: true
+
+agentic_intelligence:
+  enabled_for_research: true
+  allowed_roles:
+    - TECHNICAL_RESEARCH
+    - ONCHAIN_WHALE_RESEARCH
+    - FUNDAMENTAL_RESEARCH
+    - MACRO_NEWS_RESEARCH
+    - RISK_REVIEW
+    - MODEL_RISK_AUDIT
+    - REPRODUCIBILITY_AUDIT
+  direct_order_authorized: false
+  source_grounding_required: true
+  point_in_time_required: true
+
+financial_constitution:
+  risk_per_trade_max: 0.0025
+  max_asset_weight: 0.35
+  max_gross_exposure: 0.70
+  drawdown_kill_max: 0.05
+  max_cvar95: 0.035
+  shared_capital: true
+  independent_veto: true
+  ai_may_relax_limits: false
+  rl_may_relax_limits: false
+
+execution_research:
+  market_impact: candidate
+  stochastic_slippage: candidate
+  spread: candidate
+  latency: candidate
+  partial_fills: candidate
+  funding_and_borrow: candidate
+  lot_size_constraints: candidate
+
+rl:
+  enabled: false
+  activation_gate: AFTER_BASELINE_AND_HOLDOUT_EVIDENCE
+  scope:
+    - POSITION_SIZING
+    - PORTFOLIO_ALLOCATION
+    - REBALANCING
+    - EXECUTION_TIMING
+  candidates:
+    - RECURRENT_SAC
+    - PPO
+    - TD3
+    - CONSTRAINED_RL
+    - OFFLINE_RL
+    - IMITATION_ASSISTED_RL
+  min_training_seeds: 10
+  best_seed_reporting_forbidden: true
+
+evaluation:
+  expanding_walk_forward: true
+  purge_embargo: true
+  independent_holdout_required: true
+  same_test_retuning_forbidden: true
+  cost_scenarios_bps:
+    - 0
+    - 24
+    - 36
+    - 50
+  multi_asset_required: true
+  regime_reporting_required: true
+  calibration_metrics:
+    - BRIER
+    - LOGLOSS
+    - RELIABILITY
+  economic_metrics:
+    - NET_RETURN
+    - SHARPE
+    - SORTINO
+    - MAX_DRAWDOWN
+    - CALMAR
+    - PROFIT_FACTOR
+    - EXPECTANCY
+    - TURNOVER
+    - CVAR
+  selective_metrics:
+    - COVERAGE
+    - ABSTENTION_RATE
+    - RETURN_AT_COVERAGE
+    - ERROR_AT_COVERAGE
+  multiplicity_controls:
+    - PSR
+    - DSR
+    - PBO
+    - BLOCK_BOOTSTRAP
+
+implementation_priority:
+  - CONFORMAL_SELECTIVE_UNCERTAINTY
+  - MODEL_STRATEGY_TOURNAMENT_REGISTRY
+  - MULTI_SEED_EVALUATION_LEDGER
+  - DIFF_LSTM_TCN_BASELINES
+  - PATCHTST_ITRANSFORMER
+  - TSFM_ADAPTERS
+  - MULTIMODAL_PIT_FUSION
+  - REALISTIC_EXECUTION_SIMULATOR
+  - RECURRENT_RL_ALLOCATOR
