@@ -15,6 +15,7 @@ from .decision import economic_gate
 from .evidence import EvidenceLedger
 from .finance import financial_gate
 from .hashing import stable_hash
+from .execution import ExecutionCostEstimate
 
 
 class V59DecisionOrchestrator:
@@ -34,6 +35,7 @@ class V59DecisionOrchestrator:
         prediction: ModelPrediction,
         uncertainty: UncertaintyAssessment,
         portfolio: PortfolioState,
+        execution_cost: ExecutionCostEstimate | None = None,
     ) -> FinalResearchDecision:
         if candidate.event_id in self._seen_events:
             raise RuntimeError("duplicate event_id cannot be evaluated twice")
@@ -54,15 +56,27 @@ class V59DecisionOrchestrator:
             payload=uncertainty,
             recorded_at=candidate.decision_at,
         )
+        if execution_cost is not None:
+            if execution_cost.event_id != candidate.event_id:
+                raise ValueError("execution-cost event identity mismatch")
+            self.ledger.append(
+                record_type="EXECUTION_COST_ESTIMATE",
+                payload=execution_cost,
+                recorded_at=candidate.decision_at,
+            )
 
-        economics = economic_gate(candidate, prediction, uncertainty, self.config)
+        economics = economic_gate(
+            candidate, prediction, uncertainty, self.config, execution_cost=execution_cost
+        )
         self.ledger.append(
             record_type="ECONOMIC_DECISION",
             payload=economics,
             recorded_at=candidate.decision_at,
         )
 
-        finance = financial_gate(candidate, economics, portfolio, self.config)
+        finance = financial_gate(
+            candidate, economics, portfolio, self.config, execution_cost=execution_cost
+        )
         self.ledger.append(
             record_type="FINANCIAL_DECISION",
             payload=finance,
@@ -89,6 +103,7 @@ class V59DecisionOrchestrator:
                 "ledger_hash_before_final": self.ledger.ledger_hash,
                 "action": action,
                 "approved_notional": approved,
+                "execution_cost_hash": None if execution_cost is None else stable_hash(execution_cost),
             }
         )
         final = FinalResearchDecision(
