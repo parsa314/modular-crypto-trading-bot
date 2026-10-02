@@ -20,6 +20,7 @@ from .contracts import (
 )
 from .data_plane import ingest_ohlcv
 from .fixtures import DeterministicFixtureProvider, fixture_request
+from .execution import ExecutionAssumptions, LiquiditySnapshot, estimate_execution_cost
 from .hashing import canonical_json, stable_hash
 from .market_data import MarketDataRequest, normalize_and_audit
 from .multitimeframe import build_timeframe_views
@@ -198,6 +199,102 @@ def _data_fixture_demo(output: Path) -> dict:
     return summary
 
 
+
+def _execution_demo(output: Path) -> dict:
+    output.mkdir(parents=True, exist_ok=True)
+    decision_at = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)
+    entry_at = decision_at + timedelta(minutes=5)
+    candidate = SignalCandidate(
+        event_id=stable_hash({"demo": "v59-stage3"}),
+        strategy_id="FVG_ICT_TSI_MTF",
+        strategy_family="FVG_ICT_TSI_MTF",
+        symbol="BTC/USDT",
+        venue="synthetic",
+        direction=Direction.LONG,
+        decision_at=decision_at,
+        entry_time=entry_at,
+        entry_price=100.0,
+        stop_price=99.0,
+        target_price=102.0,
+        horizon_bars=12,
+        regime=Regime.TREND_UP,
+        regime_confidence=0.85,
+        feature_snapshot_id=stable_hash({"feature": "stage3"}),
+        data_version=stable_hash({"data": "stage3"}),
+        strategy_version="V59_STAGE3",
+        source_hash=stable_hash({"source": "stage3-fixture"}),
+        confirmations=("FVG", "TSI", "STRUCTURE_BREAK"),
+    )
+    prediction = ModelPrediction(
+        event_id=candidate.event_id,
+        model_id="LOGISTIC",
+        model_version="V59_STAGE3_BASELINE",
+        available_at=decision_at,
+        probabilities={"TP": 0.70, "SL": 0.20, "TIMEOUT": 0.10},
+        calibrated=True,
+        calibration_id=stable_hash({"calibration": "stage3"}),
+        entropy=0.60,
+        shift_score=1.0,
+    )
+    uncertainty = UncertaintyAssessment(
+        event_id=candidate.event_id,
+        prediction_set=("TP",),
+        conformity_score=0.90,
+        empirical_coverage=0.90,
+        abstain=False,
+        reason="STAGE3_FIXTURE_CONFIDENT",
+    )
+    portfolio = PortfolioState(
+        timestamp=entry_at,
+        equity=10_000.0,
+        cash=10_000.0,
+        peak_equity=10_000.0,
+        gross_exposure=0.0,
+        asset_exposure={},
+        recent_returns=(),
+    )
+    liquidity = LiquiditySnapshot(
+        symbol="BTC/USDT",
+        observed_at=decision_at,
+        bid=99.99,
+        ask=100.01,
+        depth_notional_10bps=100_000.0,
+        source="stage3-fixture-orderbook",
+        source_hash=stable_hash({"book": "stage3"}),
+    )
+    config = V59Config()
+    cost = estimate_execution_cost(
+        candidate=candidate,
+        portfolio=portfolio,
+        liquidity=liquidity,
+        config=config,
+        assumptions=ExecutionAssumptions(),
+    )
+    engine = V59DecisionOrchestrator(config)
+    final = engine.evaluate(
+        candidate=candidate,
+        prediction=prediction,
+        uncertainty=uncertainty,
+        portfolio=portfolio,
+        execution_cost=cost,
+    )
+    engine.ledger.write_immutable(output / "execution_decision_ledger.json")
+    summary = {
+        "classification": "V59_STAGE3_EXECUTION_ECONOMICS",
+        "cost_estimate": asdict(cost),
+        "final_decision": {**asdict(final), "status": final.status.value},
+        "ledger_hash": engine.ledger.ledger_hash,
+        "ledger_verified": engine.ledger.verify(),
+        "paper_execution": False,
+        "live_execution": False,
+    }
+    (output / "stage3_summary.json").write_text(
+        json.dumps(summary, sort_keys=True, indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    return summary
+
+
 def _public_ohlcv(args: argparse.Namespace) -> dict:
     from .adapters.ccxt_public import CCXTPublicOHLCVProvider
 
@@ -241,6 +338,9 @@ def main() -> int:
     fixture = sub.add_parser("data-fixture-demo", help="run deterministic V59 stage-2 market-data pipeline")
     fixture.add_argument("--output", type=Path, required=True)
 
+    execution = sub.add_parser("execution-demo", help="run deterministic V59 stage-3 execution economics")
+    execution.add_argument("--output", type=Path, required=True)
+
     public = sub.add_parser("public-ohlcv", help="fetch and freeze credential-free real public spot OHLCV")
     public.add_argument("--exchange", required=True)
     public.add_argument("--symbol", default="BTC/USDT")
@@ -273,6 +373,15 @@ def main() -> int:
                 f"rows={summary['rows']} "
                 f"dataset={summary['dataset_hash']} "
                 f"next={summary['think_tank_next_priority']}"
+            )
+            return 0
+        if args.command == "execution-demo":
+            summary = _execution_demo(args.output)
+            print(
+                "V59_STAGE3_EXECUTION_ECONOMICS "
+                f"cost_bps={summary['cost_estimate']['total_round_trip_bps']:.6f} "
+                f"action={summary['final_decision']['action']} "
+                f"ledger={summary['ledger_hash']}"
             )
             return 0
         if args.command == "public-ohlcv":
