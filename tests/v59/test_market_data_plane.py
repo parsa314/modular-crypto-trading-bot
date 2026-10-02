@@ -89,7 +89,7 @@ def test_provider_identity_cannot_be_relabelled():
 
 def test_only_closed_bars_are_admitted():
     req = request(
-        until=START + timedelta(minutes=7),
+        until=START + timedelta(minutes=5, seconds=30),
         as_of=START + timedelta(minutes=5, seconds=30),
     )
     provider = FixtureProvider(data=rows(7))
