@@ -99,3 +99,69 @@ def metric_feature_snapshot(metrics: list[PITMetric], *, decision_at) -> dict[st
         }
     result["feature_snapshot_hash"] = stable_hash(result)
     return result
+
+
+@dataclass(frozen=True)
+class MetricProviderResult:
+    provider_id: str
+    metrics: tuple[PITMetric, ...]
+    raw_payload: bytes
+    provider_metadata: dict[str, Any]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.provider_id, str) or not self.provider_id.strip():
+            raise ValueError("provider_id is required")
+        if not self.metrics:
+            raise ValueError("metrics are required")
+        if not isinstance(self.raw_payload, bytes) or not self.raw_payload:
+            raise ValueError("raw_payload evidence is required")
+
+
+class ReadOnlyMetricProvider(Protocol):
+    provider_id: str
+
+    def fetch_metrics(self, *, symbol: str) -> MetricProviderResult:
+        ...
+
+
+def ingest_metrics(
+    *,
+    provider: ReadOnlyMetricProvider,
+    symbol: str,
+    store: ImmutableArtifactStore,
+    run_id: str,
+) -> dict[str, Any]:
+    result = provider.fetch_metrics(symbol=symbol)
+    raw_ref = store.write_bytes(f"{run_id}/raw/metric_payload.bin", result.raw_payload)
+    metrics = []
+    for metric in result.metrics:
+        if symbol.replace("/", "").upper() not in metric.entity.replace("/", "").upper():
+            raise ValueError("metric provider entity relabeling is forbidden")
+        metrics.append(
+            {
+                **asdict(metric),
+                "effective_at": metric.effective_at.astimezone(timezone.utc).isoformat(),
+                "available_at": metric.available_at.astimezone(timezone.utc).isoformat(),
+                "observed_at": metric.observed_at.astimezone(timezone.utc).isoformat(),
+                "metric_hash": metric.metric_hash,
+            }
+        )
+    manifest = {
+        "classification": "V59_PROSPECTIVE_DERIVATIVES_EVIDENCE",
+        "run_id": run_id,
+        "provider_id": result.provider_id,
+        "symbol": symbol,
+        "metrics": metrics,
+        "provider_metadata": result.provider_metadata,
+        "raw_artifact": asdict(raw_ref),
+        "paper_execution": False,
+        "live_execution": False,
+    }
+    manifest_ref = store.write_json(f"{run_id}/metric_manifest.json", manifest)
+    return {
+        "run_id": run_id,
+        "metric_count": len(metrics),
+        "raw_sha256": raw_ref.sha256,
+        "manifest_sha256": manifest_ref.sha256,
+        "bundle_hash": bundle_hash([raw_ref, manifest_ref]),
+    }
