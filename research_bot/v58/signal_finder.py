@@ -120,6 +120,8 @@ def _confluence_signals(
                     "confirmation_mode": "FOUR_FRAMEWORK_RULE",
                     "stop_mode": "COMMON_V58_BARRIER",
                     "confirmations": list(hit.states),
+                    "ai_gate_required": True,
+                    "economic_gate_required": True,
                     "financial_gate_required": True,
                     "portfolio_execution_eligible": True,
                     "execution_note": "ELIGIBLE_FOR_V58_SPOT_FINANCIAL_GATE",
