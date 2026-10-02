@@ -417,6 +417,8 @@ def scan_signals(
             ):
                 continue
             target = target_price(reference_entry, stop, fvg.direction, config.reward_risk)
+            if not math.isfinite(target) or target <= 0:
+                continue
             signal_id = stable_hash(
                 {
                     "family": "FVG_ICT_TSI_MTF",
