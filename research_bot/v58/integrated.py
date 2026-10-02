@@ -20,6 +20,7 @@ from .pipeline import run_synthetic_engineering_pipeline, pipeline_result_files,
 from .learning import LearningConfig, run_synthetic_walk_forward
 from .portfolio import PortfolioConfig, simulate_synthetic_portfolio
 from .finance_ai import coordinate_finance_ai_handoff
+from .confluence10 import registry as confluence10_registry
 
 
 FEATURE_NAMES = (
@@ -78,6 +79,7 @@ def build_synthetic_event_dataset(bars: dict[str, pd.DataFrame]) -> tuple[pd.Dat
             snapshot = dict(event.feature_values)
             record = {
                 "event_id": row["event_id"], "venue": "synthetic", "symbol": symbol,
+                "strategy_id": row["setup_subtype"], "strategy_arm": row["strategy_arm"],
                 "decision_at": row["event_timestamp"], "label_available_at": row["resolved_at"],
                 "label": row["outcome"],
                 **{column: snapshot[name] for name, column in zip(FEATURE_NAMES, FEATURE_COLUMNS)},
@@ -191,6 +193,7 @@ def run_synthetic_ai_demo(
 
     files["learning.json"] = json_bytes(learning)
     files["event_dataset.csv"] = data.to_csv(index=False).encode("utf-8")
+    files["confluence10_registry.json"] = json_bytes(confluence10_registry())
     source_hashes = {result.metadata["source_code_sha256"] for result in pipelines.values()}
     if len(source_hashes) != 1:
         raise RuntimeError("source changed during dataset construction")
@@ -227,6 +230,8 @@ def run_synthetic_ai_demo(
         "seed": seed, "bars_per_asset": bars_per_asset, "symbols": list(symbols),
         "learning_event_count": len(data), "excluded_terminal_events": data.attrs["excluded_terminal_events"],
         "class_counts": {str(label): int(count) for label, count in data.label.value_counts().items()},
+        "strategy_event_counts": {str(name): int(count) for name, count in data.strategy_id.value_counts().items()},
+        "confluence10_strategy_ids": [row["strategy_id"] for row in confluence10_registry()],
         "fold_count": learning["fold_count"], "test_event_count": len(learning["predictions"]),
         "test_start": first_test.isoformat(), "source_code_sha256": next(iter(source_hashes)),
         "dataset_sha256": sha256(files["event_dataset.csv"]).hexdigest(),
