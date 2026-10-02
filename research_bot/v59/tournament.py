@@ -97,6 +97,7 @@ class TrialResult:
     profit_factor: float
     admitted_events: int
     evidence_class: str
+    promotion_review_eligible: bool
     promotable: bool
     reason: str
     prediction_hash: str
@@ -404,7 +405,12 @@ def run_tournament(
                     }
                 )
                 enough = len(predictions) >= cfg.min_test_events_per_trial
-                promotable = bool(enough and cfg.evidence_class != "ENGINEERING_FIXTURE")
+                promotion_review_eligible = bool(
+                    enough and cfg.evidence_class != "ENGINEERING_FIXTURE"
+                )
+                # A tournament result never promotes itself. Promotion requires a
+                # separate review/holdout artifact outside this function.
+                promotable = False
                 reason = (
                     "ENGINEERING_FIXTURE_NOT_PROMOTABLE"
                     if cfg.evidence_class == "ENGINEERING_FIXTURE"
@@ -433,6 +439,7 @@ def run_tournament(
                     profit_factor=_profit_factor(realized),
                     admitted_events=int(admitted.sum()),
                     evidence_class=cfg.evidence_class,
+                    promotion_review_eligible=promotion_review_eligible,
                     promotable=promotable,
                     reason=reason,
                     prediction_hash=prediction_hash,
