@@ -135,12 +135,12 @@ def test_next_bar_open_no_lookahead_fvg_is_consumed_once(monkeypatch):
 def test_bearish_fvg_is_detected_but_not_authorized_by_current_spot_portfolio(monkeypatch):
     raw = raw_minutes(500)
     cfg = FVGICTTSIConfig(htf="1h", ltf="5min")
-    fake = FVG(8, "short", pd.Timestamp("2026-01-01T02:00:00Z"), 50.0, 200.0, 150.0, 1.0, 1, 1.2)
+    fake = FVG(8, "short", pd.Timestamp("2026-01-01T02:00:00Z"), 99.0, 101.0, 100.0, 1.0, 1, 1.2)
     monkeypatch.setattr(strategy, "detect_fvgs", lambda *_: [fake])
     monkeypatch.setattr(strategy, "midpoint_rejection", lambda *_: True)
     monkeypatch.setattr(strategy, "tsi_cross", lambda *_: True)
     monkeypatch.setattr(strategy, "structure_break", lambda *_: False)
-    monkeypatch.setattr(strategy, "stop_price", lambda *_: 200.0)
+    monkeypatch.setattr(strategy, "stop_price", lambda *_: 101.5)
     out = strategy.scan_signals(raw, cfg, symbol="BTC/USDT")
     assert len(out["signals"]) == 1
     row = out["signals"].iloc[0]
