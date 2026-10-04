@@ -3,7 +3,7 @@
 **Evidence-driven MSc research platform for an AI cryptocurrency trading bot using financial machine learning, deep learning, portfolio risk management and reproducible out-of-sample validation.**
 
 > **Scientific contract:** Evidence Before Opinion  
-> **Execution status:** `RESEARCH_ONLY / PAPER_OFF / LIVE_OFF`  
+> **Canonical research deployment:** `RESEARCH_ONLY / PAPER_OFF / LIVE_OFF`\
 > **Latest completed scientific result:** `v0.50 — V50_NONOVERLAP_FAILURE_SUPPORTED`  
 > **Active prospective hypothesis:** `v0.51 — overlap-conflict arbitration`  
 > **Current v0.51 state:** `BLOCKED / SCIENTIFIC_DECISION_DEFERRED` — canonical prospective evidence has not yet been collected.  
@@ -132,6 +132,16 @@ execution permissions.
 ```bash
 python -m research_bot.ensemble_rl --synthetic-bars 800 --initial-train-bars 300 --test-bars 100 --folds 3 --timesteps 128 --seeds 42 --output artifacts/ensemble-smoke
 ```
+
+An independently invoked spot runner supports CoinEx, Binance and OKX with
+explicit `dry-run`, `testnet` and `live` modes. Its default previews orders using
+public data; private execution requires a matching frozen model, a dedicated
+account and explicit capital/loss limits. It records orders before submission,
+reconciles uncertain outcomes and persists risk stops. See the
+[Persian live execution guide](docs/LIVE_EXECUTION_FA.md) before invoking it.
+This operator capability was requested by the owner on 2026-10-04; no real order
+or deployment was performed while adding it, and the canonical research service
+and scientific promotion status retain their existing controls.
 
 ## Reproducibility rule
 
