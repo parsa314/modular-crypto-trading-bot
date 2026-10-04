@@ -19,3 +19,13 @@ build/
 dist/
 *.egg-info/
 .DS_Store
+
+# Operator execution state and local risk configuration.
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+live-config.json
+LIVE_STOP

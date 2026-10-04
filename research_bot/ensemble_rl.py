@@ -160,7 +160,8 @@ def _source_record():
 
 
 def run_experiment(frame, output, *, data_source, synthetic=False, walk_forward=None,
-                   env_config=None, timesteps=50000, seeds=(42, 43, 44), torch_threads=1):
+                   env_config=None, timesteps=50000, seeds=(42, 43, 44), torch_threads=1,
+                   market_identity=None):
     """Fixed PPO configuration across folds/seeds; no test-based model selection."""
     from .ensemble_agent import create_agent
     from .ensemble_env import EnsembleTradingEnv, TradingEnvConfig
@@ -188,12 +189,21 @@ def run_experiment(frame, output, *, data_source, synthetic=False, walk_forward=
         raise ValueError("initial training window must cover lookback and CVaR history")
     delta = pd.to_datetime(usable.timestamp.iloc[1]) - pd.to_datetime(usable.timestamp.iloc[0])
     periods = 365.25 * 86400 / delta.total_seconds()
+    if market_identity is not None:
+        if not isinstance(market_identity, dict) or set(market_identity) != {"exchange_id", "symbol", "timeframe"}:
+            raise ValueError("market_identity requires exchange_id, symbol and timeframe")
+        if any(not isinstance(v, str) or not v.strip() for v in market_identity.values()):
+            raise ValueError("market identity values must be nonempty strings")
+        from .data import _timeframe_to_milliseconds
+        if _timeframe_to_milliseconds(market_identity["timeframe"]) != delta.total_seconds() * 1000:
+            raise ValueError("market timeframe does not match dataset cadence")
     destination = Path(output)
     destination.mkdir(parents=True, exist_ok=False)
     manifest = {
         "status": "STARTED", "evidence_state": "ENGINEERING_SMOKE" if synthetic else "UNVALIDATED_CHALLENGER",
         "scientific_decision": "NOT_EVALUATED", "paper_execution": False, "live_execution": False,
         "data_source": data_source, "synthetic": synthetic, "dataset_sha256": dataframe_fingerprint(featured[["timestamp", "open", "high", "low", "close", "volume"]]),
+        "market_identity": market_identity,
         "input_bars": len(frame), "warmup_bars": first, "usable_bars": len(usable),
         "bar_seconds": delta.total_seconds(), "periods_per_year": periods,
         "feature_columns": cols, "walk_forward": asdict(wf), "environment": asdict(cfg),
@@ -259,6 +269,9 @@ def main(argv=None):
     source.add_argument("--csv", type=Path, help="one regular closed-bar OHLCV series")
     source.add_argument("--synthetic-bars", type=int, help="engineering smoke data only")
     parser.add_argument("--data-source", help="venue/symbol/timeframe/provenance for CSV input")
+    parser.add_argument("--market-exchange", help="structured identity for a model used by the live runner")
+    parser.add_argument("--market-symbol", help="structured training symbol, e.g. BTC/USDT")
+    parser.add_argument("--market-timeframe", help="structured training timeframe, e.g. 4h")
     parser.add_argument("--output", type=Path, required=True, help="new artifact directory; existing output is refused")
     parser.add_argument("--initial-train-bars", type=int, default=600)
     parser.add_argument("--test-bars", type=int, default=200)
@@ -276,6 +289,10 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.csv and not args.data_source:
         parser.error("--data-source is required for CSV input")
+    identities = (args.market_exchange, args.market_symbol, args.market_timeframe)
+    if any(identities) and not all(identities):
+        parser.error("provide all three --market-exchange/symbol/timeframe fields together")
+    market_identity = dict(zip(("exchange_id", "symbol", "timeframe"), identities)) if all(identities) else None
     from .ensemble_env import TradingEnvConfig
     try:
         frame = pd.read_csv(args.csv) if args.csv else synthetic_ohlcv(args.synthetic_bars)
@@ -284,7 +301,8 @@ def main(argv=None):
             max_drawdown=args.max_drawdown, max_cvar=args.max_cvar)
         result = run_experiment(frame, args.output, data_source=args.data_source or "synthetic seed=42; no market evidence",
             synthetic=args.csv is None, walk_forward=WalkForwardConfig(args.initial_train_bars, args.test_bars, args.folds, args.embargo_bars),
-            env_config=cfg, timesteps=args.timesteps, seeds=tuple(int(s) for s in args.seeds.split(",")), torch_threads=args.torch_threads)
+            env_config=cfg, timesteps=args.timesteps, seeds=tuple(int(s) for s in args.seeds.split(",")), torch_threads=args.torch_threads,
+            market_identity=market_identity)
     except (ValueError, FileExistsError) as exc:
         parser.error(str(exc))
     print(result[["fold", "seed", "model", "net_return", "max_drawdown"]].to_string(index=False))

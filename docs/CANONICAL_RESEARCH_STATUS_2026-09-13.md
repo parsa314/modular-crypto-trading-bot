@@ -20,6 +20,15 @@ Current authorized mode is:
 
 A successful CI run, backtest, research artifact or service healthcheck does not authorize PAPER or LIVE execution and does not prove profitable alpha.
 
+### Engineering addendum — 2026-10-04
+
+The owner requested a separately invoked LIVE spot CLI. The implementation and
+operator contract are described in [LIVE_EXECUTION_FA.md](LIVE_EXECUTION_FA.md).
+This authorization is for the requested execution capability; no actual order
+or deployment was performed while implementing it. The research service remains
+locked, and scientific results, promotion decisions and sealed holdouts are
+unchanged. The historical scientific provenance below remains a dated snapshot.
+
 ## Latest completed scientific result — v0.50
 
 Canonical decision:

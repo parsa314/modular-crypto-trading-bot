@@ -75,6 +75,15 @@ A missing or locked execution endpoint is **not automatically a bug**. Inspect t
 
 Do not enable live or paper execution merely to make a smoke test pass.
 
+### Owner-requested operator CLI — 2026-10-04
+
+The owner explicitly requested LIVE capability in this repository on 2026-10-04.
+`research_bot.live_runtime` is a separate, explicitly invoked spot execution CLI;
+its default is public-data preview. See `docs/LIVE_EXECUTION_FA.md` for the account,
+artifact and risk contract. This scoped engineering change does not promote a
+scientific model, unseal Kraken, change research-service flags, or start/deploy a
+trading process. Preserve the research service's intentional execution lock.
+
 ## 6. Dependency Authority
 
 For the scientific bot, use the dependency declarations in this repository as authoritative.
