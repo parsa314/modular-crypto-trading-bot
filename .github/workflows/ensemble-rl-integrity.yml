@@ -2,11 +2,12 @@ name: ensemble-rl-integrity
 
 on:
   pull_request:
-    branches: [main, research/causal-ensemble-ppo-20261002]
+    branches: [main, research/causal-ensemble-ppo-20261002, feature/live-ensemble-20261004]
     paths:
       - 'research_bot/ensemble_*.py'
       - 'tests/test_ensemble_*.py'
       - 'research_bot/live_*.py'
+      - 'research_bot/execution/**'
       - 'tests/test_live_*.py'
       - 'pyproject.toml'
       - '.github/workflows/ensemble-rl-integrity.yml'

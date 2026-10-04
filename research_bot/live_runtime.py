@@ -1,13 +1,13 @@
 """Operator-run spot execution for a frozen PPO artifact; no service endpoint.
 
-The default mode previews orders using public data. Private modes require a
-dedicated, initially flat account and explicit capital/loss limits. No credentials
-or private requests are needed to import this module or display CLI help.
+The default mode previews orders using public data. MASTER v3 Stage 0 blocks
+private modes until a later promotion gate is implemented and verified. No
+credentials or private requests are needed to display CLI help.
 """
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 import hashlib
 import io
 import json
@@ -20,55 +20,11 @@ import pandas as pd
 
 from .data import _timeframe_to_milliseconds
 from .ensemble_features import FEATURE_COLUMNS, extract_all_features
+from .execution.config import LiveConfig
 
 
 class SafetyStop(RuntimeError):
     pass
-
-
-@dataclass(frozen=True)
-class LiveConfig:
-    exchange_id: str
-    symbol: str
-    timeframe: str
-    capital_limit_quote: float
-    max_order_quote: float
-    max_daily_loss: float
-    max_drawdown: float
-    max_position_weight: float = .35
-    max_fee_bps: float = 20.0
-    max_slippage_bps: float = 10.0
-    max_spread_bps: float = 25.0
-    quote_max_age_seconds: float = 10.0
-    entry_grace_seconds: float = 60.0
-    poll_seconds: float = 10.0
-    kill_file: str = "LIVE_STOP"
-
-    def __post_init__(self):
-        if self.exchange_id not in {"coinex", "binance", "okx"}:
-            raise ValueError("supported spot venues: coinex, binance, okx")
-        if not isinstance(self.symbol, str) or self.symbol.count("/") != 1 or ":" in self.symbol:
-            raise ValueError("one unleveraged BASE/QUOTE spot symbol is required")
-        if any(not part.strip() or part != part.strip() for part in self.symbol.split("/")):
-            raise ValueError("invalid spot symbol")
-        bar_seconds = _timeframe_to_milliseconds(self.timeframe) / 1000
-        for name in ("capital_limit_quote", "max_order_quote", "max_daily_loss", "max_drawdown",
-                     "max_position_weight", "max_fee_bps", "max_slippage_bps", "max_spread_bps",
-                     "quote_max_age_seconds", "entry_grace_seconds", "poll_seconds"):
-            value = getattr(self, name)
-            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
-                raise ValueError(f"{name} must be positive and finite")
-        if self.max_order_quote > self.capital_limit_quote:
-            raise ValueError("order ceiling cannot exceed capital ceiling")
-        if not 0 < self.max_daily_loss < 1 or not 0 < self.max_drawdown < 1 or not 0 < self.max_position_weight <= 1:
-            raise ValueError("loss/drawdown/position limits must be fractions")
-        if max(self.max_fee_bps, self.max_slippage_bps, self.max_spread_bps) >= 1000:
-            raise ValueError("fee/slippage/spread limits must be below 1000 bps")
-        if self.entry_grace_seconds >= bar_seconds or self.poll_seconds >= bar_seconds:
-            raise ValueError("entry grace and polling must be shorter than one bar")
-        if not isinstance(self.kill_file, str) or not self.kill_file.strip():
-            raise ValueError("kill_file must be a nonempty path")
-        object.__setattr__(self, "kill_file", str(Path(self.kill_file).expanduser().resolve()))
 
 
 class FrozenPpoPolicy:
@@ -517,6 +473,13 @@ def main(argv=None):
     parser.add_argument("--mode", choices=("dry-run", "testnet", "live"), default="dry-run")
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args(argv)
+    if args.mode != "dry-run":
+        # No override: configuration completeness is not promotion evidence.
+        # This check precedes file reads, model loading and credential access.
+        print(json.dumps({"status": "BLOCKED_BY_MASTER_V3_GATE", "stage": 0,
+                          "execution_authorized": False,
+                          "reason": "PROMOTION_EVIDENCE_NOT_IMPLEMENTED"}))
+        raise SystemExit(2)
     config = LiveConfig(**json.loads(args.config.read_text()))
     policy = FrozenPpoPolicy(args.run_dir, fold=args.fold, seed=args.seed)
     from .live_exchange import CcxtSpotExchange
