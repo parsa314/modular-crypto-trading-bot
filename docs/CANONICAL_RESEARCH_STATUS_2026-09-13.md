@@ -29,6 +29,11 @@ or deployment was performed while implementing it. The research service remains
 locked, and scientific results, promotion decisions and sealed holdouts are
 unchanged. The historical scientific provenance below remains a dated snapshot.
 
+The owner's subsequent MASTER v3 protocol begins with Stage 0 only. Its foundation
+initializes an immutable config and pending progress ledger. On the Stage 0 branch,
+the legacy operator CLI blocks private modes until later verified promotion gates;
+no economic metric is marked passed. See [MASTER_V3_STAGE0_FA.md](MASTER_V3_STAGE0_FA.md).
+
 ## Latest completed scientific result — v0.50
 
 Canonical decision:

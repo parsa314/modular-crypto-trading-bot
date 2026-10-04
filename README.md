@@ -106,6 +106,25 @@ Source-derived trading concepts are treated as **hypothesis generators**, never 
 
 ## Install
 
+### MASTER v3 — Stage 0 foundation
+
+The owner's staged protocol starts with foundation and governance only. See the
+[Persian Stage 0 guide, questions and thesis mapping](docs/MASTER_V3_STAGE0_FA.md).
+The existing `LiveConfig` and durable ledger are reused in `research_bot.execution`
+with compatible legacy imports. New execution foundations use the standard library
+and import no training or research modules.
+
+```bash
+python -m research_bot.execution.foundation --config configs/stage0.example.json --ledger artifacts/stage0/ledger.sqlite --report artifacts/stage0/report.json
+python -m pytest -q tests/test_foundation.py tests/test_live_ledger.py tests/test_service_v1.py tests/test_v08_service.py
+```
+
+The command validates immutable L0 limits and initializes a config/source-pinned
+progress ledger. It does not train, access credentials, contact an exchange or
+authorize execution. Stage 0 awaits user review; stages 1–14 and all economic
+metrics remain pending. Venue and capital are unset until the owner supplies them.
+Private operator modes are blocked until future promotion gates are implemented.
+
 Core development environment:
 
 ```bash
@@ -135,8 +154,9 @@ python -m research_bot.ensemble_rl --synthetic-bars 800 --initial-train-bars 300
 
 An independently invoked spot runner supports CoinEx, Binance and OKX with
 explicit `dry-run`, `testnet` and `live` modes. Its default previews orders using
-public data; private execution requires a matching frozen model, a dedicated
-account and explicit capital/loss limits. It records orders before submission,
+public data. MASTER v3 Stage 0 now blocks `testnet` and `live` at the CLI entrypoint
+before inputs or credentials are read; a future verified promotion path is required.
+The underlying controller records orders before submission,
 reconciles uncertain outcomes and persists risk stops. See the
 [Persian live execution guide](docs/LIVE_EXECUTION_FA.md) before invoking it.
 This operator capability was requested by the owner on 2026-10-04; no real order

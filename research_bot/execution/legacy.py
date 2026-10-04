@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from enum import Enum
 import math
 
-from .contracts import ExecutionMode
+from ..contracts import ExecutionMode
 
 
 class OrderSide(str, Enum):

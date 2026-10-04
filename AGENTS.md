@@ -84,6 +84,16 @@ artifact and risk contract. This scoped engineering change does not promote a
 scientific model, unseal Kraken, change research-service flags, or start/deploy a
 trading process. Preserve the research service's intentional execution lock.
 
+### Owner-requested MASTER v3 protocol — Stage 0
+
+The owner's later instruction explicitly limits the current delivery to Stage 0
+and requires their go-ahead before Stage 1. Follow
+`docs/MASTER_V3_STAGE0_FA.md`: immutable L0 config, JSON events and a pinned progress
+ledger, without economic promotion claims. The legacy operator CLI now rejects
+private `live`/`testnet` modes before reading inputs or credentials. No override
+exists until a later reviewed promotion path is implemented. Tests of internal
+execution components remain engineering evidence, not permission to run them.
+
 ## 6. Dependency Authority
 
 For the scientific bot, use the dependency declarations in this repository as authoritative.

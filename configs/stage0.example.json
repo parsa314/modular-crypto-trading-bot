@@ -1,0 +1,7 @@
+{
+  "mode": "BACKTEST",
+  "live": null,
+  "full_allocation_quote": null,
+  "max_daily_loss_fraction": 0.02,
+  "max_drawdown_fraction": 0.10
+}
