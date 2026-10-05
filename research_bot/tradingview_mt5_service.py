@@ -484,6 +484,20 @@ async def ui_direct_start(request: Request) -> dict[str, Any]:
         risk_percent = float(payload.get("risk_percent", 0.25))
         poll_seconds = float(payload.get("poll_seconds", 15.0))
         risk_fraction = risk_percent / 100.0
+        ai_gate_enabled = bool(payload.get("ai_gate_enabled", True))
+        ai_hurdle_bps = float(payload.get("ai_hurdle_bps", 24.0))
+        ai_long_threshold = float(payload.get("ai_long_threshold", 0.56))
+        ai_short_threshold = float(payload.get("ai_short_threshold", 0.44))
+        ai_max_validation_brier = float(
+            payload.get("ai_max_validation_brier", 0.28)
+        )
+        ai_gate_enabled = bool(payload.get("ai_gate_enabled", True))
+        ai_hurdle_bps = float(payload.get("ai_hurdle_bps", 24.0))
+        ai_long_threshold = float(payload.get("ai_long_threshold", 0.56))
+        ai_short_threshold = float(payload.get("ai_short_threshold", 0.44))
+        ai_max_validation_brier = float(
+            payload.get("ai_max_validation_brier", 0.28)
+        )
 
         if canonical_symbol not in executor.config.allowed_symbols:
             raise ValueError(
@@ -503,6 +517,11 @@ async def ui_direct_start(request: Request) -> dict[str, Any]:
             strategy_name=strategy_name,
             bars=bars,
             risk_fraction=risk_fraction,
+            ai_gate_enabled=ai_gate_enabled,
+            ai_hurdle_bps=ai_hurdle_bps,
+            ai_long_threshold=ai_long_threshold,
+            ai_short_threshold=ai_short_threshold,
+            ai_max_validation_brier=ai_max_validation_brier,
         )
         _stop_direct_worker(request.app)
         worker = DirectMT5StrategyWorker(
@@ -570,6 +589,11 @@ async def ui_direct_evaluate_now(request: Request) -> dict[str, Any]:
             strategy_name=strategy_name,
             bars=bars,
             risk_fraction=risk_fraction,
+            ai_gate_enabled=ai_gate_enabled,
+            ai_hurdle_bps=ai_hurdle_bps,
+            ai_long_threshold=ai_long_threshold,
+            ai_short_threshold=ai_short_threshold,
+            ai_max_validation_brier=ai_max_validation_brier,
         )
         temp = DirectMT5StrategyWorker(executor, config, poll_seconds=15.0)
         outcome = temp.evaluate_now()
