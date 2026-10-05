@@ -37,7 +37,7 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Deterministic v0.15 tests
-        run: pytest -q tests/test_forward_evidence_v15.py
+        run: pytest -q tests/test_forward_evidence_v15.py tests/test_forward_collectors.py
 
       - name: Export production forward evidence
         run: |
@@ -51,6 +51,13 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
+          status=json.loads(Path('artifacts/v15_forward_evidence/v15_collection_status.json').read_text())
+          if status['status']=='DEPRECATED_BY_CURRENT_GOVERNANCE':
+              assert status['countable_forward_evidence'] is False
+              assert status['execution_authorized'] is False
+              assert not Path('artifacts/v15_forward_evidence/v15_forward_evidence.json').exists()
+              print(status)
+              raise SystemExit(0)
           p = Path("artifacts/v15_forward_evidence/v15_forward_evidence.json")
           d = json.loads(p.read_text())
           assert d["safety_contract"]["ok"] is True, d["safety_contract"]
@@ -68,6 +75,7 @@ jobs:
           PY
 
       - name: Upload v0.15 evidence artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v15-forward-evidence-${{ github.run_number }}

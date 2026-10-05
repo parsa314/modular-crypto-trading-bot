@@ -1,0 +1,23 @@
+name: prospective-collector-integrity
+on:
+  pull_request:
+    paths:
+      - "scripts/*v15*.py"
+      - "scripts/download_v19_forward_artifacts.py"
+      - "research_bot/prospective_protocol.py"
+      - "tests/test_forward_collectors.py"
+      - "tests/test_prospective_protocol.py"
+      - ".github/workflows/prospective-collector-integrity.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m pytest -q tests/test_forward_collectors.py tests/test_prospective_protocol.py tests/test_forward_evidence_v15.py tests/test_phase_q_v20.py tests/test_microstructure_quality_v19.py tests/test_forward_microstructure_v19.py tests/test_trade_timestamp_v19.py

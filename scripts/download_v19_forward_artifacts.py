@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+from hashlib import sha256
 import io
 import json
 import os
@@ -9,6 +10,8 @@ from pathlib import Path, PurePosixPath
 import urllib.parse
 import urllib.request
 import zipfile
+
+import requests
 
 
 API = "https://api.github.com"
@@ -44,9 +47,28 @@ def _request_bytes(url: str, token: str | None) -> bytes:
     }
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req, timeout=120) as response:
-        return response.read()
+    # urllib's default redirect handler carries Authorization to the signed
+    # storage URL. Follow each redirect explicitly, never carrying credentials
+    # outside api.github.com. Do not log signed URLs or response bodies.
+    current = url
+    for _ in range(5):
+        parsed = urllib.parse.urlsplit(current)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+            raise ValueError("UNSAFE_ARTIFACT_REDIRECT")
+        request_headers = headers if parsed.hostname == "api.github.com" else {"User-Agent": headers["User-Agent"]}
+        response = requests.get(current, headers=request_headers, timeout=120, allow_redirects=False)
+        if response.status_code in {301, 302, 303, 307, 308}:
+            location = response.headers.get("Location")
+            if not location:
+                raise ValueError("ARTIFACT_REDIRECT_WITHOUT_LOCATION")
+            current = urllib.parse.urljoin(current, location)
+            continue
+        if response.status_code != 200:
+            raise ValueError(f"ARTIFACT_HTTP_{response.status_code}")
+        if len(response.content) > 32 * 1024 * 1024:
+            raise ValueError("ARTIFACT_TOO_LARGE")
+        return response.content
+    raise ValueError("ARTIFACT_REDIRECT_LIMIT")
 
 
 def list_forward_artifacts(repo: str, *, token: str | None, created_after: str) -> list[dict]:
@@ -77,12 +99,18 @@ def list_forward_artifacts(repo: str, *, token: str | None, created_after: str) 
 def _safe_json_members(blob: bytes) -> list[tuple[str, bytes]]:
     out: list[tuple[str, bytes]] = []
     with zipfile.ZipFile(io.BytesIO(blob)) as zf:
+        total_size = 0
+        seen = set()
         for info in zf.infolist():
             name = PurePosixPath(info.filename)
             if info.is_dir() or name.suffix.lower() != ".json":
                 continue
             if name.is_absolute() or ".." in name.parts:
-                continue
+                raise ValueError("UNSAFE_ZIP_PATH")
+            total_size += info.file_size
+            if total_size > 32 * 1024 * 1024 or name.name in seen:
+                raise ValueError("AMBIGUOUS_OR_OVERSIZED_ZIP")
+            seen.add(name.name)
             out.append((name.name, zf.read(info)))
     return out
 
@@ -96,11 +124,21 @@ def harvest(repo: str, output_dir: Path, *, token: str | None, created_after: st
     for artifact in artifacts:
         aid = int(artifact["id"])
         try:
-            blob = _request_bytes(str(artifact["archive_download_url"]), token)
+            expected_url = f"{API}/repos/{repo}/actions/artifacts/{aid}/zip"
+            if artifact.get("archive_download_url") != expected_url:
+                raise ValueError("ARTIFACT_REPOSITORY_MISMATCH")
+            blob = _request_bytes(expected_url, token)
+            digest = "sha256:" + sha256(blob).hexdigest()
+            if artifact.get("digest") != digest:
+                raise ValueError("ARTIFACT_DIGEST_MISMATCH_OR_MISSING")
             members = _safe_json_members(blob)
             if not members:
                 errors.append({"artifact_id": aid, "reason": "NO_JSON_MEMBERS"})
                 continue
+            # Validate every member before persisting any part of an artifact.
+            for _, data in members:
+                if not isinstance(json.loads(data), dict):
+                    raise ValueError("INVALID_SNAPSHOT_OBJECT")
             saved = []
             for original_name, data in members:
                 target = output_dir / f"artifact-{aid}-{original_name}"
@@ -111,12 +149,14 @@ def harvest(repo: str, output_dir: Path, *, token: str | None, created_after: st
                 "artifact_id": aid,
                 "name": artifact.get("name"),
                 "created_at": artifact.get("created_at"),
-                "digest": artifact.get("digest"),
+                "digest": digest,
+                "digest_verified": True,
                 "workflow_run": artifact.get("workflow_run"),
                 "saved_files": saved,
             })
         except Exception as exc:
-            errors.append({"artifact_id": aid, "reason": f"{type(exc).__name__}:{exc}"})
+            safe_reason = str(exc) if isinstance(exc, ValueError) and str(exc).isupper() and " " not in str(exc) else type(exc).__name__
+            errors.append({"artifact_id": aid, "reason": safe_reason})
     return {
         "repo": repo,
         "created_after": created_after,
