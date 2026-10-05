@@ -107,6 +107,7 @@ class MT5DemoExecutor:
         self.config = config
         self._mt5 = mt5_module
         self._connected = False
+        self._submission_enabled = bool(config.submit_enabled)
         self._seen_client_order_ids: set[str] = set()
 
     def _module(self) -> Any:
@@ -168,6 +169,74 @@ class MT5DemoExecutor:
                 self._mt5.shutdown()
             finally:
                 self._connected = False
+
+    @property
+    def connected(self) -> bool:
+        return bool(self._connected)
+
+    @property
+    def submission_enabled(self) -> bool:
+        return bool(self._submission_enabled)
+
+    def set_demo_submission_enabled(self, enabled: bool) -> None:
+        """Enable/disable DEMO order submission at runtime.
+
+        Enabling is permitted only while a DEMO account is connected and is
+        revalidated immediately. This never permits real-money accounts.
+        """
+
+        if enabled:
+            if not self._connected:
+                raise MT5DemoSafetyError("MT5_DEMO_NOT_CONNECTED")
+            self._assert_demo_account()
+        self._submission_enabled = bool(enabled)
+
+    def account_summary(self) -> dict[str, Any]:
+        """Return non-secret connected DEMO account metadata for a local UI."""
+
+        if not self._connected:
+            return {"connected": False, "submission_enabled": self.submission_enabled}
+        info = self._assert_demo_account()
+        return {
+            "connected": True,
+            "submission_enabled": self.submission_enabled,
+            "login": int(getattr(info, "login", 0) or 0),
+            "server": str(getattr(info, "server", "") or ""),
+            "trade_mode": int(getattr(info, "trade_mode", -1)),
+            "balance": float(getattr(info, "balance", 0.0) or 0.0),
+            "equity": float(getattr(info, "equity", 0.0) or 0.0),
+            "margin": float(getattr(info, "margin", 0.0) or 0.0),
+            "margin_free": float(getattr(info, "margin_free", 0.0) or 0.0),
+            "currency": str(getattr(info, "currency", "") or ""),
+            "company": str(getattr(info, "company", "") or ""),
+        }
+
+    def search_symbols(self, query: str = "", *, limit: int = 100) -> list[str]:
+        """Return broker symbol names visible to the terminal.
+
+        This is for symbol mapping in the local UI. It performs no trading.
+        """
+
+        if not self._connected:
+            raise MT5DemoSafetyError("MT5_DEMO_NOT_CONNECTED")
+        mt5 = self._module()
+        symbols = mt5.symbols_get()
+        if symbols is None:
+            raise MT5DemoExecutionError(
+                f"symbols_get failed: {self._last_error()}"
+            )
+        needle = str(query).strip().lower()
+        names = []
+        for item in symbols:
+            name = str(getattr(item, "name", "") or "").strip()
+            if not name:
+                continue
+            if needle and needle not in name.lower():
+                continue
+            names.append(name)
+            if len(names) >= max(1, int(limit)):
+                break
+        return names
 
     def _assert_demo_account(self) -> Any:
         mt5 = self._module()
@@ -365,7 +434,7 @@ class MT5DemoExecutor:
 
         if not self._connected:
             raise MT5DemoSafetyError("MT5_DEMO_NOT_CONNECTED")
-        if not self.config.submit_enabled:
+        if not self._submission_enabled:
             raise MT5DemoSafetyError("MT5_DEMO_SUBMISSION_DISABLED")
         if request.order_type is not OrderType.MARKET:
             raise MT5DemoSafetyError(
