@@ -247,6 +247,8 @@ def test_ai_gate_rejection_blocks_demo_order(monkeypatch, tmp_path):
         lambda *args, **kwargs: SimpleNamespace(
             approved=False,
             probability_up=0.53,
+            probability_down=None,
+            probability_favorable=0.53,
             confidence=0.06,
             validation_brier=0.24,
             reason="AI_REJECTS_LONG",
@@ -282,6 +284,8 @@ def test_ai_gate_confirmation_allows_demo_execution(monkeypatch, tmp_path):
         lambda *args, **kwargs: SimpleNamespace(
             approved=True,
             probability_up=0.71,
+            probability_down=None,
+            probability_favorable=0.71,
             confidence=0.42,
             validation_brier=0.21,
             reason="AI_CONFIRMS_LONG",
