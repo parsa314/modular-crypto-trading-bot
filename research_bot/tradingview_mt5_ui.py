@@ -87,6 +87,12 @@ table{width:100%;border-collapse:collapse;font-size:12px;direction:ltr;text-alig
       <label>Public HTTPS Base URL</label>
       <input id="publicBase" dir="ltr" placeholder="https://your-domain.example">
       <div class="tiny">این URL باید از اینترنت توسط TradingView قابل دسترس باشد و به همین سرویس برسد.</div>
+      <div class="toolbar">
+        <button class="ok" onclick="startTunnel()">ساخت لینک عمومی موقت</button>
+        <button class="danger" onclick="stopTunnel()">توقف Tunnel</button>
+        <span class="badge"><span id="tunnelDot" class="dot off"></span><span id="tunnelState">خاموش</span></span>
+      </div>
+      <div class="tiny">اگر cloudflared نصب نیست: <code>winget install --id Cloudflare.cloudflared</code></div>
     </div>
     <div>
       <label>Webhook Route Token</label>
@@ -156,6 +162,14 @@ async function refreshStatus(){
     $('routeToken').value=s.tradingview.route_token||'';
     $('publicBase').value=s.tradingview.public_base_url||'';
     $('webhookUrl').textContent=s.tradingview.webhook_url||'Public HTTPS URL را وارد کن.';
+    if(s.tunnel){
+      $('tunnelDot').className='dot '+(s.tunnel.running?'on':'off');
+      $('tunnelState').textContent=s.tunnel.running?(s.tunnel.public_url?'متصل':'در حال راه‌اندازی'):'خاموش';
+      if(s.tunnel.public_url && !$('publicBase').value){
+        $('publicBase').value=s.tunnel.public_url;
+        $('webhookUrl').textContent=s.tradingview.webhook_url||'';
+      }
+    }
     if(s.mt5.connected){
       const a=s.mt5;
       $('accountBox').innerHTML =
@@ -188,6 +202,25 @@ async function setSubmit(enabled){try{await api('/api/ui/demo/submission',{metho
 async function searchSymbols(){try{const q=encodeURIComponent($('symbolQuery').value.trim());const r=await api('/api/ui/mt5/symbols?q='+q);$('symbolsBox').textContent=r.items.join(', ')||'نتیجه‌ای نبود'}catch(e){msg(e.message,false)}}
 async function regenToken(){try{const r=await api('/api/ui/tradingview/token',{method:'POST',body:'{}'});$('routeToken').value=r.route_token;msg('توکن جدید ساخته شد؛ Webhook URL قبلی دیگر معتبر نیست.');await configureTradingView()}catch(e){msg(e.message,false)}}
 async function configureTradingView(){try{const r=await api('/api/ui/tradingview/configure',{method:'POST',body:JSON.stringify({public_base_url:$('publicBase').value.trim()})});$('webhookUrl').textContent=r.webhook_url||'Public URL تنظیم نشده';$('routeToken').value=r.route_token;msg('تنظیم TradingView آماده شد.')}catch(e){msg(e.message,false)}}
+async function startTunnel(){
+  try{
+    const r=await api('/api/ui/tunnel/start',{method:'POST',body:'{}'});
+    msg(r.status==='TUNNEL_STARTING'?'Tunnel شروع شد؛ وضعیت را بررسی می‌کنم.':'Tunnel فعال است.');
+    for(let i=0;i<20;i++){
+      await new Promise(res=>setTimeout(res,500));
+      const s=await api('/api/ui/tunnel/status');
+      if(s.public_url){
+        $('publicBase').value=s.public_url;
+        await configureTradingView();
+        msg('لینک عمومی TradingView آماده شد.');
+        break;
+      }
+      if(s.error){throw new Error(s.error)}
+    }
+    await refreshStatus();
+  }catch(e){msg('Tunnel: '+e.message,false)}
+}
+async function stopTunnel(){try{await api('/api/ui/tunnel/stop',{method:'POST',body:'{}'});msg('Tunnel متوقف شد.');await refreshStatus()}catch(e){msg(e.message,false)}}
 function copyText(id){navigator.clipboard.writeText($(id).textContent);msg('کپی شد.')}
 async function localDryRunTest(){
   try{
