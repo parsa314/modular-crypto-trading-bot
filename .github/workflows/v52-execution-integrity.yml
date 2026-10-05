@@ -41,6 +41,9 @@ jobs:
             tests/test_execution_hardening_v52.py \
             tests/test_execution_hardening_postgres_v52.py \
             tests/test_order_reconciliation_v52.py \
+            tests/test_live_readiness.py \
+            tests/test_testnet_execution.py \
+            tests/test_okx_demo_transport.py \
             tests/test_forward_paper_v14.py
       - name: Enforce no-LIVE contract
         run: |

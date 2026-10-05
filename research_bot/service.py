@@ -6,7 +6,9 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 
-SERVICE_VERSION = "1.0.0-rc3"
+from .live_readiness import LiveReadinessChecklist, evaluate_live_readiness
+
+SERVICE_VERSION = "1.0.0-rc4"
 RESEARCH_MODE = "RESEARCH_ONLY"
 LATEST_COMPLETED_EXPERIMENT = "v0.50"
 LATEST_COMPLETED_DECISION = "V50_NONOVERLAP_FAILURE_SUPPORTED"
@@ -131,6 +133,21 @@ def research_latest() -> dict:
         "kraken_touched": False,
         "paper_execution": False,
         "live_execution": False,
+    }
+
+
+@app.get("/execution/readiness")
+def execution_readiness() -> dict:
+    decision = evaluate_live_readiness(LiveReadinessChecklist())
+    return {
+        "stage": decision.stage.value,
+        "testnet_review_eligible": decision.testnet_review_eligible,
+        "live_review_eligible": decision.live_review_eligible,
+        "live_execution_authorized": decision.live_execution_authorized,
+        "missing_gates": list(decision.missing_gates),
+        "real_money_order_submission": False,
+        "required_next_step": NEXT_RESEARCH_QUESTION,
+        "warning": "Readiness is not authorization; private/live order submission remains disabled.",
     }
 
 
