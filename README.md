@@ -151,7 +151,7 @@ BUY/SELL intents through the DEMO-only MT5 executor.
 
 This is deliberately separate from the canonical research FastAPI service and
 does not change LIVE/PAPER authorization. See
-[docs/TRADINGVIEW_MT5_BRIDGE_SETUP.md](docs/TRADINGVIEW_MT5_BRIDGE_SETUP.md)
+[docs/TRADINGVIEW_MT5_BRIDGE_SETUP.md](docs/TRADINGVIEW_MT5_BRIDGE_SETUP.md) and the one-click Windows guide at [docs/MT5_TRADINGVIEW_CONTROL_PANEL.md](docs/MT5_TRADINGVIEW_CONTROL_PANEL.md)
 and the Pine transport test at
 [tradingview/mt5_demo_bridge_test.pine](tradingview/mt5_demo_bridge_test.pine).
 
