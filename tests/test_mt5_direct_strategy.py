@@ -6,7 +6,10 @@ from types import SimpleNamespace
 import pandas as pd
 import pytest
 
-from research_bot.execution_adapters.mt5_demo import MT5DemoExecutionResult
+from research_bot.execution_adapters.mt5_demo import (
+    MT5DemoCloseResult,
+    MT5DemoExecutionResult,
+)
 from research_bot.mt5_direct_strategy import (
     DirectMT5StrategyRunner,
     DirectStrategyJournal,
@@ -28,6 +31,7 @@ class FakeExecutor:
             symbol_map={"BTC/USDT": "BTCUSD"},
         )
         self.executions = []
+        self.close_calls = []
         self._positions = []
 
     def copy_closed_bars(self, venue_symbol, timeframe, *, count=500):
@@ -102,6 +106,32 @@ class FakeExecutor:
             account_server="UnitTest-Demo",
             account_trade_mode=0,
             contract_size=1.0,
+            timestamp=now or T0,
+            comment="Done",
+        )
+
+
+    def close_bot_position(self, *, ticket, venue_symbol, now=None):
+        self.close_calls.append(
+            {"ticket": ticket, "venue_symbol": venue_symbol, "now": now}
+        )
+        self._positions = [
+            p for p in self._positions if int(p.get("ticket", 0)) != int(ticket)
+        ]
+        return MT5DemoCloseResult(
+            ticket=int(ticket),
+            venue_symbol=venue_symbol,
+            closed_side="SELL",
+            status="CLOSED_DEMO",
+            retcode=10009,
+            order_ticket=3003,
+            deal_ticket=4004,
+            requested_lots=0.01,
+            filled_lots=0.01,
+            executable_price=60_999.0,
+            fill_price=60_999.0,
+            account_login=1,
+            account_server="UnitTest-Demo",
             timestamp=now or T0,
             comment="Done",
         )
@@ -194,7 +224,10 @@ def test_direct_strategy_blocks_when_bot_position_exists(monkeypatch, tmp_path):
         fake_signal(-1),
     )
     executor = FakeExecutor(submission_enabled=True)
-    executor._positions = [{"ticket": 77}]
+    executor._positions = [{
+        "ticket": 77,
+        "time": int((T0 - timedelta(hours=8)).timestamp()),
+    }]
     runner = DirectMT5StrategyRunner(executor, config(tmp_path))
 
     outcome = runner.evaluate_once()
@@ -272,3 +305,45 @@ def test_ai_gate_confirmation_allows_demo_execution(monkeypatch, tmp_path):
     assert outcome.ai_probability_up == pytest.approx(0.71)
     assert outcome.ai_reason == "AI_CONFIRMS_LONG"
     assert len(executor.executions) == 1
+
+
+def test_direct_strategy_timeout_is_reported_in_dry_run(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.generate_direction",
+        fake_signal(0),
+    )
+    executor = FakeExecutor(submission_enabled=False)
+    executor._positions = [{
+        "ticket": 501,
+        "time": int((T0 - timedelta(hours=4 * 40)).timestamp()),
+    }]
+    runner = DirectMT5StrategyRunner(executor, config(tmp_path))
+
+    outcome = runner.evaluate_once()
+
+    assert outcome.status == "TIMEOUT_READY_DRY_RUN"
+    assert outcome.position_ticket == 501
+    assert outcome.held_bars >= 30
+    assert executor.close_calls == []
+
+
+def test_direct_strategy_timeout_closes_exact_ticket(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.generate_direction",
+        fake_signal(0),
+    )
+    executor = FakeExecutor(submission_enabled=True)
+    executor._positions = [{
+        "ticket": 502,
+        "time": int((T0 - timedelta(hours=4 * 40)).timestamp()),
+    }]
+    runner = DirectMT5StrategyRunner(executor, config(tmp_path))
+
+    outcome = runner.evaluate_once()
+
+    assert outcome.status == "TIMEOUT_CLOSED_MT5_DEMO"
+    assert outcome.position_ticket == 502
+    assert outcome.close_status == "CLOSED_DEMO"
+    assert outcome.order_ticket == 3003
+    assert outcome.deal_ticket == 4004
+    assert executor.close_calls[0]["ticket"] == 502
