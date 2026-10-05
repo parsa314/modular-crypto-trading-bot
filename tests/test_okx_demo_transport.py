@@ -59,6 +59,10 @@ class FakeOKX:
         self.calls.append(("fetch_balance",))
         return {"total": {"USDT": 10000.0}}
 
+    def fetch_ticker(self, symbol):
+        self.calls.append(("fetch_ticker", symbol))
+        return {"last": 100000.0, "bid": 99990.0, "ask": 100010.0}
+
     def create_order(self, symbol, order_type, side, amount, price, params):
         self.calls.append(("create_order", symbol, order_type, side, amount, price, params))
         if isinstance(self.created, Exception):
@@ -267,3 +271,11 @@ def test_non_okx_exchange_is_rejected():
     ex.id = "binance"
     with pytest.raises(TestnetSafetyError, match="OKX_EXCHANGE_REQUIRED"):
         OKXDemoTransport(ex)
+
+
+def test_public_reference_price_is_read_only():
+    ex = FakeOKX()
+    transport = OKXDemoTransport(ex)
+    px = transport.public_reference_price("BTC/USDT")
+    assert px == Decimal("100000.0")
+    assert ex.calls[-1] == ("fetch_ticker", "BTC/USDT")
