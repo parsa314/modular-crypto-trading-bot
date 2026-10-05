@@ -2,43 +2,17 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 import math
+from ..execution.constitution import RISK_CONSTITUTION_V1
 
 
 ABSOLUTE_RISK_CEILINGS = {
-    "risk_per_trade": 0.0025,
-    "max_asset_weight": 0.35,
-    "max_gross_exposure": 0.70,
-    "drawdown_kill": 0.05,
-    "max_cvar95": 0.035,
+    name: getattr(RISK_CONSTITUTION_V1, name) for name in
+    ("risk_per_trade", "max_asset_weight", "max_gross_exposure", "drawdown_kill", "max_cvar95")
 }
 
 
-@dataclass(frozen=True)
-class FinancialConstitution:
-    risk_per_trade: float = 0.0025
-    max_asset_weight: float = 0.35
-    max_gross_exposure: float = 0.70
-    drawdown_kill: float = 0.05
-    max_cvar95: float = 0.035
-    min_cash_buffer: float = 0.05
-    max_turnover_per_step: float = 0.70
-
-    def __post_init__(self) -> None:
-        values = asdict(self)
-        for name, value in values.items():
-            if isinstance(value, bool):
-                raise ValueError(f"{name} must be numeric")
-            value = float(value)
-            if not math.isfinite(value) or value < 0:
-                raise ValueError(f"{name} must be finite and nonnegative")
-            object.__setattr__(self, name, value)
-        for name, ceiling in ABSOLUTE_RISK_CEILINGS.items():
-            if getattr(self, name) > ceiling:
-                raise ValueError(f"{name} cannot exceed V59 absolute ceiling {ceiling}")
-        if not 0 <= self.min_cash_buffer < 1:
-            raise ValueError("min_cash_buffer must be in [0,1)")
-        if not 0 < self.max_turnover_per_step <= 1:
-            raise ValueError("max_turnover_per_step must be in (0,1]")
+# Compatibility name; research and runtime now share the same immutable type.
+from ..execution.constitution import RiskConstitution as FinancialConstitution
 
 
 @dataclass(frozen=True)
