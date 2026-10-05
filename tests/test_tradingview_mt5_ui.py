@@ -7,7 +7,7 @@ from fastapi import HTTPException
 
 from research_bot.tradingview_mt5_service import _client_ip, _require_local_admin
 from research_bot.tradingview_mt5_ui import control_panel_html
-from research_bot.tradingview_tunnel import QuickTunnelManager
+from research_bot.tradingview_tunnel import QuickTunnelManager, TunnelUnavailableError
 
 
 class FakeRequest:
@@ -75,3 +75,10 @@ def test_quick_tunnel_reader_extracts_trycloudflare_url():
     status = manager.status()
     assert status.running is True
     assert status.public_url == "https://demo-abc.trycloudflare.com"
+
+
+def test_quick_tunnel_fails_cleanly_when_cloudflared_is_missing(monkeypatch):
+    monkeypatch.setattr("research_bot.tradingview_tunnel.shutil.which", lambda _: None)
+    manager = QuickTunnelManager()
+    with pytest.raises(TunnelUnavailableError, match="cloudflared"):
+        manager.start()
