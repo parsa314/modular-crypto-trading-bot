@@ -20,10 +20,12 @@ def main() -> int:
 
     transport = OKXDemoTransport.from_env()
     result = transport.private_preflight(args.symbol)
+    reference_price = transport.public_reference_price(args.symbol)
     precision = transport.market_precision(
         args.symbol,
-        reference_price=Decimal(str(args.reference_price)),
+        reference_price=reference_price,
     )
+    result["reference_price"] = str(reference_price)
     result["precision"] = {
         "quantity_step": str(precision.quantity_step),
         "min_quantity": str(precision.min_quantity),
