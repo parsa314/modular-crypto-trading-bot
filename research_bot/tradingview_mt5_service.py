@@ -9,7 +9,7 @@ connection controls.
 """
 
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import json
 import os
@@ -30,6 +30,11 @@ from .tradingview_mt5_bridge import (
 )
 from .tradingview_mt5_ui import control_panel_html
 from .tradingview_tunnel import QuickTunnelManager, TunnelUnavailableError
+from .mt5_direct_strategy import (
+    DirectMT5StrategyWorker,
+    MT5DirectStrategyConfig,
+    registered_strategy_names,
+)
 
 
 DEFAULT_TRADINGVIEW_IPS = {
@@ -207,7 +212,17 @@ def _attach_bridge(app: FastAPI, executor: MT5DemoExecutor) -> None:
     app.state.mt5_connected = True
 
 
+def _stop_direct_worker(app: FastAPI) -> None:
+    worker = getattr(app.state, "direct_worker", None)
+    if worker is not None:
+        try:
+            worker.stop()
+        finally:
+            app.state.direct_worker = None
+
+
 def _detach_bridge(app: FastAPI) -> None:
+    _stop_direct_worker(app)
     executor = getattr(app.state, "executor", None)
     if executor is not None:
         executor.shutdown()
@@ -223,6 +238,7 @@ async def lifespan(app: FastAPI):
     app.state.bridge = None
     app.state.executor = None
     app.state.mt5_connected = False
+    app.state.direct_worker = None
     app.state.route_token = settings.route_token or secrets.token_urlsafe(32)
     app.state.public_base_url = settings.public_base_url
     app.state.enforce_source_ip = settings.enforce_source_ip
@@ -292,6 +308,10 @@ def health(request: Request) -> dict[str, Any]:
             executor.submission_enabled if executor is not None else False
         ),
         "source_ip_enforcement": request.app.state.settings.enforce_source_ip,
+        "direct_strategy_running": bool(
+            getattr(request.app.state, "direct_worker", None)
+            and request.app.state.direct_worker.running
+        ),
         "live_money_allowed": False,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -318,6 +338,11 @@ def ui_status(request: Request) -> dict[str, Any]:
             request.app.state.tunnel.status().__dict__
             if getattr(request.app.state, "tunnel", None) is not None
             else {"running": False, "public_url": "", "error": "", "pid": None}
+        ),
+        "direct_strategy": (
+            request.app.state.direct_worker.status()
+            if getattr(request.app.state, "direct_worker", None) is not None
+            else {"running": False}
         ),
         "live_money_allowed": False,
     }
@@ -427,6 +452,139 @@ def ui_symbols(request: Request, q: str = "") -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"items": items}
 
+
+
+
+@app.get("/api/ui/direct/strategies")
+def ui_direct_strategies(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    return {"items": list(registered_strategy_names())}
+
+
+@app.get("/api/ui/direct/status")
+def ui_direct_status(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    worker: DirectMT5StrategyWorker | None = request.app.state.direct_worker
+    return worker.status() if worker is not None else {"running": False}
+
+
+@app.post("/api/ui/direct/start")
+async def ui_direct_start(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    executor: MT5DemoExecutor | None = request.app.state.executor
+    if executor is None or not executor.connected:
+        raise HTTPException(status_code=409, detail="connect MT5 demo first")
+
+    payload = await request.json()
+    try:
+        canonical_symbol = str(payload.get("canonical_symbol", "")).strip()
+        venue_symbol = str(payload.get("venue_symbol", "")).strip()
+        strategy_name = str(payload.get("strategy_name", "")).strip()
+        bars = int(payload.get("bars", 600))
+        risk_percent = float(payload.get("risk_percent", 0.25))
+        poll_seconds = float(payload.get("poll_seconds", 15.0))
+        risk_fraction = risk_percent / 100.0
+
+        if canonical_symbol not in executor.config.allowed_symbols:
+            raise ValueError(
+                f"canonical symbol is not allowlisted: {canonical_symbol}"
+            )
+        expected_venue = str(
+            executor.config.symbol_map.get(canonical_symbol, canonical_symbol)
+        )
+        if venue_symbol != expected_venue:
+            raise ValueError(
+                f"venue symbol mismatch: expected {expected_venue}"
+            )
+
+        config = MT5DirectStrategyConfig(
+            canonical_symbol=canonical_symbol,
+            venue_symbol=venue_symbol,
+            strategy_name=strategy_name,
+            bars=bars,
+            risk_fraction=risk_fraction,
+        )
+        _stop_direct_worker(request.app)
+        worker = DirectMT5StrategyWorker(
+            executor,
+            config,
+            poll_seconds=poll_seconds,
+        )
+        worker.start()
+        request.app.state.direct_worker = worker
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{type(exc).__name__}: {exc}",
+        ) from exc
+
+    return {
+        "status": "DIRECT_MT5_STRATEGY_STARTED",
+        "worker": worker.status(),
+        "demo_submission_enabled": executor.submission_enabled,
+        "live_money_allowed": False,
+    }
+
+
+@app.post("/api/ui/direct/stop")
+def ui_direct_stop(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    worker: DirectMT5StrategyWorker | None = request.app.state.direct_worker
+    if worker is not None:
+        worker.stop()
+    request.app.state.direct_worker = None
+    return {"status": "DIRECT_MT5_STRATEGY_STOPPED"}
+
+
+@app.post("/api/ui/direct/evaluate-now")
+async def ui_direct_evaluate_now(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    executor: MT5DemoExecutor | None = request.app.state.executor
+    if executor is None or not executor.connected:
+        raise HTTPException(status_code=409, detail="connect MT5 demo first")
+
+    payload = await request.json()
+    try:
+        canonical_symbol = str(payload.get("canonical_symbol", "")).strip()
+        venue_symbol = str(payload.get("venue_symbol", "")).strip()
+        strategy_name = str(payload.get("strategy_name", "")).strip()
+        bars = int(payload.get("bars", 600))
+        risk_percent = float(payload.get("risk_percent", 0.25))
+        risk_fraction = risk_percent / 100.0
+
+        if canonical_symbol not in executor.config.allowed_symbols:
+            raise ValueError(
+                f"canonical symbol is not allowlisted: {canonical_symbol}"
+            )
+        expected_venue = str(
+            executor.config.symbol_map.get(canonical_symbol, canonical_symbol)
+        )
+        if venue_symbol != expected_venue:
+            raise ValueError(
+                f"venue symbol mismatch: expected {expected_venue}"
+            )
+
+        config = MT5DirectStrategyConfig(
+            canonical_symbol=canonical_symbol,
+            venue_symbol=venue_symbol,
+            strategy_name=strategy_name,
+            bars=bars,
+            risk_fraction=risk_fraction,
+        )
+        temp = DirectMT5StrategyWorker(executor, config, poll_seconds=15.0)
+        outcome = temp.evaluate_now()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{type(exc).__name__}: {exc}",
+        ) from exc
+
+    return {
+        "status": "DIRECT_MT5_EVALUATED",
+        "outcome": asdict(outcome),
+        "demo_submission_enabled": executor.submission_enabled,
+        "live_money_allowed": False,
+    }
 
 @app.post("/api/ui/tradingview/token")
 def ui_new_token(request: Request) -> dict[str, Any]:
