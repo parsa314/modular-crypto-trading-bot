@@ -9,12 +9,14 @@ on:
       - "research_bot/tradingview_mt5_service.py"
       - "research_bot/tradingview_mt5_ui.py"
       - "research_bot/tradingview_tunnel.py"
+      - "research_bot/mt5_direct_strategy.py"
       - "research_bot/demo_experience.py"
       - "scripts/run_tv_mt5_bridge.py"
       - "scripts/start_mt5_tradingview_ui.py"
       - "scripts/mt5_demo_smoke.py"
       - "START_TRADINGVIEW_MT5_DEMO_PANEL.bat"
       - "tests/test_mt5_demo_adapter.py"
+      - "tests/test_mt5_direct_strategy.py"
       - "tests/test_tradingview_mt5_bridge.py"
       - "tests/test_tradingview_mt5_ui.py"
       - "tests/test_demo_experience.py"
@@ -41,6 +43,7 @@ jobs:
           python -m compileall -q research_bot/tradingview_mt5_service.py
           python -m compileall -q research_bot/tradingview_mt5_ui.py
           python -m compileall -q research_bot/tradingview_tunnel.py
+          python -m compileall -q research_bot/mt5_direct_strategy.py
           python -m compileall -q research_bot/demo_experience.py
           python -m compileall -q scripts/start_mt5_tradingview_ui.py
 
@@ -48,6 +51,7 @@ jobs:
         run: |
           pytest -q \
             tests/test_mt5_demo_adapter.py \
+            tests/test_mt5_direct_strategy.py \
             tests/test_tradingview_mt5_bridge.py \
             tests/test_tradingview_mt5_ui.py \
             tests/test_demo_experience.py
