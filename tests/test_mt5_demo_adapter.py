@@ -24,6 +24,8 @@ class FakeMT5:
     ORDER_TYPE_SELL = 1
     ORDER_TIME_GTC = 0
     ORDER_FILLING_RETURN = 2
+    POSITION_TYPE_BUY = 0
+    POSITION_TYPE_SELL = 1
 
     TRADE_RETCODE_PLACED = 10008
     TRADE_RETCODE_DONE = 10009
@@ -357,3 +359,56 @@ def test_bot_positions_filter_by_magic_and_market_snapshot():
     assert quote["bid"] == pytest.approx(99.95)
     assert quote["ask"] == pytest.approx(100.05)
     assert quote["spread_bps"] > 0.0
+
+
+def test_ticket_aware_close_targets_existing_hedged_position():
+    mt5 = FakeMT5()
+    position = SimpleNamespace(
+        ticket=77,
+        symbol="BTCUSD",
+        type=mt5.POSITION_TYPE_BUY,
+        volume=0.25,
+        magic=314590,
+    )
+    mt5.positions_get = lambda **kwargs: [position] if kwargs.get("ticket") == 77 else []
+
+    executor = MT5DemoExecutor(config(), mt5_module=mt5)
+    executor.connect()
+    result = executor.close_bot_position(
+        ticket=77,
+        venue_symbol="BTCUSD",
+        now=NOW,
+    )
+
+    assert result.status == "CLOSED_DEMO"
+    assert result.ticket == 77
+    assert result.closed_side == "SELL"
+    assert mt5.checked_payload["position"] == 77
+    assert mt5.sent_payload["position"] == 77
+    assert mt5.sent_payload["type"] == mt5.ORDER_TYPE_SELL
+    assert mt5.sent_payload["volume"] == pytest.approx(0.25)
+    assert "sl" not in mt5.sent_payload
+    assert "tp" not in mt5.sent_payload
+
+
+def test_ticket_aware_close_refuses_foreign_magic():
+    mt5 = FakeMT5()
+    position = SimpleNamespace(
+        ticket=88,
+        symbol="BTCUSD",
+        type=mt5.POSITION_TYPE_BUY,
+        volume=0.10,
+        magic=999,
+    )
+    mt5.positions_get = lambda **kwargs: [position] if kwargs.get("ticket") == 88 else []
+
+    executor = MT5DemoExecutor(config(), mt5_module=mt5)
+    executor.connect()
+    with pytest.raises(MT5DemoSafetyError, match="POSITION_MAGIC_MISMATCH"):
+        executor.close_bot_position(
+            ticket=88,
+            venue_symbol="BTCUSD",
+            now=NOW,
+        )
+
+    assert mt5.sent_payload is None
