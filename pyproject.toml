@@ -45,3 +45,4 @@ include = ["research_bot*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
