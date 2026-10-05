@@ -111,8 +111,21 @@ def test_tournament_records_all_attempted_folds_before_any_promotion_review():
 
 
 def test_nonfixture_evidence_is_only_marked_for_separate_review_not_auto_promoted():
-    cfg = TournamentConfig(evidence_class="REAL_OOS_DEVELOPMENT")
-    result = run_tournament(tournament_fixture_events(), feature_columns=FEATURES, config=cfg)
+    # Complete temporal metadata is mandatory even in this synthetic contract
+    # test. The evidence-class flag alone no longer bypasses time validation.
+    events = tournament_fixture_events()
+    events['decision_at'] = events.timestamp
+    events['entry_time'] = events.timestamp + pd.Timedelta(seconds=1)
+    events['information_start'] = events.timestamp
+    events['event_end_time'] = events.timestamp + pd.Timedelta(seconds=20)
+    events['information_end'] = events.event_end_time
+    events['label_available_at'] = events.event_end_time
+    events['feature_available_at'] = events.timestamp
+    for name in ('feature_snapshot_id', 'data_version', 'strategy_version', 'source_hash'):
+        events[name] = 'ENGINEERING_FIXTURE_'+name
+    cfg = TournamentConfig(evidence_class="REAL_OOS_DEVELOPMENT",
+                           walk_forward=WalkForwardConfig(embargo_hours=0))
+    result = run_tournament(events, feature_columns=FEATURES, config=cfg)
     assert result["trial_results"]
     assert all(row["promotable"] is False for row in result["trial_results"])
     assert any(row["promotion_review_eligible"] for row in result["trial_results"])

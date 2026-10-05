@@ -1,0 +1,177 @@
+{
+  "date": "2026-10-05",
+  "repository": "parsa314/modular-crypto-trading-bot",
+  "main_sha": "876e229a8d3e73f2e9d646d4126c8ce08e4c11b4",
+  "base_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+  "branch": "integration/production-convergence-20261005",
+  "source_prs": [
+    {
+      "number": 109,
+      "title": "Evaluate causal native V59 strategies on verified real multi-asset data",
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "branch": "research/v59-native-strategies-20261005",
+      "base": "research/v59-stage7-native-strategy-engine-20261002",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 103,
+      "title": "Add MASTER v3 Stage 0 governance and block ungated private execution",
+      "head_sha": "822a81866582fa63d1f83ead83b8608662fa1cf1",
+      "branch": "feature/master-v3-stage0-20261004",
+      "base": "feature/live-ensemble-20261004",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 102,
+      "title": "Add explicit spot LIVE execution with durable order reconciliation",
+      "head_sha": "6d9a222c2f2dffb765e5e010b311275343f7ccc2",
+      "branch": "feature/live-ensemble-20261004",
+      "base": "research/causal-ensemble-ppo-20261002",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 101,
+      "title": "Add causal offline ensemble PPO with CVaR sizing and walk-forward evaluation",
+      "head_sha": "151639b10276ddd627dd48f07a29499b8473fd40",
+      "branch": "research/causal-ensemble-ppo-20261002",
+      "base": "main",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 100,
+      "title": "V59 Stage 6: add leakage-resistant model and strategy tournament",
+      "head_sha": "0cb048deca3abe2a665f51a7005c8ff0e6dc1855",
+      "branch": "research/v59-stage6-model-strategy-tournament-20261002",
+      "base": "research/v59-stage5-execution-calibration-20261002",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 94,
+      "title": "V58: integrate supplied MTF FVG/ICT/TSI into unified signal finder",
+      "head_sha": "f943aaf32da56c487d58c9590e9e2ce76310ead2",
+      "branch": "research/v58-signal-finder-fvg-ict-tsi-20261002",
+      "base": "research/v58-10-confluence-strategies-20261002",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 93,
+      "title": "V58: add 10 Ichimoku + ICT/SMC + Al Brooks confluence hypotheses",
+      "head_sha": "035b826a1c5200cd4310c45b5d6a821e7d0edc37",
+      "branch": "research/v58-10-confluence-strategies-20261002",
+      "base": "research/v58-finance-ai-orchestration-20261002",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 92,
+      "title": "V58: coordinate AI forecasts with financial risk and capital controls",
+      "head_sha": "e7b28aa034c3bae104859b013ded40531847fb17",
+      "branch": "research/v58-finance-ai-orchestration-20261002",
+      "base": "research/v58-market-audit-firewall-20261002",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 90,
+      "title": "V58: integrate causal ML and portfolio simulation; repair evidence integrity",
+      "head_sha": "09979266ebd7ba1466f13e8c01d8fe7857ea0e57",
+      "branch": "rebuild/v58-integrated-ai-20261001",
+      "base": "research/v58-core-repair",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 89,
+      "title": "V58 core repair: real-market development replay and executable path",
+      "head_sha": "455014d2b146165b7edc13cf7bc9c61489447948",
+      "branch": "research/v58-core-repair",
+      "base": "research/v58-phase2a-barrier-freeze",
+      "draft": true,
+      "state": "open"
+    },
+    {
+      "number": 76,
+      "title": "v0.53 rebuild: causal candle time, zone lifecycle and multi-timeframe engine",
+      "head_sha": "2875ae31cb95ed8c668874cc6a26e516839f51eb",
+      "branch": "rebuild/pr64-causal-mtf-v53",
+      "base": "main",
+      "draft": true,
+      "state": "open"
+    }
+  ],
+  "v52": {
+    "pr": 75,
+    "source_sha": "b252dde46e0a97e443967ed872310ec68d7e1a63",
+    "merged": true,
+    "merge_sha": "0ef14c03b034cc5b08a67bef43057fb375d5f6f0"
+  },
+  "base_ci": [
+    {
+      "name": "v59 stage6 model strategy tournament",
+      "id": 37272649451,
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "conclusion": "success"
+    },
+    {
+      "name": "v52-research-integrity",
+      "id": 37272649011,
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "conclusion": "success"
+    },
+    {
+      "name": "V58 integrated AI engineering",
+      "id": 37272649115,
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "conclusion": "success"
+    },
+    {
+      "name": "v59 stage5 execution calibration",
+      "id": 37272649051,
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "conclusion": "success"
+    },
+    {
+      "name": "v59-native-strategy-integrity",
+      "id": 37272649024,
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "conclusion": "success"
+    },
+    {
+      "name": "v59 stage4 microstructure evidence",
+      "id": 37272648967,
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "conclusion": "success"
+    },
+    {
+      "name": "v59 phase1 rebuild integrity",
+      "id": 37272648981,
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "conclusion": "success"
+    },
+    {
+      "name": "v59 stage2 market data integrity",
+      "id": 37272648971,
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "conclusion": "success"
+    },
+    {
+      "name": "v59 stage3 execution economics",
+      "id": 37272649049,
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "conclusion": "success"
+    }
+  ],
+  "permissions": {
+    "live": false,
+    "paper": false,
+    "real_orders": false,
+    "private_requests": false
+  },
+  "note": "Audit snapshot; source scientific branches/evidence remain immutable. Existing active worktrees and unrelated main staging preserved."
+}

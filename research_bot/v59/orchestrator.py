@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from dataclasses import asdict
 
 from .config import V59Config
 from .contracts import (
@@ -77,6 +78,7 @@ class V59DecisionOrchestrator:
         finance = financial_gate(
             candidate, economics, portfolio, self.config, execution_cost=execution_cost
         )
+        self.ledger.append(record_type='PORTFOLIO_STATE', payload={'event_id': candidate.event_id, **asdict(portfolio)}, recorded_at=portfolio.timestamp)
         self.ledger.append(
             record_type="FINANCIAL_DECISION",
             payload=finance,
@@ -104,6 +106,7 @@ class V59DecisionOrchestrator:
                 "action": action,
                 "approved_notional": approved,
                 "execution_cost_hash": None if execution_cost is None else stable_hash(execution_cost),
+                "risk_constitution_hash": self.config.constitution.sha256,
             }
         )
         final = FinalResearchDecision(
@@ -113,6 +116,7 @@ class V59DecisionOrchestrator:
             approved_notional=float(approved),
             reason=reason,
             audit_hash=audit_hash,
+            risk_constitution_hash=self.config.constitution.sha256,
         )
         self.ledger.append(
             record_type="FINAL_RESEARCH_DECISION",

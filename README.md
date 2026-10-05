@@ -162,3 +162,13 @@ Predictive models do not directly authorize exchange execution. Portfolio/risk c
 ---
 
 Maintained by **Milad Parsanezhad** as an academic financial-ML, AI cryptocurrency trading-bot and quantitative-research project.
+# Production Convergence Phase 1 — engineering review
+
+The new convergence path is intentionally offline/Fake-only. See
+[Phase 1 audit and reproduction](docs/PRODUCTION_CONVERGENCE_PHASE1.md),
+[risk constitution](docs/RISK_CONSTITUTION_V1.md),
+[readiness checklist](docs/PRODUCTION_READINESS_CHECKLIST.md), and
+[test evidence](docs/PHASE1_TEST_EVIDENCE.md).
+The scientific promotion registry is empty; LIVE and PAPER execution remain
+disabled. This branch does not supersede frozen historical results or authorize
+testnet/private exchange calls.

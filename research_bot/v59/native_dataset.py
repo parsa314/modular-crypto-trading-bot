@@ -68,6 +68,7 @@ def build_native_events(frame: pd.DataFrame, *, venue: str, symbol: str, data_ve
         record = {"event_id": candidate.event_id, "timestamp": pd.Timestamp(candidate.decision_at),
                   "decision_at": pd.Timestamp(candidate.decision_at), "entry_time": pd.Timestamp(candidate.entry_time),
                   "information_start": pd.Timestamp(candidate.decision_at), "information_end": label_end,
+                  "event_end_time": label_end, "label_available_at": label_end,
                   "feature_available_at": pd.Timestamp(snapshot["available_at"]),
                   "strategy_id": candidate.strategy_id, "strategy_arm": candidate.strategy_id,
                   "venue": venue, "symbol": symbol, "regime": candidate.regime.value,
@@ -78,6 +79,8 @@ def build_native_events(frame: pd.DataFrame, *, venue: str, symbol: str, data_ve
                   "reference_entry_is_fill": False, "data_hash": candidate.source_hash,
                   "dataset_version": data_version, "code_hash": snapshot["code_hash"],
                   "feature_snapshot_id": candidate.feature_snapshot_id,
+                  "data_version": candidate.data_version, "strategy_version": candidate.strategy_version,
+                  "source_hash": candidate.source_hash, "event_identity_hash": candidate.identity_hash,
                   **snapshot["features"]}
         records.append(record)
     events = pd.DataFrame(records)

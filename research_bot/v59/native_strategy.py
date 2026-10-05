@@ -93,8 +93,10 @@ def scan_native(frame: pd.DataFrame, *, venue: str, symbol: str, data_version: s
         if stop <= 0 or not stop < reference < target:
             continue
         for strategy, confirmations in hits:
-            event_id = stable_hash({"strategy": strategy, "symbol": symbol, "venue": venue,
-                                   "decision_at": decision.isoformat(), "snapshot": snapshot_id,
+            event_id = stable_hash({"identity_version": "NATIVE_EVENT_ID_V2", "strategy": strategy,
+                                   "symbol": symbol, "venue": venue, "direction": "LONG",
+                                   "decision_at": decision.isoformat(), "entry_time": (decision+delta).isoformat(),
+                                   "snapshot": snapshot_id, "data_version": data_version,
                                    "version": STRATEGY_VERSION, "config": cfg.__dict__})
             signals.append(SignalCandidate(
                 event_id=event_id, strategy_id=strategy, strategy_family="NATIVE_CONFLUENCE" if strategy.startswith("C10_") else "ICHIMOKU",

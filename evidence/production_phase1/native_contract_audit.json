@@ -1,0 +1,61 @@
+{
+  "assets": [
+    {
+      "bars": 8784,
+      "data_hash": "8b4b10aeff34821dac061f076d79bef743206f6fedef89b79bb4a6ea9cf0f752",
+      "dataset_hash": "94792a52c89bf981b540f3c282ae1dc8b50033b29f70b15adea2773a1fc5508a",
+      "events": 3795,
+      "symbol": "BTCUSDT"
+    },
+    {
+      "bars": 8784,
+      "data_hash": "7809de98e9016872d45ceda7297c58e82b26c2316793d8ee5fc4c6edaab61bd5",
+      "dataset_hash": "517393fadaed8b65a800f44f828a00f9badf0746b7c9f2772d95a3ddfa361279",
+      "events": 3611,
+      "symbol": "ETHUSDT"
+    },
+    {
+      "bars": 8784,
+      "data_hash": "3a6f3a746520bcf53e49298346e480c41fd2f7436291b971bd4c6ab7b7ce0493",
+      "dataset_hash": "97177a3cd38c8986b082da95df23e3ddc2bba864d2eb52dd3ffb8d2a3c0d4b00",
+      "events": 3632,
+      "symbol": "SOLUSDT"
+    },
+    {
+      "bars": 8784,
+      "data_hash": "74957295cd6a2596f3dca29d7e88733bc8e364c3c65744c4cfe0460f5ab2827d",
+      "dataset_hash": "66cdee8d40bbcf370a000a9d54784b7e53d006c8e63975fa4933915f8ba65523",
+      "events": 3313,
+      "symbol": "XRPUSDT"
+    },
+    {
+      "bars": 8784,
+      "data_hash": "3aeea634c66304be6be51d9b40439e850dabe5882256809735cc89b79d6b7ba2",
+      "dataset_hash": "5c97c9ee7c3cb4bb40dc5a950521e3362e7042b802edd305cc8f27771de36d0f",
+      "events": 3437,
+      "symbol": "DOGEUSDT"
+    }
+  ],
+  "bars": 43920,
+  "base_commit": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+  "coinex_holdout_consumed": false,
+  "created_at": "2026-10-05T09:44:50.631230+00:00",
+  "economic_evaluation_performed": false,
+  "events": 17788,
+  "execution_authorized": false,
+  "global_event_uniqueness": true,
+  "kraken_holdout_consumed": false,
+  "label_available_at_policy": "HISTORICAL_CLOSED_BAR_ASSUMPTION_NOT_OBSERVED_PROSPECTIVELY",
+  "old_economic_results_recomputed": false,
+  "paper_execution": false,
+  "protocol": "CONVERGENCE_EVENT_TIME_AND_IDENTITY_V3",
+  "registered_identity": "NATIVE_EVENT_ID_V2",
+  "source_hashes": {
+    "research_bot/v59/native_dataset.py": "89812e5708cc1ea1d48db54f7682b84b9b986a985da6377b072e22aeedf67582",
+    "research_bot/v59/native_strategy.py": "14299d5cd580577d1a502b2c4377217ae36586906ee11e360e9eff9f1d43f882",
+    "research_bot/v59/tournament.py": "d4e2b176e4ab50b46f8a4f76c8d5a1ab0da272fcae247cecc72248cdca295f70",
+    "scripts/audit_convergence_native_events.py": "807441909f24f4ce2124b9013e09cfff2fbc2b65b5d1ee45dcc0b213f9829f89"
+  },
+  "status": "PASS",
+  "temporal_contract_validated": true
+}

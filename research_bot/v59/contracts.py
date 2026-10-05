@@ -7,6 +7,7 @@ import math
 from typing import Mapping, Sequence
 
 from .hashing import stable_hash
+from ..execution.constitution import RISK_CONSTITUTION_V1
 
 
 class Direction(str, Enum):
@@ -277,12 +278,14 @@ class FinalResearchDecision:
     approved_notional: float
     reason: str
     audit_hash: str
+    risk_constitution_hash: str = RISK_CONSTITUTION_V1.sha256
 
     def __post_init__(self) -> None:
         _text(self.event_id, "event_id")
         _text(self.action, "action")
         _text(self.reason, "reason")
         _text(self.audit_hash, "audit_hash")
+        _text(self.risk_constitution_hash, 'risk_constitution_hash')
         notional = _finite(self.approved_notional, "approved_notional")
         if notional < 0:
             raise ValueError("approved_notional must be nonnegative")
