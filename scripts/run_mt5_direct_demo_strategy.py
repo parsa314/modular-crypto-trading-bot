@@ -36,12 +36,18 @@ def _parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--canonical-symbol", default="BTC/USDT")
     p.add_argument("--venue-symbol", default="BTCUSD")
-    p.add_argument("--strategy", default="H4_S6_BREAKOUT")
+    p.add_argument("--strategy", default="H4_V59_CONFLUENCE_DEMO")
     p.add_argument("--bars", type=int, default=600)
     p.add_argument("--risk-percent", type=float, default=0.25)
     p.add_argument("--poll-seconds", type=float, default=15.0)
     p.add_argument("--max-order-notional", type=float, default=5000.0)
     p.add_argument("--max-spread-bps", type=float, default=35.0)
+    p.add_argument("--ai-gate", action="store_true", default=True)
+    p.add_argument("--no-ai-gate", action="store_false", dest="ai_gate")
+    p.add_argument("--ai-hurdle-bps", type=float, default=24.0)
+    p.add_argument("--ai-long-threshold", type=float, default=0.56)
+    p.add_argument("--ai-short-threshold", type=float, default=0.44)
+    p.add_argument("--ai-max-brier", type=float, default=0.28)
     p.add_argument("--submit-demo", action="store_true")
     p.add_argument("--list-strategies", action="store_true")
     return p
@@ -107,6 +113,11 @@ def main() -> int:
         strategy_name=args.strategy,
         bars=int(args.bars),
         risk_fraction=float(args.risk_percent) / 100.0,
+        ai_gate_enabled=bool(args.ai_gate),
+        ai_hurdle_bps=float(args.ai_hurdle_bps),
+        ai_long_threshold=float(args.ai_long_threshold),
+        ai_short_threshold=float(args.ai_short_threshold),
+        ai_max_validation_brier=float(args.ai_max_brier),
     )
     worker = DirectMT5StrategyWorker(
         executor,
@@ -134,6 +145,11 @@ def main() -> int:
                     "canonical_symbol": args.canonical_symbol,
                     "venue_symbol": args.venue_symbol,
                     "submission_enabled": submit_enabled,
+                    "ai_gate_enabled": bool(args.ai_gate),
+                    "ai_hurdle_bps": float(args.ai_hurdle_bps),
+                    "ai_long_threshold": float(args.ai_long_threshold),
+                    "ai_short_threshold": float(args.ai_short_threshold),
+                    "ai_max_validation_brier": float(args.ai_max_brier),
                     "account": executor.account_summary(),
                     "live_money_allowed": False,
                 },
