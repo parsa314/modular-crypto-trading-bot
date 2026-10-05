@@ -11,6 +11,11 @@ on:
       - 'scripts/run_v54_feature_audit.py'
       - 'tests/test_feature_audit_v54.py'
       - 'tests/test_v54_integrity.py'
+      - 'tests/test_v54_provenance_gate.py'
+      - 'tests/test_v53_candle_zone_mtf.py'
+      - 'tests/test_service_v1.py'
+      - 'tests/test_v08_service.py'
+      - 'pyproject.toml'
       - 'docs/V54_FEATURE_AUDIT_PROTOCOL.md'
       - '.github/workflows/v54-feature-audit-integrity.yml'
   push:

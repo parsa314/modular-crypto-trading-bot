@@ -19,7 +19,12 @@ python -m pip install -e '.[dev]'
 python -m pytest -q tests/test_v54_provenance_gate.py tests/test_v54_integrity.py tests/test_feature_audit_v54.py
 ```
 
-تأیید محلی: 33 passed. source gateهای جعلی، universe اشتباه، placeholder،
+تأیید متمرکز محلی: 33 passed؛ **کل مخزن 220 passed / 1 PostgreSQL integration skip**.
+CI ابتدا fixture قدیمی snapshot را رد کرد: آن fixture کندل هنوز بازنشده را
+به ورودی زنده می‌داد. fixture به کندل جاری محدود شد؛ تست رد clock skew باقی ماند.
+شش assertion قدیمی PAPER نیز به قرارداد موجود ResearchOnly/423 هماهنگ شدند؛
+پیاده‌سازی سرویس، سیاست اجرا و کد زمان کندل تغییر نکردند.
+source gateهای جعلی، universe اشتباه، placeholder،
 manifest ناامن و تفاوت scheduler/checkout با تست‌های adversarial پوشش داده شدند.
 این کار به معنی اجرای دوبارهٔ آزمایش علمی یا رفع اقتصادی نتایج منفی نیست.
 پنجره‌های sealed و تمام شواهد پیشین حفظ شده‌اند. برای فصل سه، artifact provenance
