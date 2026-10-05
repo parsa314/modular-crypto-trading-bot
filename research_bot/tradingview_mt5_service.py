@@ -358,6 +358,10 @@ async def ui_connect_mt5(request: Request) -> dict[str, Any]:
         max_order_notional = float(payload.get("max_order_notional", 5000.0))
         max_spread_bps = float(payload.get("max_spread_bps", 35.0))
 
+        # MetaTrader5 uses a process-global terminal connection. Disconnect
+        # the previous session before creating a replacement so a later
+        # shutdown cannot tear down the newly established session.
+        _detach_bridge(request.app)
         executor = _build_executor(
             allowed_symbols=allowed_symbols,
             symbol_map=symbol_map,
@@ -377,7 +381,6 @@ async def ui_connect_mt5(request: Request) -> dict[str, Any]:
             detail=f"{type(exc).__name__}: {exc}",
         ) from exc
 
-    _detach_bridge(request.app)
     _attach_bridge(request.app, executor)
     return {
         "status": "MT5_DEMO_CONNECTED",
