@@ -491,13 +491,6 @@ async def ui_direct_start(request: Request) -> dict[str, Any]:
         ai_max_validation_brier = float(
             payload.get("ai_max_validation_brier", 0.28)
         )
-        ai_gate_enabled = bool(payload.get("ai_gate_enabled", True))
-        ai_hurdle_bps = float(payload.get("ai_hurdle_bps", 24.0))
-        ai_long_threshold = float(payload.get("ai_long_threshold", 0.56))
-        ai_short_threshold = float(payload.get("ai_short_threshold", 0.44))
-        ai_max_validation_brier = float(
-            payload.get("ai_max_validation_brier", 0.28)
-        )
 
         if canonical_symbol not in executor.config.allowed_symbols:
             raise ValueError(
@@ -570,6 +563,13 @@ async def ui_direct_evaluate_now(request: Request) -> dict[str, Any]:
         bars = int(payload.get("bars", 600))
         risk_percent = float(payload.get("risk_percent", 0.25))
         risk_fraction = risk_percent / 100.0
+        ai_gate_enabled = bool(payload.get("ai_gate_enabled", True))
+        ai_hurdle_bps = float(payload.get("ai_hurdle_bps", 24.0))
+        ai_long_threshold = float(payload.get("ai_long_threshold", 0.56))
+        ai_short_threshold = float(payload.get("ai_short_threshold", 0.44))
+        ai_max_validation_brier = float(
+            payload.get("ai_max_validation_brier", 0.28)
+        )
 
         if canonical_symbol not in executor.config.allowed_symbols:
             raise ValueError(
