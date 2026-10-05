@@ -20,6 +20,7 @@ import math
 import os
 from pathlib import Path
 import threading
+import time
 from typing import Any
 
 import pandas as pd
@@ -464,7 +465,28 @@ class DirectMT5StrategyRunner:
             "spread_bps": spread_bps,
         }
 
-        self.journal.reserve_intent(sid, intent_payload)
+        try:
+            self.journal.reserve_intent(sid, intent_payload)
+        except DuplicateDirectSignalError:
+            return MT5DirectStrategyOutcome(
+                status="DUPLICATE_SIGNAL",
+                reason="signal_id was already reserved/submitted previously",
+                strategy_name=self.strategy.name,
+                canonical_symbol=self.config.canonical_symbol,
+                venue_symbol=self.config.venue_symbol,
+                signal_id=sid,
+                signal_time=signal_time,
+                direction=direction,
+                side=side.value,
+                reference_price=reference_price,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                requested_quantity=quantity,
+                requested_notional=requested_notional,
+                risk_fraction=self.config.risk_fraction,
+                spread_bps=spread_bps,
+            )
+
         request = ExecutionRequest(
             client_order_id=sid[:31],
             symbol=self.config.canonical_symbol,
@@ -507,3 +529,100 @@ class DirectMT5StrategyRunner:
             deal_ticket=result.deal_ticket,
             execution_status=result.status,
         )
+
+
+class DirectMT5StrategyWorker:
+    """Background polling worker for one direct MT5 DEMO strategy."""
+
+    def __init__(
+        self,
+        executor: MT5DemoExecutor,
+        config: MT5DirectStrategyConfig,
+        *,
+        poll_seconds: float = 15.0,
+    ):
+        if not math.isfinite(float(poll_seconds)) or float(poll_seconds) < 2.0:
+            raise ValueError("poll_seconds must be finite and >= 2")
+        self.executor = executor
+        self.config = config
+        self.poll_seconds = float(poll_seconds)
+        self.runner = DirectMT5StrategyRunner(executor, config)
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._lock = threading.Lock()
+        self._last_outcome: MT5DirectStrategyOutcome | None = None
+        self._last_error = ""
+        self._iterations = 0
+        self._started_at: datetime | None = None
+
+    @property
+    def running(self) -> bool:
+        thread = self._thread
+        return bool(thread is not None and thread.is_alive())
+
+    def start(self) -> None:
+        if self.running:
+            return
+        if not self.executor.connected:
+            raise MT5DirectStrategyError("MT5 DEMO is not connected")
+        self._stop.clear()
+        self._started_at = datetime.now(timezone.utc)
+        self._thread = threading.Thread(
+            target=self._loop,
+            daemon=True,
+            name=f"mt5-direct-{self.config.strategy_name}",
+        )
+        self._thread.start()
+
+    def stop(self, timeout: float = 5.0) -> None:
+        self._stop.set()
+        thread = self._thread
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=max(0.0, float(timeout)))
+
+    def _loop(self) -> None:
+        while not self._stop.is_set():
+            try:
+                outcome = self.runner.evaluate_once()
+                with self._lock:
+                    self._last_outcome = outcome
+                    self._last_error = ""
+                    self._iterations += 1
+            except Exception as exc:
+                with self._lock:
+                    self._last_error = f"{type(exc).__name__}: {exc}"[:1000]
+                    self._iterations += 1
+            self._stop.wait(self.poll_seconds)
+
+    def evaluate_now(self) -> MT5DirectStrategyOutcome:
+        outcome = self.runner.evaluate_once()
+        with self._lock:
+            self._last_outcome = outcome
+            self._last_error = ""
+            self._iterations += 1
+        return outcome
+
+    def status(self) -> dict[str, Any]:
+        with self._lock:
+            outcome = (
+                asdict(self._last_outcome)
+                if self._last_outcome is not None
+                else None
+            )
+            return {
+                "running": self.running,
+                "strategy_name": self.config.strategy_name,
+                "canonical_symbol": self.config.canonical_symbol,
+                "venue_symbol": self.config.venue_symbol,
+                "timeframe": self.runner.strategy.timeframe,
+                "risk_fraction": self.config.risk_fraction,
+                "poll_seconds": self.poll_seconds,
+                "iterations": self._iterations,
+                "started_at": (
+                    self._started_at.isoformat()
+                    if self._started_at is not None
+                    else None
+                ),
+                "last_outcome": outcome,
+                "last_error": self._last_error,
+            }
