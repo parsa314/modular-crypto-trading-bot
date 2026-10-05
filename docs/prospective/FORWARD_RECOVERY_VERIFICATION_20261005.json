@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-10-05",
+  "ci": {
+    "collector_integrity": 37269263083,
+    "main_integrity": 37269263041,
+    "phase_q": 37269263051
+  },
+  "deployment_preflight": "BLOCKED_HTTP_404_HEALTH",
+  "economic_promotion": false,
+  "execution_authorized": false,
+  "harvesting": {
+    "all_official_digests_verified": true,
+    "artifact_id": 11327866006,
+    "artifact_zip_sha256": "43662957b8503f611410c49771ca3ecec518178aa9b76f93e3b5d1fcc37c2a53",
+    "downloaded_artifacts": 144,
+    "errors": 0,
+    "json_files": 144,
+    "matching_artifacts": 144
+  },
+  "head_sha": "a78f4f5c70edff160ac10ef29915edab2f114415",
+  "local_tests": {
+    "passed": 181,
+    "skip_reason": "PostgreSQL integration requires a configured test database",
+    "skipped": 1
+  }
+}

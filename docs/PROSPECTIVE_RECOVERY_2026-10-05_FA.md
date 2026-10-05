@@ -1,5 +1,18 @@
 # اصلاح شواهد Forward — ۵ اکتبر ۲۰۲۶
 
+**تأیید تازه:** روی SHA `a78f4f5c70edff160ac10ef29915edab2f114415`، اجرای
+[Phase-Q 37269263051](https://github.com/parsa314/modular-crypto-trading-bot/actions/runs/37269263051)
+هر 144 artifact را دانلود کرد؛ صفر خطا و digest رسمی همه تأیید شد. CI اصلی و
+collector نیز موفق بودند؛ تست کامل محلی 181 passed / 1 PostgreSQL skip بود.
+این رفع harvesting است؛ quality/promotion همچنان false هستند.
+[رکورد بازتولید](prospective/FORWARD_RECOVERY_VERIFICATION_20261005.json).
+
+پنجرهٔ مستقل [V25B orderbook quality](prospective/V25B_ORDERBOOK_QUALITY_20261008.json)
+پیش از مرز ۸ اکتبر ثبت شد. حالت `PRE_REGISTERED_AWAITING_CANONICAL_SCHEDULER`،
+collection=false و sample=0 است. کد ثبت با جمع‌آوری واقعی یکی نیست؛ اتصال به
+collector بازبینی‌شده و scheduler هنوز لازم است. اگر مرز بدون collector طی شود،
+bootstrap gap این پنجره را نیز fail-closed می‌کند؛ تاریخ آن تغییر داده نمی‌شود.
+
 این تغییر اصلاح مهندسی و ثبت شکست زیرساخت است؛ نتیجهٔ سودآوری یا مجوز معامله نیست.
 شاخهٔ main در ممیزی: `876e229a8d3e73f2e9d646d4126c8ce08e4c11b4`.
 
@@ -31,7 +44,7 @@
 کد قدیمی با urllib هدر Authorization را در redirect حفظ می‌کرد؛ این نقص
 transport مشخص است. علت قطعی هر 142 شکست قدیمی هنوز معلوم نیست، زیرا manifest
 آن اجرا upload نشده است. موفقیت harvesting باید در CI با `actions:read` نیز
-ثابت شود؛ تست آفلاین جایگزین آن نیست.
+ثابت شود؛ تست آفلاین جایگزین آن نیست. این تأیید اکنون در اجرای بالا انجام شده است.
 
 ## تصمیم علمی V25 و پنجرهٔ بعدی
 

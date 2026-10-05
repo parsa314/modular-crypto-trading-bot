@@ -1,0 +1,31 @@
+{
+  "backfill_authorized": false,
+  "collection_active": false,
+  "countable_samples": 0,
+  "economic_metrics": null,
+  "execution_authorized": false,
+  "paper_authorized": false,
+  "protocol": {
+    "collector_git_sha": "a78f4f5c70edff160ac10ef29915edab2f114415",
+    "end_at": "2026-10-15T00:00:00+00:00",
+    "first_seen_deadline_minutes": 60,
+    "input_kind": "ORDERBOOK_ONLY",
+    "market_type": "swap",
+    "max_scheduler_gap_hours": 5.5,
+    "start_at": "2026-10-08T00:00:00+00:00",
+    "symbols": [
+      "BTC/USDT:USDT",
+      "ETH/USDT:USDT",
+      "SOL/USDT:USDT",
+      "XRP/USDT:USDT",
+      "DOGE/USDT:USDT"
+    ],
+    "timeframe": "4h",
+    "venue": "okx",
+    "window_id": "V25B_ORDERBOOK_QUALITY_20261008"
+  },
+  "protocol_sha256": "e19b258e772ad78d69bdfd72834ebc1155a94879892424453ded96ff14349f70",
+  "registered_at": "2026-10-05T05:58:39.712892+00:00",
+  "schema_version": 1,
+  "status": "PRE_REGISTERED_AWAITING_CANONICAL_SCHEDULER"
+}
