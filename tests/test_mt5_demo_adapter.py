@@ -241,3 +241,46 @@ def test_demo_market_order_is_checked_sent_and_idempotent_in_process():
             take_profit=110.0,
             now=NOW,
         )
+
+
+def test_runtime_submission_toggle_requires_connected_demo_account():
+    mt5 = FakeMT5()
+    executor = MT5DemoExecutor(config(submit_enabled=False), mt5_module=mt5)
+
+    with pytest.raises(MT5DemoSafetyError, match="MT5_DEMO_NOT_CONNECTED"):
+        executor.set_demo_submission_enabled(True)
+
+    executor.connect()
+    assert executor.submission_enabled is False
+    executor.set_demo_submission_enabled(True)
+    assert executor.submission_enabled is True
+    executor.set_demo_submission_enabled(False)
+    assert executor.submission_enabled is False
+
+
+def test_account_summary_and_symbol_search_are_ui_safe():
+    mt5 = FakeMT5()
+    mt5._account.balance = 10000.0
+    mt5._account.equity = 10050.0
+    mt5._account.margin = 100.0
+    mt5._account.margin_free = 9950.0
+    mt5._account.currency = "USD"
+    mt5._account.company = "UnitTest Broker"
+    mt5.symbols_get = lambda: [
+        SimpleNamespace(name="BTCUSD"),
+        SimpleNamespace(name="ETHUSD"),
+        SimpleNamespace(name="EURUSD"),
+    ]
+
+    executor = MT5DemoExecutor(config(submit_enabled=False), mt5_module=mt5)
+    executor.connect()
+
+    summary = executor.account_summary()
+    assert summary["connected"] is True
+    assert summary["login"] == 314590
+    assert summary["server"] == "UnitTest-Demo"
+    assert summary["balance"] == 10000.0
+    assert "password" not in summary
+
+    assert executor.search_symbols("USD", limit=2) == ["BTCUSD", "ETHUSD"]
+    assert executor.search_symbols("BTC") == ["BTCUSD"]
