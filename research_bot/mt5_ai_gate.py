@@ -55,6 +55,8 @@ class MT5AIGateConfig:
 class MT5AIGateResult:
     approved: bool
     probability_up: float | None
+    probability_down: float | None
+    probability_favorable: float | None
     confidence: float
     validation_brier: float | None
     train_rows: int
@@ -102,6 +104,8 @@ def evaluate_ai_confirmation(
         return MT5AIGateResult(
             approved=False,
             probability_up=None,
+            probability_down=None,
+            probability_favorable=None,
             confidence=0.0,
             validation_brier=None,
             train_rows=0,
@@ -115,12 +119,15 @@ def evaluate_ai_confirmation(
     hurdle = cfg.hurdle_bps / 10_000.0
     x["future_return"] = x["close"].shift(-1) / x["close"] - 1.0
     x["target_up"] = (x["future_return"] > hurdle).astype(float)
+    x["target_down"] = (x["future_return"] < -hurdle).astype(float)
 
     cols = [c for c in FEATURE_COLUMNS + REGIME_COLUMNS if c in x.columns]
     if not cols:
         return MT5AIGateResult(
             approved=False,
             probability_up=None,
+            probability_down=None,
+            probability_favorable=None,
             confidence=0.0,
             validation_brier=None,
             train_rows=0,
@@ -137,6 +144,8 @@ def evaluate_ai_confirmation(
         return MT5AIGateResult(
             approved=False,
             probability_up=None,
+            probability_down=None,
+            probability_favorable=None,
             confidence=0.0,
             validation_brier=None,
             train_rows=0,
@@ -153,6 +162,8 @@ def evaluate_ai_confirmation(
         return MT5AIGateResult(
             approved=False,
             probability_up=None,
+            probability_down=None,
+            probability_favorable=None,
             confidence=0.0,
             validation_brier=None,
             train_rows=len(train),
@@ -162,12 +173,15 @@ def evaluate_ai_confirmation(
             reason="INSUFFICIENT_CHRONOLOGICAL_SPLIT",
         )
 
-    y_train = train["target_up"].astype(int)
-    y_val = validation["target_up"].astype(int)
+    target_col = "target_up" if direction > 0 else "target_down"
+    y_train = train[target_col].astype(int)
+    y_val = validation[target_col].astype(int)
     if y_train.nunique() < 2 or y_val.nunique() < 2:
         return MT5AIGateResult(
             approved=False,
             probability_up=None,
+            probability_down=None,
+            probability_favorable=None,
             confidence=0.0,
             validation_brier=None,
             train_rows=len(train),
@@ -186,6 +200,8 @@ def evaluate_ai_confirmation(
         return MT5AIGateResult(
             approved=False,
             probability_up=None,
+            probability_down=None,
+            probability_favorable=None,
             confidence=0.0,
             validation_brier=brier if math.isfinite(brier) else None,
             train_rows=len(train),
@@ -196,20 +212,31 @@ def evaluate_ai_confirmation(
         )
 
     final_model = _model(cfg.random_state)
-    final_model.fit(labelled[cols], labelled["target_up"].astype(int))
-    probability_up = float(final_model.predict_proba(latest[cols])[:, 1][0])
-    confidence = float(np.clip(2.0 * abs(probability_up - 0.5), 0.0, 1.0))
+    final_model.fit(labelled[cols], labelled[target_col].astype(int))
+    probability_favorable = float(
+        final_model.predict_proba(latest[cols])[:, 1][0]
+    )
+    confidence = float(
+        np.clip(2.0 * abs(probability_favorable - 0.5), 0.0, 1.0)
+    )
 
     if direction > 0:
-        approved = probability_up >= cfg.long_threshold
+        probability_up = probability_favorable
+        probability_down = None
+        approved = probability_favorable >= cfg.long_threshold
         reason = "AI_CONFIRMS_LONG" if approved else "AI_REJECTS_LONG"
     else:
-        approved = probability_up <= cfg.short_threshold
+        probability_up = None
+        probability_down = probability_favorable
+        short_favorable_threshold = 1.0 - cfg.short_threshold
+        approved = probability_favorable >= short_favorable_threshold
         reason = "AI_CONFIRMS_SHORT" if approved else "AI_REJECTS_SHORT"
 
     return MT5AIGateResult(
         approved=bool(approved),
         probability_up=probability_up,
+        probability_down=probability_down,
+        probability_favorable=probability_favorable,
         confidence=confidence,
         validation_brier=brier,
         train_rows=len(labelled),
