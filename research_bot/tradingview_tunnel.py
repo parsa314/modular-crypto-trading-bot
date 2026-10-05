@@ -63,7 +63,12 @@ class QuickTunnelManager:
     def start(self, *, local_url: str = "http://127.0.0.1:8000") -> TunnelStatus:
         with self._lock:
             if self._process is not None and self._process.poll() is None:
-                return self.status()
+                return TunnelStatus(
+                    running=True,
+                    public_url=self._public_url,
+                    error=self._error,
+                    pid=self._process.pid,
+                )
             self._public_url = ""
             self._error = ""
 
