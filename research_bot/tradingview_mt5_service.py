@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-"""Dedicated TradingView -> MT5 DEMO FastAPI bridge.
+"""Dedicated TradingView -> MT5 DEMO FastAPI bridge with local control panel.
 
 Run this service on the Windows host/VPS that owns the MetaTrader 5 terminal.
-It is intentionally separate from research_bot.service so the canonical
-research-only deployment firewall remains untouched.
+The public webhook surface is intentionally separated from local-only admin/UI
+routes so exposing the webhook through HTTPS does not expose MT5 credentials or
+connection controls.
 """
 
 from contextlib import asynccontextmanager
@@ -13,6 +14,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import secrets
 from typing import Any
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
@@ -26,6 +28,7 @@ from .tradingview_mt5_bridge import (
     TradingViewWebhookJournal,
     verify_route_token,
 )
+from .tradingview_mt5_ui import control_panel_html
 
 
 DEFAULT_TRADINGVIEW_IPS = {
@@ -34,6 +37,7 @@ DEFAULT_TRADINGVIEW_IPS = {
     "54.218.53.128",
     "52.32.178.7",
 }
+LOOPBACK_IPS = {"127.0.0.1", "::1"}
 
 
 def _truthy(name: str, default: bool = False) -> bool:
@@ -68,6 +72,7 @@ class BridgeSettings:
     server: str | None
     max_order_notional: float
     max_spread_bps: float
+    public_base_url: str
 
     @classmethod
     def from_env(cls) -> "BridgeSettings":
@@ -101,9 +106,9 @@ class BridgeSettings:
             )
         )
 
-        if enabled and len(route_token) < 24:
+        if enabled and route_token and len(route_token) < 24:
             raise RuntimeError(
-                "TV_WEBHOOK_ROUTE_TOKEN must be at least 24 characters when bridge is enabled"
+                "TV_WEBHOOK_ROUTE_TOKEN must be at least 24 characters when configured"
             )
         if enabled and not allowed_symbols:
             raise RuntimeError("TV_ALLOWED_SYMBOLS cannot be empty")
@@ -131,7 +136,21 @@ class BridgeSettings:
                 os.getenv("MT5_MAX_ORDER_NOTIONAL", "5000")
             ),
             max_spread_bps=float(os.getenv("MT5_MAX_SPREAD_BPS", "35")),
+            public_base_url=os.getenv("TV_PUBLIC_BASE_URL", "").strip().rstrip("/"),
         )
+
+
+def _direct_client_ip(request: Request) -> str:
+    if request.client is None:
+        return ""
+    return str(request.client.host)
+
+
+def _require_local_admin(request: Request) -> None:
+    """Admin/UI endpoints are local-only even if public webhook is exposed."""
+
+    if _direct_client_ip(request) not in LOOPBACK_IPS:
+        raise HTTPException(status_code=403, detail="local control panel only")
 
 
 def _client_ip(request: Request, *, trust_proxy: bool) -> str:
@@ -139,9 +158,7 @@ def _client_ip(request: Request, *, trust_proxy: bool) -> str:
         forwarded = request.headers.get("x-forwarded-for", "")
         if forwarded:
             return forwarded.split(",", 1)[0].strip()
-    if request.client is None:
-        return ""
-    return str(request.client.host)
+    return _direct_client_ip(request)
 
 
 def _execute_background(
@@ -151,6 +168,49 @@ def _execute_background(
     bridge.execute(signal)
 
 
+def _webhook_url(request: Request) -> str:
+    base = str(getattr(request.app.state, "public_base_url", "") or "").rstrip("/")
+    token = str(getattr(request.app.state, "route_token", "") or "")
+    if not base or not token:
+        return ""
+    return f"{base}/webhooks/tradingview/{token}"
+
+
+def _build_executor(
+    *,
+    allowed_symbols: tuple[str, ...],
+    symbol_map: dict[str, str],
+    max_order_notional: float,
+    max_spread_bps: float,
+    submit_enabled: bool,
+) -> MT5DemoExecutor:
+    return MT5DemoExecutor(
+        MT5DemoConfig(
+            allowed_symbols=allowed_symbols,
+            symbol_map=symbol_map,
+            max_order_notional=max_order_notional,
+            max_spread_bps=max_spread_bps,
+            submit_enabled=submit_enabled,
+        )
+    )
+
+
+def _attach_bridge(app: FastAPI, executor: MT5DemoExecutor) -> None:
+    journal = TradingViewWebhookJournal(app.state.settings.journal_path)
+    app.state.executor = executor
+    app.state.bridge = TradingViewMT5Bridge(executor=executor, journal=journal)
+    app.state.mt5_connected = True
+
+
+def _detach_bridge(app: FastAPI) -> None:
+    executor = getattr(app.state, "executor", None)
+    if executor is not None:
+        executor.shutdown()
+    app.state.executor = None
+    app.state.bridge = None
+    app.state.mt5_connected = False
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = BridgeSettings.from_env()
@@ -158,62 +218,259 @@ async def lifespan(app: FastAPI):
     app.state.bridge = None
     app.state.executor = None
     app.state.mt5_connected = False
+    app.state.route_token = settings.route_token or secrets.token_urlsafe(32)
+    app.state.public_base_url = settings.public_base_url
 
     if settings.enabled:
-        cfg = MT5DemoConfig(
+        executor = _build_executor(
             allowed_symbols=settings.allowed_symbols,
             symbol_map=settings.symbol_map,
             max_order_notional=settings.max_order_notional,
             max_spread_bps=settings.max_spread_bps,
             submit_enabled=settings.submit_enabled,
         )
-        executor = MT5DemoExecutor(cfg)
         executor.connect(
             terminal_path=settings.terminal_path,
             login=settings.login,
             password=settings.password,
             server=settings.server,
         )
-        journal = TradingViewWebhookJournal(settings.journal_path)
-        app.state.executor = executor
-        app.state.bridge = TradingViewMT5Bridge(
-            executor=executor,
-            journal=journal,
-        )
-        app.state.mt5_connected = True
+        _attach_bridge(app, executor)
 
     try:
         yield
     finally:
-        executor = getattr(app.state, "executor", None)
-        if executor is not None:
-            executor.shutdown()
-        app.state.mt5_connected = False
+        _detach_bridge(app)
 
 
 app = FastAPI(
     title="TradingView -> MT5 DEMO Bridge",
-    version="1.0.0",
+    version="1.1.0",
     description=(
-        "Fail-closed webhook bridge for TradingView alerts into a MetaTrader 5 "
-        "DEMO account. Real-money MT5 accounts are refused by the executor."
+        "Fail-closed webhook bridge and local control panel for TradingView "
+        "alerts into a MetaTrader 5 DEMO account. Real-money MT5 accounts are refused."
     ),
     lifespan=lifespan,
 )
 
 
+@app.get("/")
+def root() -> dict[str, Any]:
+    return {
+        "service": "tradingview-mt5-demo-bridge",
+        "ui": "/ui",
+        "health": "/health",
+        "live_money_allowed": False,
+    }
+
+
+@app.get("/ui")
+def ui(request: Request):
+    _require_local_admin(request)
+    return control_panel_html()
+
+
 @app.get("/health")
 def health(request: Request) -> dict[str, Any]:
-    settings: BridgeSettings = request.app.state.settings
+    executor: MT5DemoExecutor | None = request.app.state.executor
     return {
         "status": "ok",
-        "bridge_enabled": settings.enabled,
+        "bridge_enabled": request.app.state.bridge is not None,
         "mt5_connected": bool(request.app.state.mt5_connected),
-        "demo_submission_enabled": settings.submit_enabled,
-        "allowed_symbols": list(settings.allowed_symbols),
-        "source_ip_enforcement": settings.enforce_source_ip,
+        "demo_submission_enabled": (
+            executor.submission_enabled if executor is not None else False
+        ),
+        "source_ip_enforcement": request.app.state.settings.enforce_source_ip,
         "live_money_allowed": False,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.get("/api/ui/status")
+def ui_status(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    executor: MT5DemoExecutor | None = request.app.state.executor
+    mt5 = (
+        executor.account_summary()
+        if executor is not None
+        else {"connected": False, "submission_enabled": False}
+    )
+    return {
+        "mt5": mt5,
+        "tradingview": {
+            "route_token": request.app.state.route_token,
+            "public_base_url": request.app.state.public_base_url,
+            "webhook_url": _webhook_url(request),
+            "source_ip_enforcement": request.app.state.settings.enforce_source_ip,
+        },
+        "live_money_allowed": False,
+    }
+
+
+@app.post("/api/ui/mt5/connect")
+async def ui_connect_mt5(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    payload = await request.json()
+
+    try:
+        allowed_symbols = tuple(
+            str(x).strip()
+            for x in payload.get("allowed_symbols", [])
+            if str(x).strip()
+        )
+        symbol_map_raw = payload.get("symbol_map", {})
+        if not isinstance(symbol_map_raw, dict):
+            raise ValueError("symbol_map must be an object")
+        symbol_map = {
+            str(k).strip(): str(v).strip()
+            for k, v in symbol_map_raw.items()
+            if str(k).strip() and str(v).strip()
+        }
+        if not allowed_symbols:
+            raise ValueError("allowed_symbols cannot be empty")
+        missing = [s for s in allowed_symbols if s not in symbol_map]
+        if missing:
+            raise ValueError(
+                "missing broker mapping for: " + ", ".join(missing)
+            )
+
+        login_raw = str(payload.get("login", "")).strip()
+        login = int(login_raw) if login_raw else None
+        password = str(payload.get("password", "")) or None
+        server = str(payload.get("server", "")).strip() or None
+        terminal_path = str(payload.get("terminal_path", "")).strip() or None
+        max_order_notional = float(payload.get("max_order_notional", 5000.0))
+        max_spread_bps = float(payload.get("max_spread_bps", 35.0))
+
+        executor = _build_executor(
+            allowed_symbols=allowed_symbols,
+            symbol_map=symbol_map,
+            max_order_notional=max_order_notional,
+            max_spread_bps=max_spread_bps,
+            submit_enabled=False,
+        )
+        executor.connect(
+            terminal_path=terminal_path,
+            login=login,
+            password=password,
+            server=server,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{type(exc).__name__}: {exc}",
+        ) from exc
+
+    _detach_bridge(request.app)
+    _attach_bridge(request.app, executor)
+    return {
+        "status": "MT5_DEMO_CONNECTED",
+        "account": executor.account_summary(),
+        "live_money_allowed": False,
+    }
+
+
+@app.post("/api/ui/mt5/disconnect")
+def ui_disconnect_mt5(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    _detach_bridge(request.app)
+    return {"status": "MT5_DISCONNECTED", "live_money_allowed": False}
+
+
+@app.post("/api/ui/demo/submission")
+async def ui_submission(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    executor: MT5DemoExecutor | None = request.app.state.executor
+    if executor is None:
+        raise HTTPException(status_code=409, detail="MT5 demo is not connected")
+    payload = await request.json()
+    enabled = bool(payload.get("enabled", False))
+    try:
+        executor.set_demo_submission_enabled(enabled)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "status": "DEMO_SUBMISSION_ENABLED" if enabled else "DRY_RUN_ENABLED",
+        "submission_enabled": executor.submission_enabled,
+        "live_money_allowed": False,
+    }
+
+
+@app.get("/api/ui/mt5/symbols")
+def ui_symbols(request: Request, q: str = "") -> dict[str, Any]:
+    _require_local_admin(request)
+    executor: MT5DemoExecutor | None = request.app.state.executor
+    if executor is None:
+        raise HTTPException(status_code=409, detail="MT5 demo is not connected")
+    try:
+        items = executor.search_symbols(q, limit=100)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"items": items}
+
+
+@app.post("/api/ui/tradingview/token")
+def ui_new_token(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    request.app.state.route_token = secrets.token_urlsafe(32)
+    return {
+        "route_token": request.app.state.route_token,
+        "webhook_url": _webhook_url(request),
+    }
+
+
+@app.post("/api/ui/tradingview/configure")
+async def ui_configure_tradingview(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    payload = await request.json()
+    base = str(payload.get("public_base_url", "")).strip().rstrip("/")
+    if base and not base.lower().startswith("https://"):
+        raise HTTPException(
+            status_code=400,
+            detail="Public TradingView URL must use https://",
+        )
+    request.app.state.public_base_url = base
+    return {
+        "status": "TRADINGVIEW_WEBHOOK_CONFIGURED",
+        "route_token": request.app.state.route_token,
+        "public_base_url": base,
+        "webhook_url": _webhook_url(request),
+    }
+
+
+@app.post("/api/ui/tradingview/dry-run-test")
+async def ui_tradingview_dry_run(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    bridge: TradingViewMT5Bridge | None = request.app.state.bridge
+    if bridge is None:
+        raise HTTPException(status_code=409, detail="connect MT5 demo first")
+    payload = await request.json()
+    try:
+        signal = bridge.accept(payload)
+    except TradingViewDuplicateError:
+        return {
+            "status": "DUPLICATE_IGNORED",
+            "event_id": str(payload.get("event_id", "")),
+        }
+    except TradingViewPayloadError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {
+        "status": "DRY_RUN_ACCEPTED",
+        "event_id": signal.event_id,
+        "symbol": signal.canonical_symbol,
+        "action": signal.action,
+        "order_sent": False,
+    }
+
+
+@app.get("/api/ui/events")
+def ui_events(request: Request, limit: int = 30) -> dict[str, Any]:
+    _require_local_admin(request)
+    bridge: TradingViewMT5Bridge | None = request.app.state.bridge
+    if bridge is None:
+        return {"items": []}
+    return {
+        "items": bridge.journal.latest(min(max(int(limit), 1), 100))
     }
 
 
@@ -223,12 +480,11 @@ def recent(
     request: Request,
     limit: int = 20,
 ) -> dict[str, Any]:
-    settings: BridgeSettings = request.app.state.settings
     bridge = request.app.state.bridge
     if bridge is None:
         raise HTTPException(status_code=503, detail="bridge disabled")
     try:
-        verify_route_token(settings.route_token, route_token)
+        verify_route_token(request.app.state.route_token, route_token)
     except TradingViewAuthError as exc:
         raise HTTPException(status_code=404, detail="not found") from exc
     return {
@@ -245,12 +501,13 @@ async def tradingview_webhook(
 ) -> dict[str, Any]:
     settings: BridgeSettings = request.app.state.settings
     bridge: TradingViewMT5Bridge | None = request.app.state.bridge
+    executor: MT5DemoExecutor | None = request.app.state.executor
 
-    if not settings.enabled or bridge is None:
-        raise HTTPException(status_code=503, detail="bridge disabled")
+    if bridge is None or executor is None:
+        raise HTTPException(status_code=503, detail="MT5 demo bridge is not connected")
 
     try:
-        verify_route_token(settings.route_token, route_token)
+        verify_route_token(request.app.state.route_token, route_token)
     except TradingViewAuthError as exc:
         raise HTTPException(status_code=404, detail="not found") from exc
 
@@ -281,7 +538,7 @@ async def tradingview_webhook(
     except TradingViewPayloadError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    if not settings.submit_enabled:
+    if not executor.submission_enabled:
         return {
             "status": "ACCEPTED_DRY_RUN",
             "event_id": signal.event_id,
@@ -290,8 +547,6 @@ async def tradingview_webhook(
             "live_money_allowed": False,
         }
 
-    # Return immediately so TradingView is not blocked by MT5 order latency.
-    # Execution continues after the HTTP 202 response.
     background_tasks.add_task(_execute_background, bridge, signal)
 
     return {
