@@ -5,7 +5,11 @@ from types import SimpleNamespace
 import pytest
 from fastapi import HTTPException
 
-from research_bot.tradingview_mt5_service import _client_ip, _require_local_admin
+from research_bot.tradingview_mt5_service import (
+    _client_ip,
+    _direct_config_from_payload,
+    _require_local_admin,
+)
 from research_bot.tradingview_mt5_ui import control_panel_html
 from research_bot.tradingview_tunnel import QuickTunnelManager, TunnelUnavailableError
 
@@ -87,3 +91,45 @@ def test_quick_tunnel_fails_cleanly_when_cloudflared_is_missing(monkeypatch):
     manager = QuickTunnelManager()
     with pytest.raises(TunnelUnavailableError, match="cloudflared"):
         manager.start()
+
+
+def test_direct_payload_defaults_to_v59_ai_contract():
+    executor = SimpleNamespace(
+        config=SimpleNamespace(
+            allowed_symbols=("BTC/USDT",),
+            symbol_map={"BTC/USDT": "BTCUSD"},
+        )
+    )
+    cfg, poll = _direct_config_from_payload(
+        executor,
+        {
+            "canonical_symbol": "BTC/USDT",
+            "venue_symbol": "BTCUSD",
+        },
+    )
+
+    assert cfg.strategy_name == "H4_V59_CONFLUENCE_DEMO"
+    assert cfg.risk_fraction == pytest.approx(0.0025)
+    assert cfg.ai_gate_enabled is True
+    assert cfg.ai_hurdle_bps == pytest.approx(24.0)
+    assert cfg.ai_long_threshold == pytest.approx(0.56)
+    assert cfg.ai_short_threshold == pytest.approx(0.44)
+    assert cfg.ai_max_validation_brier == pytest.approx(0.28)
+    assert poll == pytest.approx(15.0)
+
+
+def test_direct_payload_rejects_wrong_broker_symbol():
+    executor = SimpleNamespace(
+        config=SimpleNamespace(
+            allowed_symbols=("BTC/USDT",),
+            symbol_map={"BTC/USDT": "BTCUSD"},
+        )
+    )
+    with pytest.raises(ValueError, match="venue symbol mismatch"):
+        _direct_config_from_payload(
+            executor,
+            {
+                "canonical_symbol": "BTC/USDT",
+                "venue_symbol": "BTCUSDm",
+            },
+        )
