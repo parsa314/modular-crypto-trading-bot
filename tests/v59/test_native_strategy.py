@@ -107,3 +107,12 @@ def test_future_coinex_holdout_is_sealed():
     with pytest.raises(ValueError, match="SEALED"):
         scan_native(f, venue="coinex", symbol="BTC/USDT", data_version="FORBIDDEN",
                     as_of=f.timestamp.iloc[-1] + pd.Timedelta(hours=4))
+
+
+def test_event_identity_changes_when_data_version_changes():
+    f = trending()
+    a, _ = scan(f)
+    b, _ = scan_native(f, venue='binance', symbol='BTC/USDT', data_version='DIFFERENT_PINNED_DATA_VERSION',
+        as_of=f.timestamp.iloc[-1]+pd.Timedelta(hours=1), config=NativeStrategyConfig(timeframe='1h'))
+    assert a and b and len(a) == len(b)
+    assert {s.event_id for s in a}.isdisjoint({s.event_id for s in b})
