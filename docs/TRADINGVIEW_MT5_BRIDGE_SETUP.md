@@ -170,7 +170,7 @@ Expected webhook response:
 
 Inspect:
 
-    GET /bridge/recent
+    GET /bridge/recent/YOUR_ROUTE_TOKEN
 
 The journal should contain a RECEIVED row and no MT5 order should exist.
 
