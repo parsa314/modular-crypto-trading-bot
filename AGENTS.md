@@ -94,6 +94,17 @@ private `live`/`testnet` modes before reading inputs or credentials. No override
 exists until a later reviewed promotion path is implemented. Tests of internal
 execution components remain engineering evidence, not permission to run them.
 
+### Owner-authorized automatic historical research phases — 2026-10-04
+
+The owner subsequently authorized choosing/correcting the proposed Binance Spot
+BTC/USDT 1h configuration and automatically running data ingestion, Logistic
+baseline and cost-aware walk-forward research. This supersedes the Stage 0
+wait-for-go-ahead rule for these three research phases. Follow the separately
+frozen `docs/BINANCE_PROFIT_STUDY_PROTOCOL_FA.md` and JSON study configuration.
+Keep the v0.51 experiment and sealed holdout independent; this historical study
+does not create prospective evidence or authorize private execution. Preserve
+all results, including failed economic gates; never retune on inspected OOS data.
+
 ## 6. Dependency Authority
 
 For the scientific bot, use the dependency declarations in this repository as authoritative.
