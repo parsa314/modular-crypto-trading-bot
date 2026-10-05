@@ -205,6 +205,47 @@ def _build_executor(
     )
 
 
+def _direct_config_from_payload(
+    executor: MT5DemoExecutor,
+    payload: dict[str, Any],
+) -> tuple[MT5DirectStrategyConfig, float]:
+    canonical_symbol = str(payload.get("canonical_symbol", "")).strip()
+    venue_symbol = str(payload.get("venue_symbol", "")).strip()
+    strategy_name = str(
+        payload.get("strategy_name", "H4_V59_CONFLUENCE_DEMO")
+    ).strip()
+    bars = int(payload.get("bars", 600))
+    risk_percent = float(payload.get("risk_percent", 0.25))
+    poll_seconds = float(payload.get("poll_seconds", 15.0))
+    risk_fraction = risk_percent / 100.0
+
+    if canonical_symbol not in executor.config.allowed_symbols:
+        raise ValueError(
+            f"canonical symbol is not allowlisted: {canonical_symbol}"
+        )
+    expected_venue = str(
+        executor.config.symbol_map.get(canonical_symbol, canonical_symbol)
+    )
+    if venue_symbol != expected_venue:
+        raise ValueError(f"venue symbol mismatch: expected {expected_venue}")
+
+    config = MT5DirectStrategyConfig(
+        canonical_symbol=canonical_symbol,
+        venue_symbol=venue_symbol,
+        strategy_name=strategy_name,
+        bars=bars,
+        risk_fraction=risk_fraction,
+        ai_gate_enabled=bool(payload.get("ai_gate_enabled", True)),
+        ai_hurdle_bps=float(payload.get("ai_hurdle_bps", 24.0)),
+        ai_long_threshold=float(payload.get("ai_long_threshold", 0.56)),
+        ai_short_threshold=float(payload.get("ai_short_threshold", 0.44)),
+        ai_max_validation_brier=float(
+            payload.get("ai_max_validation_brier", 0.28)
+        ),
+    )
+    return config, poll_seconds
+
+
 def _attach_bridge(app: FastAPI, executor: MT5DemoExecutor) -> None:
     journal = TradingViewWebhookJournal(app.state.settings.journal_path)
     app.state.executor = executor
@@ -477,45 +518,7 @@ async def ui_direct_start(request: Request) -> dict[str, Any]:
 
     payload = await request.json()
     try:
-        canonical_symbol = str(payload.get("canonical_symbol", "")).strip()
-        venue_symbol = str(payload.get("venue_symbol", "")).strip()
-        strategy_name = str(payload.get("strategy_name", "")).strip()
-        bars = int(payload.get("bars", 600))
-        risk_percent = float(payload.get("risk_percent", 0.25))
-        poll_seconds = float(payload.get("poll_seconds", 15.0))
-        risk_fraction = risk_percent / 100.0
-        ai_gate_enabled = bool(payload.get("ai_gate_enabled", True))
-        ai_hurdle_bps = float(payload.get("ai_hurdle_bps", 24.0))
-        ai_long_threshold = float(payload.get("ai_long_threshold", 0.56))
-        ai_short_threshold = float(payload.get("ai_short_threshold", 0.44))
-        ai_max_validation_brier = float(
-            payload.get("ai_max_validation_brier", 0.28)
-        )
-
-        if canonical_symbol not in executor.config.allowed_symbols:
-            raise ValueError(
-                f"canonical symbol is not allowlisted: {canonical_symbol}"
-            )
-        expected_venue = str(
-            executor.config.symbol_map.get(canonical_symbol, canonical_symbol)
-        )
-        if venue_symbol != expected_venue:
-            raise ValueError(
-                f"venue symbol mismatch: expected {expected_venue}"
-            )
-
-        config = MT5DirectStrategyConfig(
-            canonical_symbol=canonical_symbol,
-            venue_symbol=venue_symbol,
-            strategy_name=strategy_name,
-            bars=bars,
-            risk_fraction=risk_fraction,
-            ai_gate_enabled=ai_gate_enabled,
-            ai_hurdle_bps=ai_hurdle_bps,
-            ai_long_threshold=ai_long_threshold,
-            ai_short_threshold=ai_short_threshold,
-            ai_max_validation_brier=ai_max_validation_brier,
-        )
+        config, poll_seconds = _direct_config_from_payload(executor, payload)
         _stop_direct_worker(request.app)
         worker = DirectMT5StrategyWorker(
             executor,
@@ -557,44 +560,7 @@ async def ui_direct_evaluate_now(request: Request) -> dict[str, Any]:
 
     payload = await request.json()
     try:
-        canonical_symbol = str(payload.get("canonical_symbol", "")).strip()
-        venue_symbol = str(payload.get("venue_symbol", "")).strip()
-        strategy_name = str(payload.get("strategy_name", "")).strip()
-        bars = int(payload.get("bars", 600))
-        risk_percent = float(payload.get("risk_percent", 0.25))
-        risk_fraction = risk_percent / 100.0
-        ai_gate_enabled = bool(payload.get("ai_gate_enabled", True))
-        ai_hurdle_bps = float(payload.get("ai_hurdle_bps", 24.0))
-        ai_long_threshold = float(payload.get("ai_long_threshold", 0.56))
-        ai_short_threshold = float(payload.get("ai_short_threshold", 0.44))
-        ai_max_validation_brier = float(
-            payload.get("ai_max_validation_brier", 0.28)
-        )
-
-        if canonical_symbol not in executor.config.allowed_symbols:
-            raise ValueError(
-                f"canonical symbol is not allowlisted: {canonical_symbol}"
-            )
-        expected_venue = str(
-            executor.config.symbol_map.get(canonical_symbol, canonical_symbol)
-        )
-        if venue_symbol != expected_venue:
-            raise ValueError(
-                f"venue symbol mismatch: expected {expected_venue}"
-            )
-
-        config = MT5DirectStrategyConfig(
-            canonical_symbol=canonical_symbol,
-            venue_symbol=venue_symbol,
-            strategy_name=strategy_name,
-            bars=bars,
-            risk_fraction=risk_fraction,
-            ai_gate_enabled=ai_gate_enabled,
-            ai_hurdle_bps=ai_hurdle_bps,
-            ai_long_threshold=ai_long_threshold,
-            ai_short_threshold=ai_short_threshold,
-            ai_max_validation_brier=ai_max_validation_brier,
-        )
+        config, _ = _direct_config_from_payload(executor, payload)
         temp = DirectMT5StrategyWorker(executor, config, poll_seconds=15.0)
         outcome = temp.evaluate_now()
     except Exception as exc:
@@ -609,6 +575,7 @@ async def ui_direct_evaluate_now(request: Request) -> dict[str, Any]:
         "demo_submission_enabled": executor.submission_enabled,
         "live_money_allowed": False,
     }
+
 
 @app.post("/api/ui/tradingview/token")
 def ui_new_token(request: Request) -> dict[str, Any]:
