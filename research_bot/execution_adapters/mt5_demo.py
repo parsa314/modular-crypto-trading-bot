@@ -348,6 +348,36 @@ class MT5DemoExecutor:
             )
         return out
 
+
+    def market_snapshot(self, venue_symbol: str) -> dict[str, float]:
+        """Return the current executable quote and spread in basis points."""
+
+        if not self._connected:
+            raise MT5DemoSafetyError("MT5_DEMO_NOT_CONNECTED")
+        mt5 = self._module()
+        if not mt5.symbol_select(str(venue_symbol), True):
+            info = mt5.symbol_info(str(venue_symbol))
+            if info is None:
+                raise MT5DemoExecutionError(
+                    f"MT5 symbol not found: {venue_symbol}"
+                )
+        tick = mt5.symbol_info_tick(str(venue_symbol))
+        if tick is None:
+            raise MT5DemoExecutionError(
+                f"symbol_info_tick failed for {venue_symbol}: {self._last_error()}"
+            )
+        bid = self._finite_positive(getattr(tick, "bid", 0.0), "bid")
+        ask = self._finite_positive(getattr(tick, "ask", 0.0), "ask")
+        if ask < bid:
+            raise MT5DemoSafetyError("CROSSED_MT5_QUOTE")
+        mid = (bid + ask) / 2.0
+        return {
+            "bid": float(bid),
+            "ask": float(ask),
+            "mid": float(mid),
+            "spread_bps": float((ask - bid) / mid * 10_000.0),
+        }
+
     def _assert_demo_account(self) -> Any:
         mt5 = self._module()
         info = mt5.account_info()
