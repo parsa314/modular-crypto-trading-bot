@@ -6,6 +6,7 @@ results to LIVE authorization.
 """
 
 from .mt5_demo import (
+    MT5DemoCloseResult,
     MT5DemoConfig,
     MT5DemoExecutionError,
     MT5DemoExecutionResult,
@@ -14,6 +15,7 @@ from .mt5_demo import (
 )
 
 __all__ = [
+    "MT5DemoCloseResult",
     "MT5DemoConfig",
     "MT5DemoExecutionError",
     "MT5DemoExecutionResult",
