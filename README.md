@@ -141,6 +141,20 @@ Optional Windows MT5 environment:
 python -m pip install -e '.[dev,mt5]'
 ```
 
+## TradingView -> MT5 DEMO bridge
+
+The engineering validation branch also includes a dedicated TradingView webhook
+bridge. TradingView alerts can send JSON over HTTPS to a Windows/VPS service
+running beside the MT5 terminal; the service journals the event, rejects
+duplicates, verifies the configured route/source controls, and routes eligible
+BUY/SELL intents through the DEMO-only MT5 executor.
+
+This is deliberately separate from the canonical research FastAPI service and
+does not change LIVE/PAPER authorization. See
+[docs/TRADINGVIEW_MT5_BRIDGE_SETUP.md](docs/TRADINGVIEW_MT5_BRIDGE_SETUP.md)
+and the Pine transport test at
+[tradingview/mt5_demo_bridge_test.pine](tradingview/mt5_demo_bridge_test.pine).
+
 ## Reproducibility rule
 
 Every promotable experiment preserves source SHA, frozen hypothesis/config, data provenance, dependency environment, dataset/artifact fingerprints, validation-only selection logic, fresh evaluation evidence, cost/risk assumptions, machine-readable decision output and explicit PAPER/LIVE authorization flags.
