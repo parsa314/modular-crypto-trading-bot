@@ -25,7 +25,7 @@ jobs:
       - name: Fetch and validate primary-source ZIP checksums
         run: python scripts/collect_binance_archive_2022_2023.py --output-dir data/binance-2022-2023
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: binance-real-2022-2023-${{ github.run_id }}
           path: data/binance-2022-2023/

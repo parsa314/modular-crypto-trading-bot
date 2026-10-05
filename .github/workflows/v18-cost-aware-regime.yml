@@ -49,7 +49,7 @@ jobs:
           print(json.dumps({'A': z['experiment_a']['decision'],'B': z['experiment_b']['decision'],'external': z['experiment_b_external_source']}, indent=2))
           PY
       - name: Upload v0.18 evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: v18-cost-aware-regime-results
           path: |

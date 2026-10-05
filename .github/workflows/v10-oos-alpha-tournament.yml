@@ -68,7 +68,7 @@ jobs:
           print({'eligible':r['eligibility']['eligible_assets'],'best':t['provisional_best_model'],'promotion':t['promotion_status']})
           PY
       - name: Upload v0.10 OOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: v10-oos-alpha-tournament
           path: artifacts/v10/oos_alpha_tournament.json

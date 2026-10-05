@@ -88,7 +88,7 @@ jobs:
           })
           PY
       - name: Upload v0.11 robustness artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: v11-robustness-inference
           path: artifacts/v11/robustness_inference.json
