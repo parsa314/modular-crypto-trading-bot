@@ -29,6 +29,7 @@ from .tradingview_mt5_bridge import (
     verify_route_token,
 )
 from .tradingview_mt5_ui import control_panel_html
+from .tradingview_tunnel import QuickTunnelManager, TunnelUnavailableError
 
 
 DEFAULT_TRADINGVIEW_IPS = {
@@ -154,11 +155,15 @@ def _require_local_admin(request: Request) -> None:
 
 
 def _client_ip(request: Request, *, trust_proxy: bool) -> str:
-    if trust_proxy:
+    direct = _direct_client_ip(request)
+    if trust_proxy and direct in LOOPBACK_IPS:
+        cf_ip = request.headers.get("cf-connecting-ip", "").strip()
+        if cf_ip:
+            return cf_ip
         forwarded = request.headers.get("x-forwarded-for", "")
         if forwarded:
             return forwarded.split(",", 1)[0].strip()
-    return _direct_client_ip(request)
+    return direct
 
 
 def _execute_background(
@@ -220,6 +225,9 @@ async def lifespan(app: FastAPI):
     app.state.mt5_connected = False
     app.state.route_token = settings.route_token or secrets.token_urlsafe(32)
     app.state.public_base_url = settings.public_base_url
+    app.state.enforce_source_ip = settings.enforce_source_ip
+    app.state.trust_proxy = settings.trust_proxy
+    app.state.tunnel = QuickTunnelManager()
 
     if settings.enabled:
         executor = _build_executor(
@@ -240,6 +248,9 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        tunnel = getattr(app.state, "tunnel", None)
+        if tunnel is not None:
+            tunnel.stop()
         _detach_bridge(app)
 
 
@@ -301,8 +312,13 @@ def ui_status(request: Request) -> dict[str, Any]:
             "route_token": request.app.state.route_token,
             "public_base_url": request.app.state.public_base_url,
             "webhook_url": _webhook_url(request),
-            "source_ip_enforcement": request.app.state.settings.enforce_source_ip,
+            "source_ip_enforcement": bool(request.app.state.enforce_source_ip),
         },
+        "tunnel": (
+            request.app.state.tunnel.status().__dict__
+            if getattr(request.app.state, "tunnel", None) is not None
+            else {"running": False, "public_url": "", "error": "", "pid": None}
+        ),
         "live_money_allowed": False,
     }
 
@@ -474,6 +490,47 @@ def ui_events(request: Request, limit: int = 30) -> dict[str, Any]:
     }
 
 
+
+@app.post("/api/ui/tunnel/start")
+def ui_tunnel_start(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    tunnel: QuickTunnelManager = request.app.state.tunnel
+    try:
+        status = tunnel.start(local_url="http://127.0.0.1:8000")
+    except TunnelUnavailableError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    request.app.state.trust_proxy = True
+    request.app.state.enforce_source_ip = True
+    if status.public_url:
+        request.app.state.public_base_url = status.public_url
+    return {
+        "status": "TUNNEL_RUNNING" if status.public_url else "TUNNEL_STARTING",
+        **status.__dict__,
+    }
+
+
+@app.get("/api/ui/tunnel/status")
+def ui_tunnel_status(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    tunnel: QuickTunnelManager = request.app.state.tunnel
+    status = tunnel.status()
+    if status.public_url:
+        request.app.state.public_base_url = status.public_url
+    return {
+        **status.__dict__,
+        "webhook_url": _webhook_url(request),
+    }
+
+
+@app.post("/api/ui/tunnel/stop")
+def ui_tunnel_stop(request: Request) -> dict[str, Any]:
+    _require_local_admin(request)
+    tunnel: QuickTunnelManager = request.app.state.tunnel
+    status = tunnel.stop()
+    return {"status": "TUNNEL_STOPPED", **status.__dict__}
+
+
 @app.get("/bridge/recent/{route_token}")
 def recent(
     route_token: str,
@@ -511,8 +568,11 @@ async def tradingview_webhook(
     except TradingViewAuthError as exc:
         raise HTTPException(status_code=404, detail="not found") from exc
 
-    source_ip = _client_ip(request, trust_proxy=settings.trust_proxy)
-    if settings.enforce_source_ip and source_ip not in settings.source_ips:
+    source_ip = _client_ip(
+        request,
+        trust_proxy=bool(request.app.state.trust_proxy),
+    )
+    if bool(request.app.state.enforce_source_ip) and source_ip not in settings.source_ips:
         raise HTTPException(status_code=403, detail="source IP not allowlisted")
 
     content_type = request.headers.get("content-type", "").lower()
