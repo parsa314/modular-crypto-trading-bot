@@ -238,6 +238,116 @@ class MT5DemoExecutor:
                 break
         return names
 
+
+    def copy_closed_bars(
+        self,
+        venue_symbol: str,
+        timeframe: str,
+        *,
+        count: int = 500,
+    ) -> list[dict[str, float | int]]:
+        """Return completed MT5 OHLCV bars only.
+
+        The current forming bar is excluded by requesting from position 1.
+        Returned rows contain UTC epoch seconds and standard OHLCV fields.
+        """
+
+        if not self._connected:
+            raise MT5DemoSafetyError("MT5_DEMO_NOT_CONNECTED")
+        mt5 = self._module()
+        tf_name = str(timeframe).strip().lower()
+        mapping = {
+            "1m": "TIMEFRAME_M1",
+            "5m": "TIMEFRAME_M5",
+            "15m": "TIMEFRAME_M15",
+            "30m": "TIMEFRAME_M30",
+            "1h": "TIMEFRAME_H1",
+            "4h": "TIMEFRAME_H4",
+            "1d": "TIMEFRAME_D1",
+        }
+        const_name = mapping.get(tf_name)
+        if const_name is None:
+            raise ValueError(f"unsupported MT5 timeframe: {timeframe}")
+        tf_value = getattr(mt5, const_name, None)
+        if tf_value is None:
+            raise MT5DemoExecutionError(f"MT5 constant unavailable: {const_name}")
+
+        if not mt5.symbol_select(str(venue_symbol), True):
+            info = mt5.symbol_info(str(venue_symbol))
+            if info is None:
+                raise MT5DemoExecutionError(
+                    f"MT5 symbol not found: {venue_symbol}"
+                )
+
+        rows = mt5.copy_rates_from_pos(
+            str(venue_symbol),
+            tf_value,
+            1,
+            max(2, int(count)),
+        )
+        if rows is None:
+            raise MT5DemoExecutionError(
+                f"copy_rates_from_pos failed for {venue_symbol}: {self._last_error()}"
+            )
+
+        out: list[dict[str, float | int]] = []
+        for row in rows:
+            getter = (
+                (lambda name: row[name])
+                if hasattr(row, "dtype") and getattr(row.dtype, "names", None)
+                else (lambda name: getattr(row, name))
+            )
+            out.append(
+                {
+                    "time": int(getter("time")),
+                    "open": float(getter("open")),
+                    "high": float(getter("high")),
+                    "low": float(getter("low")),
+                    "close": float(getter("close")),
+                    "tick_volume": float(getter("tick_volume")),
+                    "spread": float(getter("spread")),
+                    "real_volume": float(getter("real_volume")),
+                }
+            )
+        return out
+
+    def bot_positions(
+        self,
+        venue_symbol: str,
+        *,
+        magic: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return positions owned by this bot magic number for one symbol."""
+
+        if not self._connected:
+            raise MT5DemoSafetyError("MT5_DEMO_NOT_CONNECTED")
+        mt5 = self._module()
+        rows = mt5.positions_get(symbol=str(venue_symbol))
+        if rows is None:
+            raise MT5DemoExecutionError(
+                f"positions_get failed for {venue_symbol}: {self._last_error()}"
+            )
+        expected_magic = int(self.config.magic if magic is None else magic)
+        out: list[dict[str, Any]] = []
+        for pos in rows:
+            pos_magic = int(getattr(pos, "magic", 0) or 0)
+            if pos_magic != expected_magic:
+                continue
+            out.append(
+                {
+                    "ticket": int(getattr(pos, "ticket", 0) or 0),
+                    "symbol": str(getattr(pos, "symbol", "") or ""),
+                    "type": int(getattr(pos, "type", -1)),
+                    "volume": float(getattr(pos, "volume", 0.0) or 0.0),
+                    "price_open": float(getattr(pos, "price_open", 0.0) or 0.0),
+                    "sl": float(getattr(pos, "sl", 0.0) or 0.0),
+                    "tp": float(getattr(pos, "tp", 0.0) or 0.0),
+                    "profit": float(getattr(pos, "profit", 0.0) or 0.0),
+                    "magic": pos_magic,
+                }
+            )
+        return out
+
     def _assert_demo_account(self) -> Any:
         mt5 = self._module()
         info = mt5.account_info()
