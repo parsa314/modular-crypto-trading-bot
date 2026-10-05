@@ -44,6 +44,7 @@ jobs:
             tests/test_live_readiness.py \
             tests/test_testnet_execution.py \
             tests/test_okx_demo_transport.py \
+            tests/test_nobitex_testnet_transport.py \
             tests/test_forward_paper_v14.py
       - name: Enforce no-LIVE contract
         run: |
