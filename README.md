@@ -13,6 +13,11 @@
 
 ## Canonical current state
 
+Phase 2A task 1 adds a real PostgreSQL journal behind the generic Fake OMS,
+with offline SQLite migration and recovery/atomicity tests. See the
+[PostgreSQL runbook](docs/POSTGRESQL_PHASE2A.md). This engineering continuation
+does not enable Paper, Testnet or Live execution or change scientific thresholds.
+
 The V58 engineering continuation connects causal events, three-fold walk-forward
 ML, frozen JSON scoring, cost-adjusted abstention and shared-capital risk on
 synthetic fixtures. Run `python -m research_bot.v58 synthetic-ai-demo --output results/v58-ai-new`.

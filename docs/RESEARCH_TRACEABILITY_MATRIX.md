@@ -85,6 +85,8 @@ Fake-only OMS → atomic local journal → confirmed protective Fake lifecycle.
 | Research-production bridge | production_adapter.py + immutable envelope/manifest/intent | ENGINEERING_FIXTURE_ONLY | Empty real promotion registry; no live authority |
 | Generic OMS | execution/oms.py + ledger.py | FAKE_REPLAY_TESTED, model agnostic | Authenticated adapter + infrastructure validation |
 | Protective lifecycle | execution/protection.py + venue-labelled Fake seams | FAKE_ACK_RESTART_FAULT_TESTED | Native venue protection NOT_VERIFIED |
+| Phase 2A PostgreSQL persistence | execution/postgres_ledger.py + postgres_schema.sql; tests/test_convergence_postgres.py | ENGINEERING_REPLAY_ONLY, actual DB atomicity/recovery | Production deployment/native exchange protection not verified |
+| Offline SQLite → PostgreSQL migration | execution/postgres_migration.py + explicit CLI | Identity-pinned, transactional, source read-only, no-overwrite | Operator must stop source writers; no operational backend switch authorized |
 | Production infrastructure | PostgreSQL/WS/watchdog/correlation portfolio | NOT_IMPLEMENTED_IN_PHASE1 | Phase 2 after Phase-1 review |
 
 See PRODUCTION_CONVERGENCE_PHASE1.md and PHASE1_TEST_EVIDENCE.md for exact scope,

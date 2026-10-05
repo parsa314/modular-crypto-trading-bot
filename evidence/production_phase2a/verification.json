@@ -1,0 +1,46 @@
+{
+  "authorization": {
+    "live": false,
+    "paper": false,
+    "real_order_submission": false,
+    "scientific_registry": "EMPTY",
+    "testnet": false
+  },
+  "evidence_hashes": {
+    "evidence/production_phase2a/cli_migration.json": "d234f028f7befbdf47fac7dab448fce37924fb092cf2ce840a3c72ed83c004e1",
+    "evidence/production_phase2a/container_restart.json": "85c4f13779021d45375c840d2320c1db55485412004facff17518d1614910e66",
+    "evidence/production_phase2a/focused_pytest.log": "3b7d6407c8765f26c4c4c90dacfde6549b2825b0b1977b08bf379be740f639c6",
+    "evidence/production_phase2a/full_pytest.log": "b2481cdfa8696902de97c2c5dae94ff7e5623be66fe28770c38eb9730bd472e4"
+  },
+  "focused": {
+    "failed": 0,
+    "passed": 28,
+    "skipped": 0
+  },
+  "full_regression": {
+    "dependency_deprecation_warnings": 1,
+    "failed": 0,
+    "passed": 787,
+    "skipped": 0,
+    "subtests": 12
+  },
+  "native_protection": "NOT_VERIFIED",
+  "python": "Python 3.11.16",
+  "risk_constitution_hash": "299138617d80a1976c9ac9fae84ee1c0732b1ddf32549d3cba01ece6e52664fe",
+  "schema_wheel_verified": true,
+  "source_base_sha": "fde6e758bfab244e40055778aa84c42cf454f295",
+  "source_hashes": {
+    ".github/workflows/production-postgres-phase2a.yml": "21917eeef9910ba1781a418a0bfa7e4a4084fdccd7a8e3990655f2c2cd1c866f",
+    "compose.postgres-test.yml": "7b6601f33c53c64170db6c57e2d2674144db479d3ca036022978950dfb99eb0b",
+    "pyproject.toml": "2e0223dd50173292e8494e4b319da6095c3599d1e2943eb01d8724a022a1573c",
+    "research_bot/execution/ledger.py": "d0cfacd56befa000ba2df92025aebe2f6be2856ab247a1b808a045a94077a4cc",
+    "research_bot/execution/postgres_ledger.py": "c9d1c94481e6e9206850a64763a8d39dd128d3e7a554958e051e1a54ebfe86b6",
+    "research_bot/execution/postgres_migration.py": "78e362773c0239f11d9866dd82bbffe1bc06a6af70ca06579df2fd7115658691",
+    "research_bot/execution/postgres_schema.sql": "d7a69c5ec3507786fcf84e24b1f60f99f62f53f22ff489556032f27bd4bc8c83",
+    "scripts/migrate_convergence_sqlite_to_postgres.py": "db52be0dec4fe3c8a52c0374db85be37644438c08725abb7da0e8f3f5422d178",
+    "tests/test_convergence_postgres.py": "45ffa974a49556356786374e5668e6cc7724585ead0a96f0d5dcfeb75a71caf9",
+    "tests/test_postgres_authorization.py": "6980bc5a29484517a2565c62b1873cab6bc74ad0f951d229459ac467bcaf008d"
+  },
+  "status": "PASS_PHASE2A_TASK1_ONLY",
+  "whole_phase2a": "PARTIAL"
+}
