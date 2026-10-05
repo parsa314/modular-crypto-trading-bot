@@ -34,6 +34,11 @@ def test_control_panel_contains_mt5_and_tradingview_controls():
     assert 'id="password"' in body
     assert 'id="webhookUrl"' in body
     assert "ساخت لینک عمومی موقت" in body
+    assert "H4_V59_CONFLUENCE_DEMO" in body or "directStrategy" in body
+    assert 'id="directAI"' in body
+    assert 'id="directBrier"' in body
+    assert 'id="directAILong"' in body
+    assert 'id="directAIShort"' in body
 
 
 def test_admin_surface_is_loopback_only():
