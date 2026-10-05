@@ -155,6 +155,21 @@ does not change LIVE/PAPER authorization. See
 and the Pine transport test at
 [tradingview/mt5_demo_bridge_test.pine](tradingview/mt5_demo_bridge_test.pine).
 
+## Direct registered strategy -> MT5 DEMO
+
+The local MT5 panel can also run the project's registered deterministic strategy
+candidates **without TradingView**. Completed MT5 bars are fed directly into
+`STRATEGY_REGISTRY`, then ATR-based bracket construction, risk sizing,
+spread/notional guards, persistent signal idempotency and DEMO-only execution
+are applied before `order_send()`.
+
+The browser UI exposes strategy selection/start/stop/status controls. A headless
+Windows/VPS runner is also available at
+`scripts/run_mt5_direct_demo_strategy.py`.
+
+This remains DEMO forward/execution validation. It does not authorize
+real-money MT5 or exchange LIVE execution.
+
 ## Reproducibility rule
 
 Every promotable experiment preserves source SHA, frozen hypothesis/config, data provenance, dependency environment, dataset/artifact fingerprints, validation-only selection logic, fresh evaluation evidence, cost/risk assumptions, machine-readable decision output and explicit PAPER/LIVE authorization flags.
