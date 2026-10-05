@@ -56,6 +56,8 @@ def test_ai_gate_produces_chronological_validation_evidence():
     assert result.model_name == "HGB_DEMO_CONFIRM_V1"
     assert result.reason in {"AI_CONFIRMS_LONG", "AI_REJECTS_LONG"}
     assert result.probability_up is not None
+    assert result.probability_down is None
+    assert result.probability_favorable == result.probability_up
     assert 0.0 <= result.probability_up <= 1.0
     assert result.validation_brier is not None
     assert 0.0 <= result.validation_brier <= 0.50
@@ -72,8 +74,10 @@ def test_ai_gate_short_uses_lower_probability_threshold():
     )
 
     assert result.reason in {"AI_CONFIRMS_SHORT", "AI_REJECTS_SHORT"}
-    assert result.probability_up is not None
+    assert result.probability_up is None
+    assert result.probability_down is not None
+    assert result.probability_favorable == result.probability_down
     if result.approved:
-        assert result.probability_up <= 0.44
+        assert result.probability_down >= 0.56
     else:
-        assert result.probability_up > 0.44
+        assert result.probability_down < 0.56
