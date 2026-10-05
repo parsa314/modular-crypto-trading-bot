@@ -10,6 +10,8 @@ on:
       - "research_bot/tradingview_mt5_ui.py"
       - "research_bot/tradingview_tunnel.py"
       - "research_bot/mt5_direct_strategy.py"
+      - "research_bot/mt5_ai_gate.py"
+      - "research_bot/multitimeframe_strategies_v19.py"
       - "research_bot/demo_experience.py"
       - "scripts/run_tv_mt5_bridge.py"
       - "scripts/start_mt5_tradingview_ui.py"
@@ -18,6 +20,8 @@ on:
       - "START_TRADINGVIEW_MT5_DEMO_PANEL.bat"
       - "tests/test_mt5_demo_adapter.py"
       - "tests/test_mt5_direct_strategy.py"
+      - "tests/test_mt5_ai_gate.py"
+      - "tests/test_multitimeframe_strategies_v19.py"
       - "tests/test_tradingview_mt5_bridge.py"
       - "tests/test_tradingview_mt5_ui.py"
       - "tests/test_demo_experience.py"
@@ -45,6 +49,8 @@ jobs:
           python -m compileall -q research_bot/tradingview_mt5_ui.py
           python -m compileall -q research_bot/tradingview_tunnel.py
           python -m compileall -q research_bot/mt5_direct_strategy.py
+          python -m compileall -q research_bot/mt5_ai_gate.py
+          python -m compileall -q research_bot/multitimeframe_strategies_v19.py
           python -m compileall -q research_bot/demo_experience.py
           python -m compileall -q scripts/start_mt5_tradingview_ui.py
           python -m compileall -q scripts/run_mt5_direct_demo_strategy.py
@@ -54,6 +60,8 @@ jobs:
           pytest -q \
             tests/test_mt5_demo_adapter.py \
             tests/test_mt5_direct_strategy.py \
+            tests/test_mt5_ai_gate.py \
+            tests/test_multitimeframe_strategies_v19.py \
             tests/test_tradingview_mt5_bridge.py \
             tests/test_tradingview_mt5_ui.py \
             tests/test_demo_experience.py
