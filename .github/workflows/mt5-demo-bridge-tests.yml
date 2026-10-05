@@ -7,11 +7,16 @@ on:
       - "research_bot/execution_adapters/**"
       - "research_bot/tradingview_mt5_bridge.py"
       - "research_bot/tradingview_mt5_service.py"
+      - "research_bot/tradingview_mt5_ui.py"
+      - "research_bot/tradingview_tunnel.py"
       - "research_bot/demo_experience.py"
       - "scripts/run_tv_mt5_bridge.py"
+      - "scripts/start_mt5_tradingview_ui.py"
       - "scripts/mt5_demo_smoke.py"
+      - "START_TRADINGVIEW_MT5_DEMO_PANEL.bat"
       - "tests/test_mt5_demo_adapter.py"
       - "tests/test_tradingview_mt5_bridge.py"
+      - "tests/test_tradingview_mt5_ui.py"
       - "tests/test_demo_experience.py"
       - "pyproject.toml"
 
@@ -21,17 +26,28 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Install test environment
         run: python -m pip install -e ".[dev]"
+
       - name: Compile bridge modules
         run: |
           python -m compileall -q research_bot/execution_adapters
           python -m compileall -q research_bot/tradingview_mt5_bridge.py
           python -m compileall -q research_bot/tradingview_mt5_service.py
+          python -m compileall -q research_bot/tradingview_mt5_ui.py
+          python -m compileall -q research_bot/tradingview_tunnel.py
           python -m compileall -q research_bot/demo_experience.py
+          python -m compileall -q scripts/start_mt5_tradingview_ui.py
+
       - name: Run focused tests
         run: |
-          pytest -q             tests/test_mt5_demo_adapter.py             tests/test_tradingview_mt5_bridge.py             tests/test_demo_experience.py
+          pytest -q \
+            tests/test_mt5_demo_adapter.py \
+            tests/test_tradingview_mt5_bridge.py \
+            tests/test_tradingview_mt5_ui.py \
+            tests/test_demo_experience.py
