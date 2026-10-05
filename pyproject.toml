@@ -44,6 +44,9 @@ rl = [
 [tool.setuptools.packages.find]
 include = ["research_bot*"]
 
+[tool.setuptools.package-data]
+"research_bot.execution" = ["postgres_schema.sql"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
