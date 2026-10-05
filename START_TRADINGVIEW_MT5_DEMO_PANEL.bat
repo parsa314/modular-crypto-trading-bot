@@ -45,6 +45,23 @@ if not exist ".venv\.mt5_panel_ready" (
   echo ready>".venv\.mt5_panel_ready"
 )
 
+where cloudflared >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+  echo.
+  echo Optional component cloudflared is not installed.
+  echo It is used only to create the temporary public HTTPS URL for TradingView.
+  set /p INSTALL_CF="Install cloudflared now with winget? [Y/N]: "
+  if /I "%INSTALL_CF%"=="Y" (
+    where winget >nul 2>nul
+    if %ERRORLEVEL%==0 (
+      winget install --id Cloudflare.cloudflared --accept-source-agreements --accept-package-agreements
+    ) else (
+      echo winget was not found. You can install cloudflared later.
+    )
+  )
+)
+
+echo.
 echo Starting local control panel...
 python scripts\start_mt5_tradingview_ui.py
 
