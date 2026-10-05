@@ -202,3 +202,73 @@ def test_direct_strategy_blocks_when_bot_position_exists(monkeypatch, tmp_path):
     assert outcome.status == "POSITION_EXISTS"
     assert outcome.side == "SELL"
     assert executor.executions == []
+
+
+def test_ai_gate_rejection_blocks_demo_order(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.generate_direction",
+        fake_signal(1),
+    )
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.evaluate_ai_confirmation",
+        lambda *args, **kwargs: SimpleNamespace(
+            approved=False,
+            probability_up=0.53,
+            confidence=0.06,
+            validation_brier=0.24,
+            reason="AI_REJECTS_LONG",
+        ),
+    )
+    executor = FakeExecutor(submission_enabled=True)
+    cfg = MT5DirectStrategyConfig(
+        canonical_symbol="BTC/USDT",
+        venue_symbol="BTCUSD",
+        strategy_name="H4_V59_CONFLUENCE_DEMO",
+        bars=400,
+        risk_fraction=0.0025,
+        journal_path=str(tmp_path / "ai-reject.jsonl"),
+        ai_gate_enabled=True,
+    )
+
+    outcome = DirectMT5StrategyRunner(executor, cfg).evaluate_once()
+
+    assert outcome.status == "AI_REJECTED"
+    assert outcome.ai_gate_enabled is True
+    assert outcome.ai_probability_up == pytest.approx(0.53)
+    assert outcome.ai_validation_brier == pytest.approx(0.24)
+    assert executor.executions == []
+
+
+def test_ai_gate_confirmation_allows_demo_execution(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.generate_direction",
+        fake_signal(1),
+    )
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.evaluate_ai_confirmation",
+        lambda *args, **kwargs: SimpleNamespace(
+            approved=True,
+            probability_up=0.71,
+            confidence=0.42,
+            validation_brier=0.21,
+            reason="AI_CONFIRMS_LONG",
+        ),
+    )
+    executor = FakeExecutor(submission_enabled=True)
+    cfg = MT5DirectStrategyConfig(
+        canonical_symbol="BTC/USDT",
+        venue_symbol="BTCUSD",
+        strategy_name="H4_V59_CONFLUENCE_DEMO",
+        bars=400,
+        risk_fraction=0.0025,
+        journal_path=str(tmp_path / "ai-confirm.jsonl"),
+        ai_gate_enabled=True,
+    )
+
+    outcome = DirectMT5StrategyRunner(executor, cfg).evaluate_once()
+
+    assert outcome.status == "EXECUTED_MT5_DEMO"
+    assert outcome.ai_gate_enabled is True
+    assert outcome.ai_probability_up == pytest.approx(0.71)
+    assert outcome.ai_reason == "AI_CONFIRMS_LONG"
+    assert len(executor.executions) == 1
