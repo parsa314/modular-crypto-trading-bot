@@ -80,8 +80,57 @@ table{width:100%;border-collapse:collapse;font-size:12px;direction:ltr;text-alig
   <div id="symbolsBox" class="codebox" style="margin-top:10px">بعد از اتصال قابل استفاده است.</div>
 </section>
 
+
 <section class="card full">
-  <h2 class="title2">۳) اتصال TradingView</h2>
+  <h2 class="title2">۳) اجرای مستقیم استراتژی ربات روی MT5 Demo</h2>
+  <div class="note">
+    این مسیر TradingView را دور می‌زند: داده‌ی کندل بسته‌شده مستقیماً از MT5 خوانده می‌شود،
+    Strategy Registry ربات اجرا می‌شود و در صورت عبور از Risk/SL/TP به حساب Demo سفارش می‌رود.
+  </div>
+  <div class="row">
+    <div>
+      <label>Strategy ثبت‌شده</label>
+      <select id="directStrategy"></select>
+    </div>
+    <div>
+      <label>Canonical Symbol</label>
+      <input id="directCanonical" dir="ltr" value="BTC/USDT" oninput="syncDirectVenue()">
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label>MT5 Broker Symbol</label>
+      <input id="directVenue" dir="ltr" value="BTCUSD">
+    </div>
+    <div>
+      <label>Risk per trade (%)</label>
+      <input id="directRisk" type="number" value="0.25" min="0.01" max="1" step="0.01">
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label>Completed bars</label>
+      <input id="directBars" type="number" value="600" min="240" step="10">
+    </div>
+    <div>
+      <label>Polling interval (seconds)</label>
+      <input id="directPoll" type="number" value="15" min="2" step="1">
+    </div>
+  </div>
+  <div class="toolbar">
+    <button class="warn" onclick="evaluateDirect()">فقط یک بار Evaluate</button>
+    <button class="ok" onclick="startDirect()">Start اجرای مستقیم</button>
+    <button class="danger" onclick="stopDirect()">Stop</button>
+  </div>
+  <div class="statusline">
+    <span class="badge"><span id="directDot" class="dot off"></span><span id="directState">متوقف</span></span>
+  </div>
+  <label>وضعیت آخرین ارزیابی</label>
+  <div id="directStatusBox" class="codebox">هنوز اجرا نشده است.</div>
+</section>
+
+<section class="card full">
+  <h2 class="title2">۴) اتصال TradingView</h2>
   <div class="row">
     <div>
       <label>Public HTTPS Base URL</label>
@@ -123,7 +172,7 @@ table{width:100%;border-collapse:collapse;font-size:12px;direction:ltr;text-alig
 </section>
 
 <section class="card full">
-  <h2 class="title2">۴) رویدادهای اخیر</h2>
+  <h2 class="title2">۵) رویدادهای اخیر</h2>
   <div class="toolbar"><button class="ghost" onclick="loadEvents()">بروزرسانی رویدادها</button></div>
   <div style="overflow:auto;margin-top:10px">
     <table>
@@ -170,6 +219,16 @@ async function refreshStatus(){
         $('webhookUrl').textContent=s.tradingview.webhook_url||'';
       }
     }
+    if(s.direct_strategy){
+      $('directDot').className='dot '+(s.direct_strategy.running?'on':'off');
+      $('directState').textContent=s.direct_strategy.running?'در حال اجرا':'متوقف';
+      const last=s.direct_strategy.last_outcome||null;
+      if(last){
+        $('directStatusBox').textContent=JSON.stringify(last,null,2);
+      }else if(s.direct_strategy.last_error){
+        $('directStatusBox').textContent=s.direct_strategy.last_error;
+      }
+    }
     if(s.mt5.connected){
       const a=s.mt5;
       $('accountBox').innerHTML =
@@ -200,6 +259,75 @@ async function connectMT5(){
 async function disconnectMT5(){try{await api('/api/ui/mt5/disconnect',{method:'POST',body:'{}'});msg('اتصال MT5 قطع شد.');await refreshStatus()}catch(e){msg(e.message,false)}}
 async function setSubmit(enabled){try{await api('/api/ui/demo/submission',{method:'POST',body:JSON.stringify({enabled})});msg(enabled?'ارسال سفارش Demo فعال شد.':'Dry‑Run فعال شد؛ سفارش ارسال نمی‌شود.');await refreshStatus()}catch(e){msg(e.message,false)}}
 async function searchSymbols(){try{const q=encodeURIComponent($('symbolQuery').value.trim());const r=await api('/api/ui/mt5/symbols?q='+q);$('symbolsBox').textContent=r.items.join(', ')||'نتیجه‌ای نبود'}catch(e){msg(e.message,false)}}
+
+async function loadStrategies(){
+  try{
+    const r=await api('/api/ui/direct/strategies');
+    const sel=$('directStrategy');
+    sel.innerHTML='';
+    r.items.forEach(name=>{
+      const o=document.createElement('option');
+      o.value=name;o.textContent=name;sel.appendChild(o);
+    });
+    const preferred=['H4_S6_BREAKOUT','H1_ICHIMOKU_PULLBACK','M15_CONFIRMED_ORDER_BLOCK'];
+    for(const p of preferred){
+      if(r.items.includes(p)){sel.value=p;break}
+    }
+  }catch(e){msg('Strategy list: '+e.message,false)}
+}
+function syncDirectVenue(){
+  try{
+    const m=JSON.parse($('symbolMap').value);
+    const c=$('directCanonical').value.trim();
+    if(m[c])$('directVenue').value=m[c];
+  }catch(e){}
+}
+function directPayload(){
+  return {
+    strategy_name:$('directStrategy').value,
+    canonical_symbol:$('directCanonical').value.trim(),
+    venue_symbol:$('directVenue').value.trim(),
+    risk_percent:Number($('directRisk').value),
+    bars:Number($('directBars').value),
+    poll_seconds:Number($('directPoll').value)
+  }
+}
+async function evaluateDirect(){
+  try{
+    const r=await api('/api/ui/direct/evaluate-now',{
+      method:'POST',body:JSON.stringify(directPayload())
+    });
+    $('directStatusBox').textContent=JSON.stringify(r.outcome,null,2);
+    msg('ارزیابی مستقیم MT5 انجام شد: '+r.outcome.status);
+  }catch(e){msg('Direct MT5: '+e.message,false)}
+}
+async function startDirect(){
+  try{
+    const r=await api('/api/ui/direct/start',{
+      method:'POST',body:JSON.stringify(directPayload())
+    });
+    $('directStatusBox').textContent=JSON.stringify(r.worker,null,2);
+    msg('Worker اجرای مستقیم MT5 شروع شد.');
+    await refreshStatus();
+  }catch(e){msg('Direct MT5: '+e.message,false)}
+}
+async function stopDirect(){
+  try{
+    await api('/api/ui/direct/stop',{method:'POST',body:'{}'});
+    msg('Worker اجرای مستقیم MT5 متوقف شد.');
+    await refreshStatus();
+  }catch(e){msg(e.message,false)}
+}
+async function refreshDirect(){
+  try{
+    const r=await api('/api/ui/direct/status');
+    $('directDot').className='dot '+(r.running?'on':'off');
+    $('directState').textContent=r.running?'در حال اجرا':'متوقف';
+    if(r.last_outcome)$('directStatusBox').textContent=JSON.stringify(r.last_outcome,null,2);
+    else if(r.last_error)$('directStatusBox').textContent=r.last_error;
+  }catch(e){}
+}
+
 async function regenToken(){try{const r=await api('/api/ui/tradingview/token',{method:'POST',body:'{}'});$('routeToken').value=r.route_token;msg('توکن جدید ساخته شد؛ Webhook URL قبلی دیگر معتبر نیست.');await configureTradingView()}catch(e){msg(e.message,false)}}
 async function configureTradingView(){try{const r=await api('/api/ui/tradingview/configure',{method:'POST',body:JSON.stringify({public_base_url:$('publicBase').value.trim()})});$('webhookUrl').textContent=r.webhook_url||'Public URL تنظیم نشده';$('routeToken').value=r.route_token;msg('تنظیم TradingView آماده شد.')}catch(e){msg(e.message,false)}}
 async function startTunnel(){
@@ -245,7 +373,7 @@ async function loadEvents(){
     })
   }catch(e){msg(e.message,false)}
 }
-refreshStatus();loadEvents();setInterval(refreshStatus,10000);
+loadStrategies();refreshStatus();refreshDirect();loadEvents();setInterval(()=>{refreshStatus();refreshDirect()},10000);
 </script>
 </body></html>'''
     )
