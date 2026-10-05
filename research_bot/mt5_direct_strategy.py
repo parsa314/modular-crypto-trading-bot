@@ -27,6 +27,7 @@ import pandas as pd
 
 from .execution import ExecutionRequest, OrderSide
 from .execution_adapters import (
+    MT5DemoCloseResult,
     MT5DemoExecutionResult,
     MT5DemoExecutor,
 )
@@ -117,6 +118,9 @@ class MT5DirectStrategyOutcome:
     ai_confidence: float | None = None
     ai_validation_brier: float | None = None
     ai_reason: str | None = None
+    position_ticket: int | None = None
+    held_bars: int | None = None
+    close_status: str | None = None
 
 
 class DirectStrategyJournal:
@@ -180,6 +184,50 @@ class DirectStrategyJournal:
                     "signal_id": signal_id,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "payload": payload,
+                }
+            )
+
+    def reserve_close_intent(
+        self,
+        action_id: str,
+        payload: dict[str, Any],
+    ) -> None:
+        with self._lock:
+            rows = self._rows_unlocked()
+            if any(
+                row.get("signal_id") == action_id
+                and row.get("record_type") == "CLOSE_INTENT"
+                for row in rows
+            ):
+                raise DuplicateDirectSignalError(action_id)
+            self._append_unlocked(
+                {
+                    "record_type": "CLOSE_INTENT",
+                    "signal_id": action_id,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "payload": payload,
+                }
+            )
+
+    def record_close_result(
+        self,
+        action_id: str,
+        result: MT5DemoCloseResult,
+        *,
+        reason: str,
+    ) -> None:
+        with self._lock:
+            payload = asdict(result)
+            payload["timestamp"] = result.timestamp.astimezone(
+                timezone.utc
+            ).isoformat()
+            self._append_unlocked(
+                {
+                    "record_type": "CLOSE_RESULT",
+                    "signal_id": action_id,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "reason": reason,
+                    "result": payload,
                 }
             )
 
@@ -325,6 +373,176 @@ class DirectMT5StrategyRunner:
             direction=direction,
         )
 
+        if self.config.one_bot_position_per_symbol:
+            existing = self.executor.bot_positions(self.config.venue_symbol)
+            if len(existing) > 1:
+                return MT5DirectStrategyOutcome(
+                    status="RISK_REJECTED",
+                    reason="multiple bot-owned positions exist for one-symbol policy",
+                    strategy_name=self.strategy.name,
+                    canonical_symbol=self.config.canonical_symbol,
+                    venue_symbol=self.config.venue_symbol,
+                    signal_id=sid,
+                    signal_time=signal_time,
+                    direction=direction if direction in {-1, 1} else 0,
+                    side=("BUY" if direction > 0 else "SELL" if direction < 0 else None),
+                    reference_price=None,
+                    stop_loss=None,
+                    take_profit=None,
+                    requested_quantity=None,
+                    requested_notional=None,
+                    risk_fraction=self.config.risk_fraction,
+                    spread_bps=None,
+                )
+            if existing:
+                pos = existing[0]
+                open_epoch = int(pos.get("time", 0) or 0)
+                if open_epoch <= 0:
+                    return MT5DirectStrategyOutcome(
+                        status="RISK_REJECTED",
+                        reason="bot position open timestamp is unavailable",
+                        strategy_name=self.strategy.name,
+                        canonical_symbol=self.config.canonical_symbol,
+                        venue_symbol=self.config.venue_symbol,
+                        signal_id=sid,
+                        signal_time=signal_time,
+                        direction=direction if direction in {-1, 1} else 0,
+                        side=None,
+                        reference_price=None,
+                        stop_loss=None,
+                        take_profit=None,
+                        requested_quantity=None,
+                        requested_notional=None,
+                        risk_fraction=self.config.risk_fraction,
+                        spread_bps=None,
+                        position_ticket=int(pos.get("ticket", 0) or 0),
+                    )
+
+                opened_at = pd.to_datetime(open_epoch, unit="s", utc=True)
+                held_bars = int((frame["timestamp"] >= opened_at).sum())
+                ticket = int(pos.get("ticket", 0) or 0)
+
+                if held_bars >= int(self.strategy.max_hold_bars):
+                    close_id = (
+                        f"timeout-{ticket}-"
+                        + hashlib.sha256(
+                            f"{self.strategy.name}|{ticket}|{signal_time}".encode("utf-8")
+                        ).hexdigest()[:20]
+                    )
+                    if not self.executor.submission_enabled:
+                        return MT5DirectStrategyOutcome(
+                            status="TIMEOUT_READY_DRY_RUN",
+                            reason="max_hold_bars reached; DEMO submission is disabled",
+                            strategy_name=self.strategy.name,
+                            canonical_symbol=self.config.canonical_symbol,
+                            venue_symbol=self.config.venue_symbol,
+                            signal_id=close_id,
+                            signal_time=signal_time,
+                            direction=direction if direction in {-1, 1} else 0,
+                            side=None,
+                            reference_price=None,
+                            stop_loss=None,
+                            take_profit=None,
+                            requested_quantity=None,
+                            requested_notional=None,
+                            risk_fraction=self.config.risk_fraction,
+                            spread_bps=None,
+                            position_ticket=ticket,
+                            held_bars=held_bars,
+                            close_status="READY_DRY_RUN",
+                        )
+
+                    try:
+                        self.journal.reserve_close_intent(
+                            close_id,
+                            {
+                                "strategy_name": self.strategy.name,
+                                "venue_symbol": self.config.venue_symbol,
+                                "ticket": ticket,
+                                "held_bars": held_bars,
+                                "max_hold_bars": int(self.strategy.max_hold_bars),
+                                "signal_time": signal_time,
+                                "reason": "TIMEOUT",
+                            },
+                        )
+                    except DuplicateDirectSignalError:
+                        return MT5DirectStrategyOutcome(
+                            status="DUPLICATE_CLOSE_SIGNAL",
+                            reason="timeout close intent was already reserved",
+                            strategy_name=self.strategy.name,
+                            canonical_symbol=self.config.canonical_symbol,
+                            venue_symbol=self.config.venue_symbol,
+                            signal_id=close_id,
+                            signal_time=signal_time,
+                            direction=direction if direction in {-1, 1} else 0,
+                            side=None,
+                            reference_price=None,
+                            stop_loss=None,
+                            take_profit=None,
+                            requested_quantity=None,
+                            requested_notional=None,
+                            risk_fraction=self.config.risk_fraction,
+                            spread_bps=None,
+                            position_ticket=ticket,
+                            held_bars=held_bars,
+                        )
+
+                    close_result = self.executor.close_bot_position(
+                        ticket=ticket,
+                        venue_symbol=self.config.venue_symbol,
+                        now=datetime.now(timezone.utc),
+                    )
+                    self.journal.record_close_result(
+                        close_id,
+                        close_result,
+                        reason="TIMEOUT",
+                    )
+                    return MT5DirectStrategyOutcome(
+                        status="TIMEOUT_CLOSED_MT5_DEMO",
+                        reason="max_hold_bars reached and bot-owned ticket was closed",
+                        strategy_name=self.strategy.name,
+                        canonical_symbol=self.config.canonical_symbol,
+                        venue_symbol=self.config.venue_symbol,
+                        signal_id=close_id,
+                        signal_time=signal_time,
+                        direction=direction if direction in {-1, 1} else 0,
+                        side=close_result.closed_side,
+                        reference_price=close_result.executable_price,
+                        stop_loss=None,
+                        take_profit=None,
+                        requested_quantity=None,
+                        requested_notional=None,
+                        risk_fraction=self.config.risk_fraction,
+                        spread_bps=None,
+                        order_ticket=close_result.order_ticket,
+                        deal_ticket=close_result.deal_ticket,
+                        execution_status=close_result.status,
+                        position_ticket=ticket,
+                        held_bars=held_bars,
+                        close_status=close_result.status,
+                    )
+
+                return MT5DirectStrategyOutcome(
+                    status="POSITION_EXISTS",
+                    reason="bot-owned position exists and has not reached timeout",
+                    strategy_name=self.strategy.name,
+                    canonical_symbol=self.config.canonical_symbol,
+                    venue_symbol=self.config.venue_symbol,
+                    signal_id=sid,
+                    signal_time=signal_time,
+                    direction=direction if direction in {-1, 1} else 0,
+                    side=("BUY" if direction > 0 else "SELL" if direction < 0 else None),
+                    reference_price=None,
+                    stop_loss=None,
+                    take_profit=None,
+                    requested_quantity=None,
+                    requested_notional=None,
+                    risk_fraction=self.config.risk_fraction,
+                    spread_bps=None,
+                    position_ticket=ticket,
+                    held_bars=held_bars,
+                )
+
         if direction not in {-1, 1}:
             return MT5DirectStrategyOutcome(
                 status="NO_SIGNAL",
@@ -344,28 +562,6 @@ class DirectMT5StrategyRunner:
                 risk_fraction=self.config.risk_fraction,
                 spread_bps=None,
             )
-
-        if self.config.one_bot_position_per_symbol:
-            existing = self.executor.bot_positions(self.config.venue_symbol)
-            if existing:
-                return MT5DirectStrategyOutcome(
-                    status="POSITION_EXISTS",
-                    reason="bot-owned position already exists for venue symbol",
-                    strategy_name=self.strategy.name,
-                    canonical_symbol=self.config.canonical_symbol,
-                    venue_symbol=self.config.venue_symbol,
-                    signal_id=sid,
-                    signal_time=signal_time,
-                    direction=direction,
-                    side="BUY" if direction > 0 else "SELL",
-                    reference_price=None,
-                    stop_loss=None,
-                    take_profit=None,
-                    requested_quantity=None,
-                    requested_notional=None,
-                    risk_fraction=self.config.risk_fraction,
-                    spread_bps=None,
-                )
 
         ai_fields: dict[str, Any] = {
             "ai_gate_enabled": bool(self.config.ai_gate_enabled),
