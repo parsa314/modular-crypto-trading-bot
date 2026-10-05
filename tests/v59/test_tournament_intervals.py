@@ -12,6 +12,14 @@ FEATURES = ("f_trend", "f_vol", "f_structure", "f_memory")
 def real_events():
     x = tournament_fixture_events()
     x["information_end"] = x.timestamp + pd.Timedelta(minutes=30)
+    x['decision_at'] = x.timestamp
+    x['entry_time'] = x.timestamp + pd.Timedelta(seconds=1)
+    x['information_start'] = x.timestamp
+    x['event_end_time'] = x.information_end
+    x['label_available_at'] = x.information_end
+    x['feature_available_at'] = x.timestamp
+    for name in ('feature_snapshot_id', 'data_version', 'strategy_version', 'source_hash'):
+        x[name] = 'ENGINEERING_FIXTURE_'+name
     return x
 
 

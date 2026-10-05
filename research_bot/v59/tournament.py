@@ -114,7 +114,7 @@ class TrialResult:
 
 def _validate_events(frame: pd.DataFrame, feature_columns: Sequence[str]) -> pd.DataFrame:
     required = {
-        "timestamp", "strategy_id", "label", "reward_fraction",
+        "timestamp", "event_id", "strategy_id", "label", "reward_fraction",
         "loss_fraction", "timeout_loss_fraction",
     }
     missing = required - set(frame.columns)
@@ -128,8 +128,11 @@ def _validate_events(frame: pd.DataFrame, feature_columns: Sequence[str]) -> pd.
 
     x = frame.copy()
     x["timestamp"] = pd.to_datetime(x["timestamp"], utc=True, errors="raise")
-    if x["timestamp"].duplicated().any() and "event_id" in x.columns and x["event_id"].duplicated().any():
-        raise ValueError("duplicate event identities are forbidden")
+    if "event_id" in x.columns:
+        if x["event_id"].duplicated().any():
+            raise ValueError("duplicate event identities are forbidden")
+        if not x.event_id.map(lambda v: isinstance(v, str) and bool(v) and v == v.strip()).all():
+            raise ValueError("event identities must be canonical nonempty strings")
     if not x["label"].isin(CLASSES).all():
         raise ValueError("labels must be TP/SL/TIMEOUT")
     for name in ("reward_fraction", "loss_fraction", "timeout_loss_fraction"):
@@ -149,6 +152,29 @@ def _validate_events(frame: pd.DataFrame, feature_columns: Sequence[str]) -> pd.
         if not np.isfinite(realized).all() or (realized <= -1).any():
             raise ValueError("Realized outcome returns must be finite and above -100%")
     return x.sort_values(["strategy_id", "timestamp"], kind="mergesort").reset_index(drop=True)
+
+
+def _validate_temporal_contract(frame: pd.DataFrame) -> pd.DataFrame:
+    columns = ('decision_at', 'entry_time', 'event_end_time', 'label_available_at',
+               'information_start', 'information_end', 'feature_available_at')
+    missing = set(columns + ('event_id',)) - set(frame.columns)
+    if missing:
+        raise ValueError(f'Real temporal interval contract missing: {sorted(missing)}')
+    x = frame.copy()
+    for name in ('feature_snapshot_id', 'data_version', 'strategy_version', 'source_hash'):
+        if name not in x or not x[name].map(lambda v: isinstance(v, str) and bool(v) and v == v.strip()).all():
+            raise ValueError('temporal contract requires nonempty provenance: '+name)
+    for name in columns:
+        if not x[name].map(lambda v: pd.notna(v) and pd.Timestamp(v).tzinfo is not None).all():
+            raise ValueError('temporal contract requires explicit timezone-aware timestamps')
+        x[name] = pd.to_datetime(x[name], utc=True, errors='raise')
+    valid = ((x.timestamp == x.decision_at) & (x.information_start <= x.decision_at)
+             & (x.feature_available_at <= x.decision_at) & (x.decision_at < x.entry_time)
+             & (x.entry_time <= x.event_end_time) & (x.event_end_time <= x.information_end)
+             & (x.information_end <= x.label_available_at))
+    if not valid.all():
+        raise ValueError('invalid temporal interval ordering')
+    return x
 
 
 def make_walk_forward_folds(rows: int, config: WalkForwardConfig) -> tuple[FoldSpec, ...]:
@@ -337,11 +363,12 @@ def run_tournament(
 ) -> dict:
     cfg = TournamentConfig() if config is None else config
     frame = _validate_events(events, feature_columns)
-    if cfg.evidence_class == "REAL_MARKET_EVENT_DATA" and "information_end" not in frame:
-        raise ValueError("Real event datasets require outcome intervals for temporal purging")
-    if cfg.evidence_class == "REAL_MARKET_EVENT_DATA" and set(feature_columns) & {
+    if cfg.evidence_class != "ENGINEERING_FIXTURE":
+        frame = _validate_temporal_contract(frame)
+    if set(feature_columns) & {
         "label", "realized_gross_return", "exit_fill_reference", "information_end",
-        "reward_fraction", "loss_fraction", "timeout_loss_fraction", "entry_fill_reference"}:
+        "event_end_time", "label_available_at", "reward_fraction", "loss_fraction",
+        "timeout_loss_fraction", "entry_fill_reference"}:
         raise ValueError("Outcome/execution columns cannot enter model features")
     strategy_ids = tuple(sorted(str(value) for value in frame["strategy_id"].unique()))
     if not strategy_ids:
@@ -363,8 +390,13 @@ def run_tournament(
                 test = strategy.iloc[fold.test_start:fold.test_end]
                 if "information_end" in strategy:
                     embargo = pd.Timedelta(hours=cfg.walk_forward.embargo_hours)
-                    train = train.loc[train.information_end < validation.timestamp.iloc[0] - embargo]
-                    validation = validation.loc[validation.information_end < test.timestamp.iloc[0] - embargo]
+                    validation_start = (validation.information_start.min() if 'information_start' in validation
+                                        else validation.timestamp.iloc[0])
+                    test_start = test.information_start.min() if 'information_start' in test else test.timestamp.iloc[0]
+                    train_end = train[['information_end', 'label_available_at']].max(axis=1) if 'label_available_at' in train else train.information_end
+                    validation_end = validation[['information_end', 'label_available_at']].max(axis=1) if 'label_available_at' in validation else validation.information_end
+                    train = train.loc[train_end < min(validation_start, test_start) - embargo]
+                    validation = validation.loc[validation_end < test_start - embargo]
                     # Purging also removes equal-clock groups split by row boundaries.
                     if train.empty or validation.empty or (model_id != "PRIOR" and train.label.nunique() < 2):
                         attempted.append({"strategy_id": strategy_id, "model_id": model_id,
@@ -390,6 +422,10 @@ def run_tournament(
                         "purge_method": "OUTCOME_INTERVAL_PLUS_TIME_EMBARGO" if "information_end" in strategy else "ROW_EMBARGO_FIXTURE_ONLY",
                         "train_max_information_end": train.information_end.max().isoformat() if "information_end" in train else None,
                         "validation_max_information_end": validation.information_end.max().isoformat() if "information_end" in validation else None,
+                        "train_max_label_available_at": train.label_available_at.max().isoformat() if 'label_available_at' in train else None,
+                        "validation_max_label_available_at": validation.label_available_at.max().isoformat() if 'label_available_at' in validation else None,
+                        "validation_information_start": validation_start.isoformat() if 'information_end' in strategy else None,
+                        "test_information_start": test_start.isoformat() if 'information_end' in strategy else None,
                     }
                 )
                 if model_id == "PRIOR":
