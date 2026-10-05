@@ -86,3 +86,24 @@ Before any broader Demo experiment, validate these cases:
 
 Passing this runbook is evidence for TESTNET execution engineering only. It is
 not alpha evidence and it does not set `LIVE_EXECUTION=true`.
+
+
+## GitHub Actions read-only preflight
+
+A manual workflow is available at:
+
+`.github/workflows/okx-demo-readonly-preflight.yml`
+
+Configure these repository secrets before dispatching it:
+
+- `OKX_DEMO_API_KEY`
+- `OKX_DEMO_API_SECRET`
+- `OKX_DEMO_API_PASSPHRASE`
+
+The workflow sets `OKX_DEMO_ENABLED=true`, authenticates to Demo Trading,
+loads the requested market, reads a public ticker, reads the Demo balance
+response, and derives venue precision/minimums. It contains no create-order,
+amend-order, or cancel-order step.
+
+Do not paste Demo credentials into source code, documentation, issues, pull
+requests, chat messages, or CI logs.
