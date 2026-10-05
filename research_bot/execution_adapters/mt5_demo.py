@@ -96,6 +96,25 @@ class MT5DemoExecutionResult:
     comment: str
 
 
+@dataclass(frozen=True)
+class MT5DemoCloseResult:
+    ticket: int
+    venue_symbol: str
+    closed_side: str
+    status: str
+    retcode: int
+    order_ticket: int
+    deal_ticket: int
+    requested_lots: float
+    filled_lots: float
+    executable_price: float
+    fill_price: float
+    account_login: int
+    account_server: str
+    timestamp: datetime
+    comment: str
+
+
 class MT5DemoExecutor:
     """Demo-only MT5 adapter with strict real-account refusal.
 
@@ -343,6 +362,9 @@ class MT5DemoExecutor:
                     "sl": float(getattr(pos, "sl", 0.0) or 0.0),
                     "tp": float(getattr(pos, "tp", 0.0) or 0.0),
                     "profit": float(getattr(pos, "profit", 0.0) or 0.0),
+                    "time": int(getattr(pos, "time", 0) or 0),
+                    "time_msc": int(getattr(pos, "time_msc", 0) or 0),
+                    "comment": str(getattr(pos, "comment", "") or ""),
                     "magic": pos_magic,
                 }
             )
@@ -377,6 +399,152 @@ class MT5DemoExecutor:
             "mid": float(mid),
             "spread_bps": float((ask - bid) / mid * 10_000.0),
         }
+
+    def close_bot_position(
+        self,
+        *,
+        ticket: int,
+        venue_symbol: str,
+        now: datetime | None = None,
+    ) -> MT5DemoCloseResult:
+        """Close exactly one bot-owned DEMO position by ticket.
+
+        The MT5 position ticket is supplied explicitly so hedging accounts do
+        not accidentally open an opposite position instead of closing the
+        intended one.
+        """
+
+        if not self._connected:
+            raise MT5DemoSafetyError("MT5_DEMO_NOT_CONNECTED")
+        if not self._submission_enabled:
+            raise MT5DemoSafetyError("MT5_DEMO_SUBMISSION_DISABLED")
+        if int(ticket) <= 0:
+            raise ValueError("position ticket must be positive")
+
+        account = self._assert_demo_account()
+        mt5 = self._module()
+        rows = mt5.positions_get(ticket=int(ticket))
+        if rows is None:
+            raise MT5DemoExecutionError(
+                f"positions_get(ticket={ticket}) failed: {self._last_error()}"
+            )
+        if len(rows) != 1:
+            raise MT5DemoSafetyError(
+                f"POSITION_TICKET_NOT_UNIQUE_OR_GONE ticket={ticket} count={len(rows)}"
+            )
+
+        pos = rows[0]
+        pos_symbol = str(getattr(pos, "symbol", "") or "")
+        if pos_symbol != str(venue_symbol):
+            raise MT5DemoSafetyError(
+                f"POSITION_SYMBOL_MISMATCH ticket={ticket} "
+                f"expected={venue_symbol} actual={pos_symbol}"
+            )
+        pos_magic = int(getattr(pos, "magic", 0) or 0)
+        if pos_magic != int(self.config.magic):
+            raise MT5DemoSafetyError(
+                f"POSITION_MAGIC_MISMATCH ticket={ticket} magic={pos_magic}"
+            )
+
+        lots = self._finite_positive(getattr(pos, "volume", 0.0), "position_volume")
+        position_type = int(getattr(pos, "type", -1))
+        buy_position = int(getattr(mt5, "POSITION_TYPE_BUY", 0))
+        sell_position = int(getattr(mt5, "POSITION_TYPE_SELL", 1))
+        if position_type == buy_position:
+            close_side = OrderSide.SELL
+        elif position_type == sell_position:
+            close_side = OrderSide.BUY
+        else:
+            raise MT5DemoSafetyError(
+                f"UNSUPPORTED_POSITION_TYPE ticket={ticket} type={position_type}"
+            )
+
+        ts = now or datetime.now(timezone.utc)
+        _, executable_price = self._validated_market_state(
+            venue_symbol=pos_symbol,
+            side=close_side,
+            now=ts,
+        )
+        order_type = (
+            mt5.ORDER_TYPE_BUY
+            if close_side is OrderSide.BUY
+            else mt5.ORDER_TYPE_SELL
+        )
+        filling_mode = (
+            self.config.filling_mode
+            if self.config.filling_mode is not None
+            else mt5.ORDER_FILLING_RETURN
+        )
+        payload = {
+            "action": mt5.TRADE_ACTION_DEAL,
+            "symbol": pos_symbol,
+            "volume": float(lots),
+            "type": order_type,
+            "position": int(ticket),
+            "price": float(executable_price),
+            "deviation": int(self.config.max_deviation_points),
+            "magic": int(self.config.magic),
+            "comment": f"mbot:close:{int(ticket)}"[:31],
+            "type_time": mt5.ORDER_TIME_GTC,
+            "type_filling": filling_mode,
+        }
+
+        check = mt5.order_check(payload)
+        if check is None:
+            raise MT5DemoExecutionError(
+                f"close order_check returned None: {self._last_error()}"
+            )
+        if int(getattr(check, "retcode", -1)) != 0:
+            raise MT5DemoExecutionError(
+                f"close order_check rejected retcode={getattr(check, 'retcode', None)} "
+                f"comment={getattr(check, 'comment', '')}"
+            )
+
+        result = mt5.order_send(payload)
+        if result is None:
+            raise MT5DemoExecutionError(
+                f"close order_send returned None: {self._last_error()}"
+            )
+
+        retcode = int(getattr(result, "retcode", -1))
+        done = int(getattr(mt5, "TRADE_RETCODE_DONE", 10009))
+        partial = int(getattr(mt5, "TRADE_RETCODE_DONE_PARTIAL", 10010))
+        placed = int(getattr(mt5, "TRADE_RETCODE_PLACED", 10008))
+        if retcode not in {done, partial, placed}:
+            raise MT5DemoExecutionError(
+                f"close order_send rejected retcode={retcode} "
+                f"comment={getattr(result, 'comment', '')}"
+            )
+
+        if retcode == done:
+            status = "CLOSED_DEMO"
+        elif retcode == partial:
+            status = "PARTIALLY_CLOSED_DEMO"
+        else:
+            status = "CLOSE_ACKNOWLEDGED_DEMO"
+
+        filled_lots = float(getattr(result, "volume", 0.0) or 0.0)
+        fill_price = float(getattr(result, "price", 0.0) or 0.0)
+        if fill_price <= 0.0:
+            fill_price = float(executable_price)
+
+        return MT5DemoCloseResult(
+            ticket=int(ticket),
+            venue_symbol=pos_symbol,
+            closed_side=close_side.value,
+            status=status,
+            retcode=retcode,
+            order_ticket=int(getattr(result, "order", 0) or 0),
+            deal_ticket=int(getattr(result, "deal", 0) or 0),
+            requested_lots=float(lots),
+            filled_lots=float(filled_lots),
+            executable_price=float(executable_price),
+            fill_price=float(fill_price),
+            account_login=int(getattr(account, "login", 0) or 0),
+            account_server=str(getattr(account, "server", "") or ""),
+            timestamp=ts.astimezone(timezone.utc),
+            comment=str(getattr(result, "comment", "") or ""),
+        )
 
     def _assert_demo_account(self) -> Any:
         mt5 = self._module()
