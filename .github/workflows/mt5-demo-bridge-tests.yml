@@ -14,6 +14,7 @@ on:
       - "scripts/run_tv_mt5_bridge.py"
       - "scripts/start_mt5_tradingview_ui.py"
       - "scripts/mt5_demo_smoke.py"
+      - "scripts/run_mt5_direct_demo_strategy.py"
       - "START_TRADINGVIEW_MT5_DEMO_PANEL.bat"
       - "tests/test_mt5_demo_adapter.py"
       - "tests/test_mt5_direct_strategy.py"
@@ -46,6 +47,7 @@ jobs:
           python -m compileall -q research_bot/mt5_direct_strategy.py
           python -m compileall -q research_bot/demo_experience.py
           python -m compileall -q scripts/start_mt5_tradingview_ui.py
+          python -m compileall -q scripts/run_mt5_direct_demo_strategy.py
 
       - name: Run focused tests
         run: |
