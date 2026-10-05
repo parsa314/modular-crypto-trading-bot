@@ -71,3 +71,21 @@ This file connects the thesis research program to executable repository modules,
 `NOT_TESTED`, `DATA_UNAVAILABLE`, `UNVERIFIED`, `HYPOTHESIS`, `CHALLENGER`, `TESTED`, `REJECTED`, `BLOCKED`, `DISCOVERY_CANDIDATE`, `VALIDATED_OOS`, `EXTERNAL_HOLDOUT_NEGATIVE_RESULT`, `FORWARD_PAPER_HYPOTHESIS`, `SEARCH_AWARE_SURVIVOR`, `FORWARD_REPLICATED`, `MEASUREMENT_INFRASTRUCTURE_VERIFIED_FORWARD_SAMPLE_IMMATURE`.
 
 No module can transition to `VALIDATED_OOS` from a unit test, synthetic smoke run, a single backtest, validation-only uplift, or PAPER execution alone. No candidate can transition to `SEARCH_AWARE_SURVIVOR` without a complete trial registry and appropriate correction for model/strategy search. Negative, blocked and inconclusive results are retained as first-class scientific evidence.
+
+## 2026-10-05 Production Convergence Phase 1 addendum
+
+The historical rows above remain evidence snapshots. New canonical engineering
+path: V59 native research → hash-bound promotion/portfolio envelope → generic
+Fake-only OMS → atomic local journal → confirmed protective Fake lifecycle.
+
+| Component | Implementation | Evidence status | Remaining gate |
+|---|---|---|---|
+| Risk constitution | execution/constitution.py; MASTER and RL config bindings | ENGINEERING_TESTED, fractions and no relaxation | Scientific model/operational promotion still absent |
+| Event-time validation | v59/tournament.py; native_dataset.py; native identity V2 | ENGINEERING_TESTED, real 2024 contract audit only | Fresh preregistered economic evaluation; never reuse old results as new protocol |
+| Research-production bridge | production_adapter.py + immutable envelope/manifest/intent | ENGINEERING_FIXTURE_ONLY | Empty real promotion registry; no live authority |
+| Generic OMS | execution/oms.py + ledger.py | FAKE_REPLAY_TESTED, model agnostic | Authenticated adapter + infrastructure validation |
+| Protective lifecycle | execution/protection.py + venue-labelled Fake seams | FAKE_ACK_RESTART_FAULT_TESTED | Native venue protection NOT_VERIFIED |
+| Production infrastructure | PostgreSQL/WS/watchdog/correlation portfolio | NOT_IMPLEMENTED_IN_PHASE1 | Phase 2 after Phase-1 review |
+
+See PRODUCTION_CONVERGENCE_PHASE1.md and PHASE1_TEST_EVIDENCE.md for exact scope,
+source SHAs, evidence hashes and reproduction. LIVE=false and PAPER=false.
