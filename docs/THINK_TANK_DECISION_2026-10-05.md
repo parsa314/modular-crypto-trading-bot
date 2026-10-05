@@ -44,10 +44,16 @@ TESTNET execution gateway**, not real-money LIVE activation.
 
 ## Venue decision
 
-OKX Demo Trading is the preferred first external TESTNET integration target
-because it provides an explicit demo trading environment.  The transport layer
-in this commit remains venue-neutral so exchange-specific API mapping can be
-tested independently before credentials are introduced.
+Nobitex TESTNET is now the preferred first Iranian execution venue for this
+project because it provides an official API, an official TESTNET API at
+`https://testnetapi.nobitex.ir`, order creation/status/cancellation endpoints,
+market precision/minimum-order metadata, and `clientOrderId` support that
+matches the repository's existing reconciliation state machine.
+
+OKX Demo remains a secondary cross-venue adapter for portability testing.
+
+Versland is not selected for automated execution at this stage because the
+project has no verified stable public trading API or TESTNET contract for it.
 
 ## Safety boundary
 
