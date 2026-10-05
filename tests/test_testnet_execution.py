@@ -16,8 +16,8 @@ from research_bot.testnet_execution import (
     AmbiguousTransportOutcome,
     MarketPrecision,
     MemoryTestnetOrderStore,
-    TestnetExecutionGateway,
-    TestnetSafetyError,
+    TestnetExecutionGateway as SandboxGateway,
+    TestnetSafetyError as SandboxSafetyError,
     VenueOrderSnapshot,
 )
 
@@ -70,7 +70,7 @@ class FakeSandboxTransport:
 
 
 def _gateway(transport=None, store=None):
-    return TestnetExecutionGateway(
+    return SandboxGateway(
         transport=transport or FakeSandboxTransport(),
         store=store or MemoryTestnetOrderStore(),
         readiness=_readiness(),
@@ -79,8 +79,8 @@ def _gateway(transport=None, store=None):
 
 def test_testnet_gateway_rejects_live_mode_and_non_sandbox_transport():
     transport = FakeSandboxTransport()
-    with pytest.raises(TestnetSafetyError, match="NON_TESTNET"):
-        TestnetExecutionGateway(
+    with pytest.raises(SandboxSafetyError, match="NON_TESTNET"):
+        SandboxGateway(
             transport=transport,
             store=MemoryTestnetOrderStore(),
             readiness=_readiness(),
@@ -88,8 +88,8 @@ def test_testnet_gateway_rejects_live_mode_and_non_sandbox_transport():
         )
 
     transport.sandbox = False
-    with pytest.raises(TestnetSafetyError, match="SANDBOX_TRANSPORT_REQUIRED"):
-        TestnetExecutionGateway(
+    with pytest.raises(SandboxSafetyError, match="SANDBOX_TRANSPORT_REQUIRED"):
+        SandboxGateway(
             transport=transport,
             store=MemoryTestnetOrderStore(),
             readiness=_readiness(),
@@ -97,8 +97,8 @@ def test_testnet_gateway_rejects_live_mode_and_non_sandbox_transport():
 
 
 def test_readiness_gate_must_pass_before_testnet_submission():
-    with pytest.raises(TestnetSafetyError, match="READINESS_GATE_CLOSED"):
-        TestnetExecutionGateway(
+    with pytest.raises(SandboxSafetyError, match="READINESS_GATE_CLOSED"):
+        SandboxGateway(
             transport=FakeSandboxTransport(),
             store=MemoryTestnetOrderStore(),
             readiness=evaluate_live_readiness(LiveReadinessChecklist()),
@@ -126,7 +126,7 @@ def test_decimal_quantity_is_floored_to_venue_step_before_submit():
 def test_risk_rejection_prevents_any_transport_call():
     transport = FakeSandboxTransport()
     gateway = _gateway(transport=transport)
-    with pytest.raises(TestnetSafetyError, match="RISK_GATE_REJECTED"):
+    with pytest.raises(SandboxSafetyError, match="RISK_GATE_REJECTED"):
         gateway.submit_market(
             client_order_id="cid-1",
             symbol="BTC/USDT",
