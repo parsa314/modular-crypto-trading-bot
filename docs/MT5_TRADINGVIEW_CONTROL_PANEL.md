@@ -191,3 +191,113 @@ Credentials از متغیرهای زیر خوانده می‌شوند یا passw
 
 هیچ‌کدام نباید داخل Git commit شوند.
 
+
+
+## استراتژی پیش‌فرض Demo: H4_V59_CONFLUENCE_DEMO
+
+پنل و Headless Runner اکنون به صورت پیش‌فرض از این Strategy استفاده می‌کنند.
+
+### لایه 1 — Ichimoku
+
+Long:
+
+- قیمت بالای cloud
+- Tenkan بالای Kijun
+- Kijun slope مثبت
+
+Short معکوس همین شروط است.
+
+### لایه 2 — ICT / SMC
+
+رأی ساختاری از یکی از این خانواده‌ها ساخته می‌شود:
+
+- liquidity sweep -> BOS
+- FVG recent + midpoint rejection
+- BOS recent + Order Block mitigation/rejection
+
+### لایه 3 — Al Brooks / Price Action proxy
+
+ویژگی‌ها کاملاً الگوریتمی و causal هستند:
+
+- body ratio
+- close location
+- bar overlap
+- EMA20/EMA50 trend strength normalized by ATR
+- breakout strength normalized by ATR
+- signal-bar quality
+- follow-through
+- three-bar micro-channel proxy
+
+این پیاده‌سازی یک proxy پژوهشی از مفاهیم Price Action است و ادعا نمی‌کند discretionary chart reading آل بروکس را عیناً بازسازی می‌کند.
+
+### لایه 4 — Regime / Trend
+
+- price vs EMA200
+- EMA200 slope
+- EMA20 vs EMA50
+
+### لایه 5 — S6 / Breakout
+
+- close بالاتر از previous 20-bar high برای Long
+- close پایین‌تر از previous 20-bar low برای Short
+- EMA200 slope هم‌جهت
+
+### قانون Confluence
+
+برای ورود:
+
+    directional_score >= 3
+
+و همچنین:
+
+    directional_score - opposite_score >= 2
+
+بنابراین حالت 3-vs-2 معامله نمی‌شود.
+
+### AI Confirmation Gate
+
+AI فقط بعد از تشکیل Confluence signal اجرا می‌شود.
+
+مدل Demo:
+
+    HistGradientBoostingClassifier
+
+قواعد causal:
+
+- latest closed bar هرگز target آموزشی ندارد.
+- فقط rowهایی که next-bar outcome آنها در decision time معلوم است وارد آموزش می‌شوند.
+- train/validation chronological است.
+- validation Brier محاسبه می‌شود.
+- اگر Brier از سقف عبور کند، معامله رد می‌شود.
+- Long پیش‌فرض به probability_up >= 0.56 نیاز دارد.
+- Short پیش‌فرض به probability_up <= 0.44 نیاز دارد.
+- hurdle پیش‌فرض 24 bps است.
+- fail-closed است: insufficient history / class collapse / bad validation => NO ORDER.
+
+### Risk / Execution
+
+پس از تأیید AI:
+
+- risk per trade پیش‌فرض 0.25%
+- stop = 1.5 ATR برای H4 V59
+- target = 2.5R
+- max-notional guard
+- spread guard
+- one bot-owned position per symbol
+- persistent signal idempotency
+- order_check قبل از order_send
+- broker-side SL/TP
+- real-money MT5 account refusal
+
+### مسیر نهایی
+
+    MT5 closed H4 bars
+      -> V59 Confluence
+      -> AI Confirmation
+      -> Position / Spread / Risk gates
+      -> Persistent INTENT
+      -> MT5 order_check
+      -> MT5 DEMO order_send
+      -> Execution Journal
+      -> Shadow-learning evidence
+
