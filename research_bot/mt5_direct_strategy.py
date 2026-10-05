@@ -36,6 +36,7 @@ from .multitimeframe_strategies_v19 import (
     generate_direction,
 )
 from .risk import RiskEngine
+from .mt5_ai_gate import MT5AIGateConfig, evaluate_ai_confirmation
 
 
 class MT5DirectStrategyError(RuntimeError):
@@ -56,6 +57,11 @@ class MT5DirectStrategyConfig:
     min_stop_fraction: float = 0.0005
     journal_path: str = "results/mt5_direct_strategy_journal.jsonl"
     one_bot_position_per_symbol: bool = True
+    ai_gate_enabled: bool = False
+    ai_hurdle_bps: float = 24.0
+    ai_long_threshold: float = 0.56
+    ai_short_threshold: float = 0.44
+    ai_max_validation_brier: float = 0.28
 
     def __post_init__(self) -> None:
         if not str(self.canonical_symbol).strip():
@@ -75,6 +81,14 @@ class MT5DirectStrategyConfig:
             or float(self.min_stop_fraction) <= 0.0
         ):
             raise ValueError("min_stop_fraction must be positive and finite")
+        if not math.isfinite(float(self.ai_hurdle_bps)) or self.ai_hurdle_bps < 0:
+            raise ValueError("ai_hurdle_bps must be finite and non-negative")
+        if not 0.50 < float(self.ai_long_threshold) < 1.0:
+            raise ValueError("ai_long_threshold must be in (0.50, 1)")
+        if not 0.0 < float(self.ai_short_threshold) < 0.50:
+            raise ValueError("ai_short_threshold must be in (0, 0.50)")
+        if not 0.0 < float(self.ai_max_validation_brier) <= 0.50:
+            raise ValueError("ai_max_validation_brier must be in (0, 0.50]")
 
 
 @dataclass(frozen=True)
@@ -98,6 +112,11 @@ class MT5DirectStrategyOutcome:
     order_ticket: int | None = None
     deal_ticket: int | None = None
     execution_status: str | None = None
+    ai_gate_enabled: bool = False
+    ai_probability_up: float | None = None
+    ai_confidence: float | None = None
+    ai_validation_brier: float | None = None
+    ai_reason: str | None = None
 
 
 class DirectStrategyJournal:
@@ -348,6 +367,53 @@ class DirectMT5StrategyRunner:
                     spread_bps=None,
                 )
 
+        ai_fields: dict[str, Any] = {
+            "ai_gate_enabled": bool(self.config.ai_gate_enabled),
+            "ai_probability_up": None,
+            "ai_confidence": None,
+            "ai_validation_brier": None,
+            "ai_reason": None,
+        }
+        if self.config.ai_gate_enabled:
+            ai = evaluate_ai_confirmation(
+                frame,
+                direction=direction,
+                config=MT5AIGateConfig(
+                    min_history=max(360, min(int(self.config.bars), 600)),
+                    hurdle_bps=float(self.config.ai_hurdle_bps),
+                    long_threshold=float(self.config.ai_long_threshold),
+                    short_threshold=float(self.config.ai_short_threshold),
+                    max_validation_brier=float(self.config.ai_max_validation_brier),
+                ),
+            )
+            ai_fields = {
+                "ai_gate_enabled": True,
+                "ai_probability_up": ai.probability_up,
+                "ai_confidence": ai.confidence,
+                "ai_validation_brier": ai.validation_brier,
+                "ai_reason": ai.reason,
+            }
+            if not ai.approved:
+                return MT5DirectStrategyOutcome(
+                    status="AI_REJECTED",
+                    reason=ai.reason,
+                    strategy_name=self.strategy.name,
+                    canonical_symbol=self.config.canonical_symbol,
+                    venue_symbol=self.config.venue_symbol,
+                    signal_id=sid,
+                    signal_time=signal_time,
+                    direction=direction,
+                    side="BUY" if direction > 0 else "SELL",
+                    reference_price=None,
+                    stop_loss=None,
+                    take_profit=None,
+                    requested_quantity=None,
+                    requested_notional=None,
+                    risk_fraction=self.config.risk_fraction,
+                    spread_bps=None,
+                    **ai_fields,
+                )
+
         quote = self.executor.market_snapshot(self.config.venue_symbol)
         side = OrderSide.BUY if direction > 0 else OrderSide.SELL
         reference_price = (
@@ -372,6 +438,7 @@ class DirectMT5StrategyRunner:
                 requested_notional=None,
                 risk_fraction=self.config.risk_fraction,
                 spread_bps=spread_bps,
+                **ai_fields,
             )
 
         atr = float(row.get("atr", math.nan))
@@ -426,6 +493,7 @@ class DirectMT5StrategyRunner:
                 requested_notional=requested_notional,
                 risk_fraction=self.config.risk_fraction,
                 spread_bps=spread_bps,
+                **ai_fields,
             )
 
         quantity = requested_notional / reference_price
@@ -447,6 +515,7 @@ class DirectMT5StrategyRunner:
                 requested_notional=requested_notional,
                 risk_fraction=self.config.risk_fraction,
                 spread_bps=spread_bps,
+                **ai_fields,
             )
 
         intent_payload = {
@@ -463,6 +532,11 @@ class DirectMT5StrategyRunner:
             "requested_notional": requested_notional,
             "risk_fraction": self.config.risk_fraction,
             "spread_bps": spread_bps,
+            "ai_gate_enabled": ai_fields["ai_gate_enabled"],
+            "ai_probability_up": ai_fields["ai_probability_up"],
+            "ai_confidence": ai_fields["ai_confidence"],
+            "ai_validation_brier": ai_fields["ai_validation_brier"],
+            "ai_reason": ai_fields["ai_reason"],
         }
 
         try:
@@ -485,6 +559,7 @@ class DirectMT5StrategyRunner:
                 requested_notional=requested_notional,
                 risk_fraction=self.config.risk_fraction,
                 spread_bps=spread_bps,
+                **ai_fields,
             )
 
         request = ExecutionRequest(
@@ -528,6 +603,7 @@ class DirectMT5StrategyRunner:
             order_ticket=result.order_ticket,
             deal_ticket=result.deal_ticket,
             execution_status=result.status,
+            **ai_fields,
         )
 
 
