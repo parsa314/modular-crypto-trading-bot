@@ -14,12 +14,12 @@ from research_bot.candle_time_v53 import CandleTimeContractV53, closed_bar_snaps
 from research_bot.coinex_public import fetch_coinex_klines
 from research_bot.feature_audit_v54 import V54AuditConfig, audit_feature_families_v54
 from research_bot.multitimeframe_v53 import build_multitimeframe_feature_frame_v53
-from research_bot.v54_completion import assess_v54_completion
+from research_bot.v54_completion import V54_UNIVERSE, assess_v54_completion, canonical_universe, valid_digest
 from research_bot.v54_integrity import dataset_manifest_v54
 from research_bot.v54_promotion import V54PromotionPolicy, summarize_family_evidence_v54
 
 
-DEFAULT_SYMBOLS = ("BTC/USDT", "ETH/USDT", "SOL/USDT", "XRP/USDT", "DOGE/USDT")
+DEFAULT_SYMBOLS = V54_UNIVERSE
 
 
 def _json_safe(obj):
@@ -42,14 +42,21 @@ def _symbol_slug(symbol: str) -> str:
 
 
 def _source_commit() -> str | None:
-    env = os.getenv("GITHUB_SHA") or os.getenv("SOURCE_COMMIT")
-    if env and len(env) >= 7:
-        return env.strip()
+    declared = os.getenv("SOURCE_COMMIT")
     try:
         out = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL).strip()
-        return out or None
     except Exception:
-        return None
+        out = None
+    if out:
+        clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", "research_bot", "scripts"],
+                               capture_output=True, check=False)
+        if clean.returncode != 0:
+            raise ValueError("Scientific source tree differs from the declared immutable commit")
+    if declared and (not valid_digest(declared, 40) or (out and declared != out)):
+        raise ValueError("SOURCE_COMMIT must match the immutable checked-out collector")
+    # GITHUB_SHA can identify a scheduler on main while checkout pins research.
+    # The checkout, not the scheduling branch, owns scientific code provenance.
+    return declared or (out if valid_digest(out, 40) else None)
 
 
 def build_symbol_frame(symbol: str, *, now: datetime, one_hour_bars: int, four_hour_bars: int) -> pd.DataFrame:
@@ -93,6 +100,10 @@ def read_frozen_input(symbol: str, directory: Path) -> tuple[pd.DataFrame, dict]
         frame[col] = pd.to_datetime(frame[col], utc=True, errors="coerce")
     expected = json.loads(manifest_path.read_text(encoding="utf-8"))
     actual = dataset_manifest_v54(frame, symbol=symbol)
+    for key in ("protocol", "symbol", "source", "rows", "decision_start", "decision_end",
+                "paper_execution", "live_execution"):
+        if expected.get(key) != actual[key] or type(expected.get(key)) is not type(actual[key]):
+            raise ValueError(f"frozen input identity/safety mismatch for {symbol}: {key}")
     if actual["frame_sha256"] != expected.get("frame_sha256"):
         raise ValueError(f"frozen input hash mismatch for {symbol}")
     if actual["schema_sha256"] != expected.get("schema_sha256"):
@@ -110,6 +121,8 @@ def run_universe(
     freeze_dir: Path | None = None,
     replay_dir: Path | None = None,
 ) -> dict:
+    symbols = canonical_universe(symbols)
+    source_commit = _source_commit()
     per_symbol: dict[str, dict] = {}
     blocked: dict[str, str] = {}
     manifests: dict[str, dict] = {}
@@ -133,7 +146,7 @@ def run_universe(
         "experiment": "V54_REAL_COINEX_FEATURE_AUDIT",
         "status": "V54_EMPIRICAL_INCOMPLETE",
         "generated_at": pd.Timestamp(now).isoformat(),
-        "source_commit": _source_commit(),
+        "source_commit": source_commit,
         "symbols_requested": list(symbols),
         "symbols_completed": sorted(per_symbol),
         "blocked": blocked,
@@ -165,6 +178,7 @@ def main() -> None:
     p.add_argument("--replay-dir", type=Path, default=None)
     p.add_argument("--output", type=Path, default=Path("artifacts/v54/feature_audit.json"))
     args = p.parse_args()
+    canonical_universe(args.symbols)
     if args.freeze_dir is not None and args.replay_dir is not None:
         raise SystemExit("--freeze-dir and --replay-dir are mutually exclusive")
 

@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from research_bot.feature_audit_v54 import _backtest_predictions
-from research_bot.v54_completion import assess_v54_completion
+from research_bot.v54_completion import V54_UNIVERSE, assess_v54_completion
 from research_bot.v54_integrity import (
     V54FeatureHealthConfig,
     dataset_manifest_v54,
@@ -132,8 +132,10 @@ def test_completion_gate_requires_provenance_and_complete_artifacts():
     symbols = ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
     manifests = {
         symbol: {
-            "frame_sha256": "a" * 64,
-            "schema_sha256": "b" * 64,
+            "protocol": "v0.54", "symbol": symbol, "source": "CoinEx public spot OHLCV",
+            "paper_execution": False, "live_execution": False,
+            "frame_sha256": "0123456789abcdef" * 4,
+            "schema_sha256": "fedcba9876543210" * 4,
             "rows": 1000,
             "decision_start": "2026-01-01T00:00:00+00:00",
             "decision_end": "2026-02-01T00:00:00+00:00",
@@ -147,7 +149,9 @@ def test_completion_gate_requires_provenance_and_complete_artifacts():
         "family_value": {"ICHIMOKU": {"all_minus_drop_sharpe": 0.1}},
     }
     report = {
-        "source_commit": "1" * 40,
+        "source_commit": "f234a85028ed2d86cd3bc672e7491f72b0245b9b",
+        "experiment": "V54_REAL_COINEX_FEATURE_AUDIT",
+        "symbols_requested": list(V54_UNIVERSE),
         "symbols_completed": symbols,
         "dataset_manifests": manifests,
         "per_symbol": {symbol: audit for symbol in symbols},

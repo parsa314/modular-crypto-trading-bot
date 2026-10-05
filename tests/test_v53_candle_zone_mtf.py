@@ -39,8 +39,11 @@ def test_bar_open_timestamp_is_not_available_until_close():
     assert timed.loc[0, "bar_open_at"] == pd.Timestamp("2026-01-01T00:00:00Z")
     assert timed.loc[0, "bar_close_at"] == pd.Timestamp("2026-01-01T04:00:00Z")
     assert timed.loc[0, "available_at"] == pd.Timestamp("2026-01-01T04:00:00Z")
-    before = closed_bar_snapshot_v53(raw, decision_time="2026-01-01T03:59:59Z", contract=contract)
-    after = closed_bar_snapshot_v53(raw, decision_time="2026-01-01T04:00:00Z", contract=contract)
+    # A live snapshot can include the current forming bar, not later unopened
+    # candles. Their rejection is checked separately by the clock-skew test.
+    current_bar = raw.iloc[:1]
+    before = closed_bar_snapshot_v53(current_bar, decision_time="2026-01-01T03:59:59Z", contract=contract)
+    after = closed_bar_snapshot_v53(current_bar, decision_time="2026-01-01T04:00:00Z", contract=contract)
     assert len(before) == 0
     assert len(after) == 1
 

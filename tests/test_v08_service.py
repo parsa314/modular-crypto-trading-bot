@@ -8,12 +8,13 @@ from research_bot.service import app
 client = TestClient(app)
 
 
-def test_health_is_paper_only():
+def test_health_is_research_only():
     response = client.get("/health")
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"
-    assert body["execution_mode"] == "PAPER"
+    assert body["execution_mode"] == "RESEARCH_ONLY"
+    assert body["paper_execution"] is False
     assert body["live_execution"] is False
 
 
@@ -23,10 +24,11 @@ def test_status_exposes_evidence_contract_not_profit_claim():
     body = response.json()
     assert body["principle"] == "Evidence Before Opinion"
     assert body["live_execution"] is False
-    assert "paper_execution" in body["active_modules"]
+    assert body["paper_execution"] is False
+    assert body["kraken_holdout"] == "SEALED"
 
 
-def test_decision_endpoint_can_execute_paper_fill():
+def test_high_confidence_decision_cannot_bypass_research_firewall():
     payload = {
         "asset": "BTC",
         "symbol": "BTC/USDT",
@@ -49,8 +51,8 @@ def test_decision_endpoint_can_execute_paper_fill():
         "recent_returns": [0.001] * 30,
     }
     response = client.post("/decision/evaluate", json=payload)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["status"] == "EXECUTED_PAPER"
-    assert body["fill"]["mode"] == "PAPER"
-    assert body["live_execution"] is False
+    assert response.status_code == 423
+    assert "locked" in response.json()["detail"]
+    assert client.get("/paper/fills").json()["items"] == []
+    assert client.get("/paper/observations").json()["items"] == []
+    assert client.get("/research/latest").json()["candidate_promotion_allowed"] is False
