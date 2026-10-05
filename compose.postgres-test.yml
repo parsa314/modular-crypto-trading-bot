@@ -1,0 +1,20 @@
+name: convergence-postgres-test
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: convergence_test
+      POSTGRES_PASSWORD: local-test-only
+      POSTGRES_DB: convergence_test
+    ports:
+      - '127.0.0.1:55432:5432'
+    volumes:
+      - test_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U convergence_test -d convergence_test']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: 'no'
+volumes:
+  test_pgdata:

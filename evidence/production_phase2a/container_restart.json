@@ -1,0 +1,16 @@
+{
+  "duplicate_claim_blocked": true,
+  "durable_reservation": true,
+  "evidence_class": "DATABASE_ENGINEERING_ONLY",
+  "halt_preserved": true,
+  "live": false,
+  "native_protection": "NOT_VERIFIED",
+  "paper": false,
+  "postgres_version": "16.15",
+  "restart": "Docker Compose restart postgres; health check then fresh Python connection",
+  "risk_constitution_hash": "299138617d80a1976c9ac9fae84ee1c0732b1ddf32549d3cba01ece6e52664fe",
+  "schema_sha256": "d7a69c5ec3507786fcf84e24b1f60f99f62f53f22ff489556032f27bd4bc8c83",
+  "source_base_sha": "fde6e758bfab244e40055778aa84c42cf454f295",
+  "status": "PASS",
+  "testnet": false
+}

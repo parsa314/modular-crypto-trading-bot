@@ -94,6 +94,22 @@ def _positive_int(value, name: str) -> int:
     return int(value)
 
 
+def _merge_order_result(previous_status: str, previous: dict, status: str, normalized: dict) -> dict:
+    """Shared monotone receipt/transition invariant for both durable backends."""
+    if status not in _TRANSITIONS[previous_status]:
+        raise ValueError(f"invalid order transition {previous_status} -> {status}")
+    old_filled = _number(previous.get("filled", 0.0), "filled")
+    filled = _number(normalized.get("filled", old_filled), "filled")
+    if filled < old_filled:
+        raise ValueError("filled quantity cannot decrease")
+    if status in ("SUBMITTING", "OPEN", "REJECTED") and filled > 0:
+        raise ValueError("order status is inconsistent with positive filled quantity")
+    if status in ("PARTIAL", "FILLED") and filled <= 0:
+        raise ValueError("PARTIAL and FILLED orders require positive filled quantity")
+    merged = {**previous, **normalized, "filled": filled}
+    return merged
+
+
 class LiveLedger:
     """SQLite journal pinned to one exact public account/model/mode identity.
 
@@ -320,18 +336,7 @@ class LiveLedger:
             row = connection.execute("SELECT * FROM live_orders WHERE client_order_id=?", (client_order_id,)).fetchone()
             if row is None:
                 raise KeyError("order ID has not been claimed")
-            if status not in _TRANSITIONS[row["state"]]:
-                raise ValueError(f"invalid order transition {row['state']} -> {status}")
-            previous = json.loads(row["result_json"])
-            old_filled = _number(previous.get("filled", 0.0), "filled")
-            filled = _number(normalized.get("filled", old_filled), "filled")
-            if filled < old_filled:
-                raise ValueError("filled quantity cannot decrease")
-            if status in ("SUBMITTING", "OPEN", "REJECTED") and filled > 0:
-                raise ValueError("order status is inconsistent with positive filled quantity")
-            if status in ("PARTIAL", "FILLED") and filled <= 0:
-                raise ValueError("PARTIAL and FILLED orders require positive filled quantity")
-            merged = {**previous, **normalized, "filled": filled}
+            merged = _merge_order_result(row["state"], json.loads(row["result_json"]), status, normalized)
             connection.execute("UPDATE live_orders SET state=?,result_json=? WHERE client_order_id=?",
                                (status, _public_json(merged), client_order_id))
             if encoded_state is not None:

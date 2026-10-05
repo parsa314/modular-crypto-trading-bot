@@ -34,8 +34,10 @@ PASS below means fresh Fake/unit/regression evidence, not live certification.
 
 ## Infrastructure — future phase, NOT_IMPLEMENTED here
 
-- [ ] Authoritative PostgreSQL execution state
-- [ ] Distributed/advisory lock
+- [x] PostgreSQL journal atomicity/recovery in Fake-only engineering path — Phase 2A task 1
+- [x] Account-scoped PostgreSQL advisory exclusion between connections/processes — engineering tested
+- [ ] Production database deployment, backups/restore and cloud failover certification
+- [ ] Remote-exchange fencing / leader lease certification
 - [ ] Public/private WebSocket
 - [ ] Independent watchdog and monitoring/alerts
 - [ ] Exchange clock-drift preflight
@@ -51,3 +53,6 @@ PASS below means fresh Fake/unit/regression evidence, not live certification.
 
 Exact authorization: LIVE=false, PAPER=false, REAL_ORDER_SUBMISSION=false,
 TESTNET=false, withdrawal/transfer/margin/leverage/futures unavailable.
+
+Phase 2A task-1 details: [PostgreSQL runbook](POSTGRESQL_PHASE2A.md).
+These checks do not complete all Phase 2A/2B/2C or authorize Paper execution.
