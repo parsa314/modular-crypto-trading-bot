@@ -122,3 +122,72 @@ CLOSE و REDUCE هنوز generic اجرا نمی‌شوند؛ چون در حسا
 
     MT5 Demo = execution / forward validation domain
     Exchange = canonical production / exchange research domain
+
+
+## اجرای مستقیم Strategy روی MT5 Demo — بدون TradingView
+
+بعد از اتصال حساب MT5 Demo در پنل، بخش «اجرای مستقیم استراتژی ربات روی MT5 Demo» قابل استفاده است.
+
+این مسیر:
+
+    MT5 closed bars
+        -> Strategy Registry
+        -> ATR / Stop / Target
+        -> Risk sizing
+        -> Spread / broker checks
+        -> persistent intent journal
+        -> MT5 DEMO order_send
+
+است و به TradingView وابسته نیست.
+
+قواعد مهم:
+
+- فقط کندل کامل‌شده خوانده می‌شود؛ کندل در حال تشکیل وارد Strategy نمی‌شود.
+- ریسک پیش‌فرض هر معامله 0.25% است.
+- Notional علاوه بر Risk sizing با سقف MT5 adapter محدود می‌شود.
+- اگر Bot با magic خودش روی همان symbol پوزیشن باز داشته باشد، ورود جدید رد می‌شود.
+- SL سمت broker اجباری است و TP بر اساس RR همان Strategy ساخته می‌شود.
+- Intent قبل از network submission روی دیسک ثبت می‌شود تا restart باعث تکرار همان signal نشود.
+- حساب Real همچنان توسط MT5DemoExecutor رد می‌شود.
+
+Strategyهای قابل انتخاب از همان \`STRATEGY_REGISTRY\` پروژه می‌آیند؛ از جمله:
+
+    H4_S6_BREAKOUT
+    H1_ICHIMOKU_PULLBACK
+    M15_CONFIRMED_ORDER_BLOCK
+    M15_SILVER_BULLET
+    M5_UNICORN
+    M1_FVG_RETRACE
+
+لیست دقیق را خود پنل از backend می‌خواند.
+
+### Headless / VPS
+
+برای اجرای بدون مرورگر:
+
+    python scripts/run_mt5_direct_demo_strategy.py --list-strategies
+
+Dry-run مستقیم:
+
+    python scripts/run_mt5_direct_demo_strategy.py ^
+      --canonical-symbol BTC/USDT ^
+      --venue-symbol BTCUSD ^
+      --strategy H4_S6_BREAKOUT
+
+برای ارسال سفارش DEMO دو opt-in لازم است:
+
+    set MT5_DEMO_SUBMIT_ENABLED=1
+
+و:
+
+    python scripts/run_mt5_direct_demo_strategy.py ... --submit-demo
+
+Credentials از متغیرهای زیر خوانده می‌شوند یا password به صورت interactive prompt گرفته می‌شود:
+
+    MT5_LOGIN
+    MT5_PASSWORD
+    MT5_SERVER
+    MT5_TERMINAL_PATH
+
+هیچ‌کدام نباید داخل Git commit شوند.
+
