@@ -284,3 +284,76 @@ def test_account_summary_and_symbol_search_are_ui_safe():
 
     assert executor.search_symbols("USD", limit=2) == ["BTCUSD", "ETHUSD"]
     assert executor.search_symbols("BTC") == ["BTCUSD"]
+
+
+def test_closed_bar_fetch_excludes_forming_bar_and_normalizes_rows():
+    mt5 = FakeMT5()
+    mt5.TIMEFRAME_H4 = 240
+    calls = []
+
+    class Rate:
+        def __init__(self, t, o, h, l, close, tv, spread, rv):
+            self.time = t
+            self.open = o
+            self.high = h
+            self.low = l
+            self.close = close
+            self.tick_volume = tv
+            self.spread = spread
+            self.real_volume = rv
+
+    def copy_rates_from_pos(symbol, timeframe, start_pos, count):
+        calls.append((symbol, timeframe, start_pos, count))
+        return [
+            Rate(1, 100, 110, 90, 105, 1000, 5, 0),
+            Rate(2, 105, 115, 95, 110, 1200, 6, 0),
+        ]
+
+    mt5.copy_rates_from_pos = copy_rates_from_pos
+    executor = MT5DemoExecutor(config(submit_enabled=False), mt5_module=mt5)
+    executor.connect()
+
+    rows = executor.copy_closed_bars("BTCUSD", "4h", count=2)
+
+    assert calls == [("BTCUSD", 240, 1, 2)]
+    assert rows[0]["time"] == 1
+    assert rows[0]["close"] == 105.0
+    assert rows[1]["tick_volume"] == 1200.0
+
+
+def test_bot_positions_filter_by_magic_and_market_snapshot():
+    mt5 = FakeMT5()
+    mt5.positions_get = lambda symbol=None: [
+        SimpleNamespace(
+            ticket=1,
+            symbol="BTCUSD",
+            type=0,
+            volume=0.01,
+            price_open=100.0,
+            sl=95.0,
+            tp=110.0,
+            profit=5.0,
+            magic=314590,
+        ),
+        SimpleNamespace(
+            ticket=2,
+            symbol="BTCUSD",
+            type=0,
+            volume=0.01,
+            price_open=100.0,
+            sl=95.0,
+            tp=110.0,
+            profit=0.0,
+            magic=999,
+        ),
+    ]
+    executor = MT5DemoExecutor(config(submit_enabled=False), mt5_module=mt5)
+    executor.connect()
+
+    positions = executor.bot_positions("BTCUSD")
+    quote = executor.market_snapshot("BTCUSD")
+
+    assert [p["ticket"] for p in positions] == [1]
+    assert quote["bid"] == pytest.approx(99.95)
+    assert quote["ask"] == pytest.approx(100.05)
+    assert quote["spread_bps"] > 0.0
