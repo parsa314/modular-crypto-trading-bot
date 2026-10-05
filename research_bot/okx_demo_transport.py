@@ -256,6 +256,22 @@ class OKXDemoTransport:
             min_notional=min_notional,
         )
 
+    def public_reference_price(self, symbol: str) -> Decimal:
+        """Read a public ticker and return a conservative usable reference price."""
+        ticker = self._exchange.fetch_ticker(symbol)
+        if not isinstance(ticker, Mapping):
+            raise TestnetSafetyError("OKX_DEMO_TICKER_RESPONSE_NOT_MAPPING")
+        last = ticker.get("last")
+        if last not in (None, "", 0, 0.0, "0"):
+            px = decimal_from(last, "ticker.last")
+            if px > 0:
+                return px
+        bid = _decimal_or_zero(ticker.get("bid"), "ticker.bid")
+        ask = _decimal_or_zero(ticker.get("ask"), "ticker.ask")
+        if bid > 0 and ask > 0:
+            return (bid + ask) / Decimal("2")
+        raise TestnetSafetyError("OKX_DEMO_REFERENCE_PRICE_UNAVAILABLE")
+
     def private_preflight(self, symbol: str) -> dict[str, Any]:
         """Authenticate against Demo without placing, amending or cancelling an order."""
         markets = self._exchange.load_markets()
