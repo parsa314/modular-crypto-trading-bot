@@ -1,0 +1,21 @@
+{
+  "created_at_utc": "2026-10-05T05:46:22.523157+00:00",
+  "economic_metrics": null,
+  "error_type": "DataIntegrityError",
+  "execution_authorized": false,
+  "experiment_id": "BINANCE_BTC_1H_LOGISTIC_2022_2024_V1",
+  "history_manifest_sha256": "5e32f2c8111274746c156bfd0ec5117c7e505f8652b25bb00d9bcfece96592ab",
+  "live_readiness": "NOT_AUTHORIZED",
+  "metrics_status": "NOT_EVALUATED",
+  "next_action": "REVIEW_SOURCE_QUALITY_WITHOUT_BACKFILL_OR_OOS_RETUNING",
+  "source_hashes": {
+    "binance_spot_archive.py": "4046a60291ec45a017074482731f478f79e74e879580ba6eb17a486482820a42",
+    "features.py": "6a5bfa1416c6d92a3b379da4d308c565d4bfde8b658bef0cea7dac729103a8e8",
+    "research/profit_backtest.py": "a6a87e760a02dce8faf06301106f61d52c3953b6bc43d426588945d153ffe94b",
+    "research/profit_features.py": "7856dde85d4a1fd94bbe8c9f093b879fcdf454b3bfd37e8de344c1687551f91a",
+    "research/profit_model.py": "c684ac671c7d3878fa71d2914fb29312f9106413543e7538cf2c488d4b285b8b",
+    "research/profit_pipeline.py": "73176440bff78c7c6dd3a5f6f60b52c78423cc11cc53459db8938a436ae6ab0c",
+    "research/spot_history.py": "70203b6091c666c5854ed04cf8261a0226e8ab49c975a14d006de624537f651b"
+  },
+  "status": "BLOCKED_DATA_QUALITY_OR_INTEGRITY"
+}

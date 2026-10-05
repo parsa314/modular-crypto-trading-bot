@@ -1,0 +1,42 @@
+{
+  "clipped_values": 0,
+  "cross_source_verified": false,
+  "end_exclusive": "2025-01-01T00:00:00+00:00",
+  "expected_rows": 26304,
+  "first_missing_timestamp": "2023-03-24T13:00:00+00:00",
+  "identical_duplicates_removed": 0,
+  "imputed_rows": 0,
+  "incomplete_bar_rows": 1,
+  "incomplete_bar_timestamps": [
+    "2023-03-24T12:00:00+00:00"
+  ],
+  "invalid_trade_count_rows": 0,
+  "last_missing_timestamp": "2023-03-24T13:00:00+00:00",
+  "missing_bars": 1,
+  "missing_timestamps": [
+    "2023-03-24T13:00:00+00:00"
+  ],
+  "negative_volume_rows": 0,
+  "nonfinite_rows": 0,
+  "nonpositive_price_rows": 0,
+  "off_grid_bars": 0,
+  "off_grid_timestamps": [],
+  "ohlc_violation_rows": 0,
+  "outlier_flags": 5,
+  "outlier_rule": "abs(close_return)>20% or volume>20x preceding 24-bar median; retained unchanged",
+  "outlier_timestamps": [
+    "2022-07-08T14:00:00+00:00",
+    "2022-07-08T15:00:00+00:00",
+    "2023-08-29T14:00:00+00:00",
+    "2023-10-16T13:00:00+00:00",
+    "2024-08-05T01:00:00+00:00"
+  ],
+  "rows": 26303,
+  "rows_outside_request": 0,
+  "start_inclusive": "2022-01-01T00:00:00+00:00",
+  "status": "BLOCKED",
+  "taker_volume_violation_rows": 0,
+  "timeframe": "1h",
+  "timestamp_semantics": "bar_open_UTC",
+  "valid": false
+}
