@@ -71,8 +71,14 @@ class UrllibJSONClient:
             payload = json.dumps(body, separators=(",", ":")).encode("utf-8")
             req_headers["Content-Type"] = "application/json"
         req = urlrequest.Request(url, data=payload, headers=req_headers, method=method.upper())
-        with urlrequest.urlopen(req, timeout=float(timeout_seconds)) as response:
-            raw = response.read().decode("utf-8")
+        try:
+            with urlrequest.urlopen(req, timeout=float(timeout_seconds)) as response:
+                raw = response.read().decode("utf-8")
+        except urlerror.HTTPError as exc:
+            # HTTPError proves that a response reached the client. Parse the
+            # venue's JSON rejection instead of misclassifying it as an
+            # ambiguous timeout-after-submit.
+            raw = exc.read().decode("utf-8")
         parsed = json.loads(raw)
         if not isinstance(parsed, dict):
             raise TestnetSafetyError("NOBITEX_RESPONSE_NOT_OBJECT")
@@ -318,6 +324,8 @@ class NobitexTestnetTransport:
 
         amount = decimal_from(order.get("amount", "0"), "amount")
         order_type = str(order.get("type", "")).strip().lower()
+        if order_type not in {"buy", "sell"}:
+            raise TestnetSafetyError(f"NOBITEX_ORDER_SIDE_UNSUPPORTED:{order_type}")
         side = OrderSide.BUY if order_type == "buy" else OrderSide.SELL
         return snapshot_from_nobitex_order(
             order,
