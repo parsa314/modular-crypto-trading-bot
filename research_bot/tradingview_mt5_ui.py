@@ -110,11 +110,37 @@ table{width:100%;border-collapse:collapse;font-size:12px;direction:ltr;text-alig
   <div class="row">
     <div>
       <label>Completed bars</label>
-      <input id="directBars" type="number" value="600" min="240" step="10">
+      <input id="directBars" type="number" value="600" min="360" step="10">
     </div>
     <div>
       <label>Polling interval (seconds)</label>
       <input id="directPoll" type="number" value="15" min="2" step="1">
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label>AI confirmation</label>
+      <select id="directAI">
+        <option value="true" selected>روشن — Fail Closed</option>
+        <option value="false">خاموش — فقط Confluence تکنیکال</option>
+      </select>
+    </div>
+    <div>
+      <label>Max validation Brier</label>
+      <input id="directBrier" type="number" value="0.28" min="0.05" max="0.50" step="0.01">
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label>AI Long / Short thresholds</label>
+      <div class="row">
+        <input id="directAILong" type="number" value="0.56" min="0.51" max="0.99" step="0.01">
+        <input id="directAIShort" type="number" value="0.44" min="0.01" max="0.49" step="0.01">
+      </div>
+    </div>
+    <div>
+      <label>AI hurdle (bps)</label>
+      <input id="directAIHurdle" type="number" value="24" min="0" max="500" step="1">
     </div>
   </div>
   <div class="toolbar">
@@ -269,7 +295,7 @@ async function loadStrategies(){
       const o=document.createElement('option');
       o.value=name;o.textContent=name;sel.appendChild(o);
     });
-    const preferred=['H4_S6_BREAKOUT','H1_ICHIMOKU_PULLBACK','M15_CONFIRMED_ORDER_BLOCK'];
+    const preferred=['H4_V59_CONFLUENCE_DEMO','H4_S6_BREAKOUT','H1_ICHIMOKU_PULLBACK','M15_CONFIRMED_ORDER_BLOCK'];
     for(const p of preferred){
       if(r.items.includes(p)){sel.value=p;break}
     }
@@ -289,7 +315,12 @@ function directPayload(){
     venue_symbol:$('directVenue').value.trim(),
     risk_percent:Number($('directRisk').value),
     bars:Number($('directBars').value),
-    poll_seconds:Number($('directPoll').value)
+    poll_seconds:Number($('directPoll').value),
+    ai_gate_enabled:$('directAI').value==='true',
+    ai_hurdle_bps:Number($('directAIHurdle').value),
+    ai_long_threshold:Number($('directAILong').value),
+    ai_short_threshold:Number($('directAIShort').value),
+    ai_max_validation_brier:Number($('directBrier').value)
   }
 }
 async function evaluateDirect(){
