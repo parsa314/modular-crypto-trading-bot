@@ -1,0 +1,66 @@
+{
+  "schema": "audit-session-checkpoint-v1",
+  "recorded_at": "2026-10-05 03:29:38 UTC",
+  "status": "BLOCKED_EXECUTOR_OFFLINE",
+  "repository": "parsa314/modular-crypto-trading-bot",
+  "base_commit": "09979266ebd7ba1466f13e8c01d8fe7857ea0e57",
+  "source_workspace": "/workspace/trading-bot-audit",
+  "source_branch": "audit/v1-v58-market-runtime-20261001",
+  "last_reported_local_commit": "9945e4a2f1cd73729192d1b7dea3cf06887137b4",
+  "last_reported_local_tree": "06d6b189e6a9bf1848eef1ef497999262e96f219",
+  "local_source_uploaded": false,
+  "historical_verification": {
+    "passed": 868,
+    "skipped": 1,
+    "subtests_passed": 12,
+    "duration_seconds": 55.53,
+    "postgresql_exercised": true,
+    "command": "TEST_DATABASE_URL='postgresql://postgres:@/postgres?host=/workspace/audit-pgdata' OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python -m pytest -x -q",
+    "evidence_strength": "Carried-forward execution record; raw files not accessible in the current executor. No fresh rerun."
+  },
+  "stage2_status": "Components developed locally; integration and final suite pending. Untracked files must be recovered before changes.",
+  "environment": {
+    "desired_phase": "running",
+    "observed_phase": "running",
+    "connectivity": "offline",
+    "observations_current": true,
+    "capabilities": [],
+    "wait_minutes": 15
+  },
+  "scientific_state": {
+    "economic_promotion": false,
+    "live_execution_verified": false,
+    "actual_exchange_orders_sent": false,
+    "synthetic_results_are_alpha": false,
+    "versions55_57_named_source_available": false
+  },
+  "development_results": {
+    "coinex": {
+      "test_brier": 0.23929100305867054,
+      "train_frequency_control_brier": 0.21985666337344248,
+      "ml_admitted_trades": 0,
+      "rules_control_trades": 17,
+      "rules_control_net_return": -0.0012781083640172053
+    },
+    "nobitex": {
+      "test_brier": 0.2517197003278097,
+      "train_frequency_control_brier": 0.2335984393343202,
+      "ml_admitted_trades": 0,
+      "rules_control_trades": 17,
+      "rules_control_net_return": -0.0013331287949227555
+    },
+    "binance": {
+      "public_fetch_status": "HTTP_451",
+      "bypassed": false
+    },
+    "interpretation": "Development models did not outperform the fixed training-frequency control. Retain negative results; do not retune the same heldout sample."
+  },
+  "resume_priorities": [
+    "Restore the original workspace and verify its HEAD/tree plus all untracked files. Do not assume source transferred.",
+    "Read AGENTS.md and canonical governance; preserve frozen scientific refs and later parallel branch work.",
+    "Review Decimal caller-context independence; integrate ledger/governor/context/replay/coordinator with explicit modes.",
+    "Test crash/restart and source identity, lot rounding, fees, stale marks, independent wallets and idempotency.",
+    "Rerun appropriate full suite including actual PostgreSQL and save fresh raw evidence.",
+    "Upload the actual source and evidence on an isolated branch; verify remote tree and hosted CI before claiming completion."
+  ]
+}
