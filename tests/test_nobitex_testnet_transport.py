@@ -13,7 +13,11 @@ from research_bot.nobitex_testnet_transport import (
     TESTNET_API_BASE,
     credentials_from_env,
 )
-from research_bot.testnet_execution import AmbiguousTransportOutcome, TestnetOrderIntent, TestnetSafetyError
+from research_bot.testnet_execution import (
+    AmbiguousTransportOutcome,
+    TestnetOrderIntent as SandboxOrderIntent,
+    TestnetSafetyError as SandboxSafetyError,
+)
 
 
 class FakeHTTP:
@@ -88,7 +92,7 @@ def _transport(http=None):
 
 
 def _intent():
-    return TestnetOrderIntent(
+    return SandboxOrderIntent(
         client_order_id="cid-1",
         symbol="BTC/USDT",
         side=OrderSide.BUY,
@@ -99,7 +103,7 @@ def _intent():
 
 
 def test_env_requires_explicit_testnet_enable_and_testnet_token():
-    with pytest.raises(TestnetSafetyError, match="EXPLICIT_ENABLE"):
+    with pytest.raises(SandboxSafetyError, match="EXPLICIT_ENABLE"):
         credentials_from_env({})
     creds = credentials_from_env(
         {"NOBITEX_TESTNET_ENABLED": "true", "NOBITEX_TESTNET_TOKEN": "abc"}
