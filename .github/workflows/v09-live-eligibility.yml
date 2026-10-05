@@ -58,7 +58,7 @@ jobs:
           print({'eligible_assets':r['eligible_assets'],'candidates':len(r['deep_analysis_candidates'])})
           PY
       - name: Upload v0.9 evidence artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: v09-live-eligibility
           path: artifacts/v09/live_eligibility_scan.json

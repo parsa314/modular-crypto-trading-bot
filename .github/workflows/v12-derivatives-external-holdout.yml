@@ -83,7 +83,7 @@ jobs:
           })
           PY
       - name: Upload v0.12 evidence artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: v12-derivatives-external-holdout
           path: artifacts/v12/derivatives_external_holdout.json

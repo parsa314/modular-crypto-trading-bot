@@ -85,7 +85,7 @@ jobs:
           print('v0.19/v0.20 fail-closed fixed-window contract validated')
           PY
       - name: Upload audit evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: v19-audit-corrected-results
           path: |

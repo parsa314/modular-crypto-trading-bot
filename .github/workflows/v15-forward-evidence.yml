@@ -68,7 +68,7 @@ jobs:
           PY
 
       - name: Upload v0.15 evidence artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: v15-forward-evidence-${{ github.run_number }}
           path: artifacts/v15_forward_evidence/
