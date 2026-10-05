@@ -26,6 +26,7 @@ class WalkForwardConfig:
     step_rows: int = 80
     embargo_rows: int = 1
     max_folds: int = 8
+    embargo_hours: float = 24.0
 
     def __post_init__(self) -> None:
         for name in (
@@ -35,6 +36,10 @@ class WalkForwardConfig:
             value = getattr(self, name)
             if not isinstance(value, int) or value < (0 if name == "embargo_rows" else 1):
                 raise ValueError(f"{name} has an invalid value")
+        if self.step_rows < self.test_rows:
+            raise ValueError("Overlapping OOS test windows cannot be counted twice")
+        if isinstance(self.embargo_hours, bool) or not np.isfinite(self.embargo_hours) or self.embargo_hours < 0:
+            raise ValueError("embargo_hours must be finite and nonnegative")
 
 
 @dataclass(frozen=True)
@@ -135,6 +140,14 @@ def _validate_events(frame: pd.DataFrame, feature_columns: Sequence[str]) -> pd.
         x[name] = pd.to_numeric(x[name], errors="raise")
         if not np.isfinite(x[name].to_numpy(float)).all():
             raise ValueError(f"feature {name} must be finite")
+    if "information_end" in x:
+        x["information_end"] = pd.to_datetime(x["information_end"], utc=True, errors="raise")
+        if x.information_end.isna().any() or (x.information_end <= x.timestamp).any():
+            raise ValueError("Outcome information interval must end after the decision")
+    if "realized_gross_return" in x:
+        realized = pd.to_numeric(x.realized_gross_return, errors="raise").to_numpy(float)
+        if not np.isfinite(realized).all() or (realized <= -1).any():
+            raise ValueError("Realized outcome returns must be finite and above -100%")
     return x.sort_values(["strategy_id", "timestamp"], kind="mergesort").reset_index(drop=True)
 
 
@@ -171,6 +184,17 @@ def _prior_probabilities(labels: pd.Series, count: int) -> np.ndarray:
     p = np.array([(float(counts.get(label, 0)) + 1.0) / (total + len(CLASSES)) for label in CLASSES])
     p = p / p.sum()
     return np.tile(p, (count, 1))
+
+
+def _interval_folds(strategy: pd.DataFrame, config: WalkForwardConfig) -> tuple[FoldSpec, ...]:
+    # Multiple assets/arms at the same decision clock form one indivisible
+    # time group. Splitting such a group by row count would be cross-sectional
+    # leakage between fitting and scoring at that clock.
+    sizes = strategy.groupby("timestamp", sort=True).size().to_numpy()
+    offsets = np.concatenate(([0], np.cumsum(sizes)))
+    return tuple(FoldSpec(fold.fold_id, **{name: int(offsets[getattr(fold, name)]) for name in
+                                          ("train_start", "train_end", "validation_start", "validation_end", "test_start", "test_end")})
+                 for fold in make_walk_forward_folds(len(sizes), config))
 
 
 def _fit_model(model_id: str, X: pd.DataFrame, y: pd.Series, seed: int):
@@ -281,6 +305,10 @@ def _economic_path(
     realized[(labels == "TP") & admitted] = reward[(labels == "TP") & admitted] - cost
     realized[(labels == "SL") & admitted] = -loss[(labels == "SL") & admitted] - cost
     realized[(labels == "TIMEOUT") & admitted] = -timeout[(labels == "TIMEOUT") & admitted] - cost
+    if "realized_gross_return" in rows:
+        # Outcome-only data is read after the admission decision. In particular,
+        # realized TIMEOUT losses must never set ex-ante timeout_loss_fraction.
+        realized = np.where(admitted, rows.realized_gross_return.to_numpy(float) - cost, 0.)
     return admitted, realized
 
 
@@ -309,6 +337,12 @@ def run_tournament(
 ) -> dict:
     cfg = TournamentConfig() if config is None else config
     frame = _validate_events(events, feature_columns)
+    if cfg.evidence_class == "REAL_MARKET_EVENT_DATA" and "information_end" not in frame:
+        raise ValueError("Real event datasets require outcome intervals for temporal purging")
+    if cfg.evidence_class == "REAL_MARKET_EVENT_DATA" and set(feature_columns) & {
+        "label", "realized_gross_return", "exit_fill_reference", "information_end",
+        "reward_fraction", "loss_fraction", "timeout_loss_fraction", "entry_fill_reference"}:
+        raise ValueError("Outcome/execution columns cannot enter model features")
     strategy_ids = tuple(sorted(str(value) for value in frame["strategy_id"].unique()))
     if not strategy_ids:
         raise ValueError("no strategy ids found")
@@ -319,13 +353,23 @@ def run_tournament(
 
     for strategy_id in strategy_ids:
         strategy = frame.loc[frame["strategy_id"] == strategy_id].reset_index(drop=True)
-        folds = make_walk_forward_folds(len(strategy), cfg.walk_forward)
+        folds = (_interval_folds(strategy, cfg.walk_forward) if "information_end" in strategy
+                 else make_walk_forward_folds(len(strategy), cfg.walk_forward))
         for model_id in cfg.models:
             fold_predictions: list[pd.DataFrame] = []
             for fold in folds:
                 train = strategy.iloc[fold.train_start:fold.train_end]
                 validation = strategy.iloc[fold.validation_start:fold.validation_end]
                 test = strategy.iloc[fold.test_start:fold.test_end]
+                if "information_end" in strategy:
+                    embargo = pd.Timedelta(hours=cfg.walk_forward.embargo_hours)
+                    train = train.loc[train.information_end < validation.timestamp.iloc[0] - embargo]
+                    validation = validation.loc[validation.information_end < test.timestamp.iloc[0] - embargo]
+                    # Purging also removes equal-clock groups split by row boundaries.
+                    if train.empty or validation.empty or (model_id != "PRIOR" and train.label.nunique() < 2):
+                        attempted.append({"strategy_id": strategy_id, "model_id": model_id,
+                                          "fold_id": fold.fold_id, "status": "SKIPPED_AFTER_INTERVAL_PURGE"})
+                        continue
                 X_train = train.loc[:, feature_columns]
                 X_validation = validation.loc[:, feature_columns]
                 X_test = test.loc[:, feature_columns]
@@ -343,6 +387,9 @@ def run_tournament(
                         "train_end_timestamp": train["timestamp"].iloc[-1].isoformat(),
                         "validation_start_timestamp": validation["timestamp"].iloc[0].isoformat(),
                         "test_start_timestamp": test["timestamp"].iloc[0].isoformat(),
+                        "purge_method": "OUTCOME_INTERVAL_PLUS_TIME_EMBARGO" if "information_end" in strategy else "ROW_EMBARGO_FIXTURE_ONLY",
+                        "train_max_information_end": train.information_end.max().isoformat() if "information_end" in train else None,
+                        "validation_max_information_end": validation.information_end.max().isoformat() if "information_end" in validation else None,
                     }
                 )
                 if model_id == "PRIOR":
@@ -357,6 +404,8 @@ def run_tournament(
                 part = test[
                     ["timestamp", "strategy_id", "label", "reward_fraction", "loss_fraction", "timeout_loss_fraction"]
                 ].copy()
+                if "realized_gross_return" in test:
+                    part["realized_gross_return"] = test.realized_gross_return.to_numpy(float)
                 part["fold_id"] = fold.fold_id
                 for index, label in enumerate(CLASSES):
                     part[f"p_{label}"] = test_prob[:, index]
@@ -423,7 +472,7 @@ def run_tournament(
                     strategy_id=strategy_id,
                     model_id=model_id,
                     cost_bps=float(cost_bps),
-                    fold_count=len(folds),
+                    fold_count=len(fold_predictions),
                     test_events=len(predictions),
                     coverage=float(admitted.mean()) if len(admitted) else 0.0,
                     multiclass_logloss=_multiclass_logloss(y, p),
@@ -462,6 +511,9 @@ def run_tournament(
         "prediction_evidence": prediction_evidence,
         "paper_execution": False,
         "live_execution": False,
+        "portfolio_performance_claim": False,
+        "event_compounding_is_investable": False,
+        "split_unit": "UNIQUE_DECISION_TIME_GROUPS" if "information_end" in frame else "FIXTURE_ROWS",
     }
     registry["registry_hash"] = stable_hash(registry)
     return registry

@@ -1,0 +1,41 @@
+{
+  "attempted_fold_count": 72,
+  "dataset_events_sha256": "d903f41edaded0dc59d4f02dc3f2d57c0f5b8fab5337f4f2fe7298bec213d02c",
+  "event_counts": {
+    "C10_01_TREND_PULLBACK_REJECTION": 205,
+    "C10_02_LIQUIDITY_SWEEP_REVERSAL": 3,
+    "C10_03_CLOUD_BREAK_FVG_CONTINUATION": 165,
+    "C10_04_KIJUN_PULLBACK_H2": 63,
+    "C10_05_RANGE_EDGE_FAILED_BREAKOUT": 3,
+    "C10_06_MICROCHANNEL_FVG_REENTRY": 179,
+    "C10_07_SQUEEZE_EXPANSION_BREAKOUT": 188,
+    "C10_08_DEEP_PULLBACK_REVERSAL": 10,
+    "C10_09_REGIME_ALIGNED_CONTINUATION": 2015,
+    "C10_10_MAX_CONFLUENCE_SELECTIVE": 223,
+    "ICHIMOKU_VISIBLE_CLOUD": 14734
+  },
+  "execution_authorized": false,
+  "no_model_promoted": true,
+  "temporal_split_unit": "UNIQUE_DECISION_TIME_GROUPS",
+  "trial_registry_hash": "f7efd85caf29673f25d04c0be9ad1356d7f0e7688188307fe34abf27ce4db9a0",
+  "unique_decision_clocks": {
+    "C10_01_TREND_PULLBACK_REJECTION": 189,
+    "C10_02_LIQUIDITY_SWEEP_REVERSAL": 3,
+    "C10_03_CLOUD_BREAK_FVG_CONTINUATION": 135,
+    "C10_04_KIJUN_PULLBACK_H2": 62,
+    "C10_05_RANGE_EDGE_FAILED_BREAKOUT": 3,
+    "C10_06_MICROCHANNEL_FVG_REENTRY": 172,
+    "C10_07_SQUEEZE_EXPANSION_BREAKOUT": 165,
+    "C10_08_DEEP_PULLBACK_REVERSAL": 10,
+    "C10_09_REGIME_ALIGNED_CONTINUATION": 1460,
+    "C10_10_MAX_CONFLUENCE_SELECTIVE": 187,
+    "ICHIMOKU_VISIBLE_CLOUD": 5403
+  },
+  "validation_local": {
+    "additional_archive_tests_passed": 29,
+    "full_repository_passed": 613,
+    "postgres_integration_skipped": 1,
+    "subtests": 12,
+    "v59_v58_tests_passed": 421
+  }
+}

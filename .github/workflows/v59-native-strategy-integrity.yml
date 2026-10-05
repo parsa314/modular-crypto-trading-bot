@@ -1,0 +1,23 @@
+name: v59-native-strategy-integrity
+on:
+  pull_request:
+    paths:
+      - "research_bot/v59/native*.py"
+      - "research_bot/v59/tournament.py"
+      - "research_bot/research/spot_history.py"
+      - "tests/v59/test_native*.py"
+      - "tests/v59/test_tournament*.py"
+      - ".github/workflows/v59-native-strategy-integrity.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e '.[dev,data]'
+      - run: python -m pytest -q tests/v59 tests/v58
