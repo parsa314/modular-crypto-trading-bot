@@ -217,11 +217,20 @@ def health(request: Request) -> dict[str, Any]:
     }
 
 
-@app.get("/bridge/recent")
-def recent(request: Request, limit: int = 20) -> dict[str, Any]:
+@app.get("/bridge/recent/{route_token}")
+def recent(
+    route_token: str,
+    request: Request,
+    limit: int = 20,
+) -> dict[str, Any]:
+    settings: BridgeSettings = request.app.state.settings
     bridge = request.app.state.bridge
     if bridge is None:
         raise HTTPException(status_code=503, detail="bridge disabled")
+    try:
+        verify_route_token(settings.route_token, route_token)
+    except TradingViewAuthError as exc:
+        raise HTTPException(status_code=404, detail="not found") from exc
     return {
         "items": bridge.journal.latest(min(max(limit, 1), 100)),
         "live_money_allowed": False,
