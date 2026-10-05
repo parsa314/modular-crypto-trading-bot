@@ -121,6 +121,26 @@ python -m pip install -e '.[deep]'
 python -m pip install -e '.[rl]'
 ```
 
+## MT5 DEMO forward-execution validation
+
+An isolated, fail-closed MetaTrader 5 DEMO adapter is available for
+forward/execution validation without changing the canonical exchange target or
+enabling real-money trading. It rejects non-DEMO MT5 accounts, requires an
+explicit symbol allowlist, validates fresh executable quotes and broker volume
+constraints, requires a server-side stop by default, performs order_check
+before order_send, and keeps submission disabled unless explicitly opted in.
+
+This path is an **execution-validation venue**, not a claim that broker CFD
+returns equal crypto-exchange Spot/Perpetual returns. See
+[docs/MT5_DEMO_VALIDATION.md](docs/MT5_DEMO_VALIDATION.md) for the architecture,
+scientific boundary, TradingView role, setup and validation ladder.
+
+Optional Windows MT5 environment:
+
+```bash
+python -m pip install -e '.[dev,mt5]'
+```
+
 ## Reproducibility rule
 
 Every promotable experiment preserves source SHA, frozen hypothesis/config, data provenance, dependency environment, dataset/artifact fingerprints, validation-only selection logic, fresh evaluation evidence, cost/risk assumptions, machine-readable decision output and explicit PAPER/LIVE authorization flags.
