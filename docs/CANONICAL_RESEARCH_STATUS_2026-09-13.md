@@ -1,5 +1,10 @@
 # Canonical Research Status — 2026-09-13
 
+> Engineering recovery addendum (2026-10-05): see
+> [PROSPECTIVE_RECOVERY_2026-10-05_FA.md](PROSPECTIVE_RECOVERY_2026-10-05_FA.md).
+> V25's old window is BLOCKED_SCHEDULER_CONTINUITY. This does not change the
+> immutable v0.50/v0.51 scientific references below or authorize execution.
+
 This file is the default navigation record for the current scientific and engineering state of the MSc crypto-trading-bot project. It exists to stop agents, reviewers and deployment tooling from confusing the moving default branch, the stacked scientific lineage, and the public deployment shell.
 
 ## Repository roles
