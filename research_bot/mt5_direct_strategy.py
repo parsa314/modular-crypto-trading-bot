@@ -115,8 +115,6 @@ class MT5DirectStrategyOutcome:
     execution_status: str | None = None
     ai_gate_enabled: bool = False
     ai_probability_up: float | None = None
-    ai_probability_down: float | None = None
-    ai_probability_favorable: float | None = None
     ai_confidence: float | None = None
     ai_validation_brier: float | None = None
     ai_reason: str | None = None
@@ -568,8 +566,6 @@ class DirectMT5StrategyRunner:
         ai_fields: dict[str, Any] = {
             "ai_gate_enabled": bool(self.config.ai_gate_enabled),
             "ai_probability_up": None,
-            "ai_probability_down": None,
-            "ai_probability_favorable": None,
             "ai_confidence": None,
             "ai_validation_brier": None,
             "ai_reason": None,
@@ -589,8 +585,6 @@ class DirectMT5StrategyRunner:
             ai_fields = {
                 "ai_gate_enabled": True,
                 "ai_probability_up": ai.probability_up,
-                "ai_probability_down": ai.probability_down,
-                "ai_probability_favorable": ai.probability_favorable,
                 "ai_confidence": ai.confidence,
                 "ai_validation_brier": ai.validation_brier,
                 "ai_reason": ai.reason,
@@ -736,8 +730,6 @@ class DirectMT5StrategyRunner:
             "spread_bps": spread_bps,
             "ai_gate_enabled": ai_fields["ai_gate_enabled"],
             "ai_probability_up": ai_fields["ai_probability_up"],
-            "ai_probability_down": ai_fields["ai_probability_down"],
-            "ai_probability_favorable": ai_fields["ai_probability_favorable"],
             "ai_confidence": ai_fields["ai_confidence"],
             "ai_validation_brier": ai_fields["ai_validation_brier"],
             "ai_reason": ai_fields["ai_reason"],
