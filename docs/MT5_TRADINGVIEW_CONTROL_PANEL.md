@@ -301,3 +301,27 @@ AI فقط بعد از تشکیل Confluence signal اجرا می‌شود.
       -> Execution Journal
       -> Shadow-learning evidence
 
+
+## اجرای مستقیم با یک کلیک
+
+برای اجرای مستقیم Strategy پیش‌فرض بدون بازکردن TradingView:
+
+    RUN_V59_DIRECT_MT5_DEMO.bat
+
+این launcher:
+
+- `H4_V59_CONFLUENCE_DEMO`
+- AI Gate روشن
+- ریسک 0.25%
+- 600 کندل بسته‌شده
+- polling هر 15 ثانیه
+
+را اجرا می‌کند. نام `BTCUSD` در launcher فقط یک mapping پیش‌فرض است؛ در پنل بهتر است ابتدا نام دقیق Symbol موجود در بروکر MT5 را پیدا و mapping را مطابق آن تنظیم کنی.
+
+## آماده‌سازی Windows/VPS
+
+اجرای یک‌باره:
+
+    powershell -ExecutionPolicy Bypass -File scripts\\setup_windows_mt5_demo.ps1
+
+این script محیط `.venv` و وابستگی `.[dev,mt5]` را نصب و فایل local `.env.mt5.local` را ایجاد می‌کند. Password داخل فایل template قرار نمی‌گیرد.
