@@ -179,6 +179,26 @@ def terminal_route_v51(
     except ValueError:
         return "V51_INCOMPLETE_EVIDENCE", audit
 
+    # The support matrix and raw ledger must agree. A complete-looking support
+    # matrix must not allow economic routing when raw first-seen evidence is
+    # absent for any frozen venue × 30-day block cell.
+    eligible = evidence.loc[evidence["prospective_eligible"]].copy()
+    elapsed_days = (
+        pd.to_datetime(eligible["bar_close_at"], utc=True) - PROSPECTIVE_START_V51
+    ).dt.total_seconds() / 86_400.0
+    eligible["prospective_block_v51"] = (elapsed_days // BLOCK_DAYS_V51).astype(int) + 1
+    observed_cells = set(zip(
+        eligible["venue"].astype(str).str.lower(),
+        eligible["prospective_block_v51"].astype(int),
+    ))
+    expected_cells = {
+        (venue, block)
+        for venue in ALLOWED_VENUES_V51
+        for block in range(1, N_BLOCKS_V51 + 1)
+    }
+    if observed_cells != expected_cells:
+        return "V51_INCOMPLETE_EVIDENCE", audit
+
     decision = route_decision_v51(
         conflict_counts=conflict_counts,
         expectancy_deltas=expectancy_deltas,
