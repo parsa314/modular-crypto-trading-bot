@@ -84,3 +84,54 @@ def test_incomplete_series_routes_without_economic_decision():
     )
     assert audit.eligible_series == 1
     assert decision == "V51_INCOMPLETE_EVIDENCE"
+
+
+
+def test_missing_raw_venue_block_cell_cannot_reach_economic_gate():
+    from research_bot.overlap_arbitration_v51 import (
+        ALLOWED_ASSETS_V51, ALLOWED_VENUES_V51, BLOCK_DAYS_V51,
+        N_BLOCKS_V51, PROSPECTIVE_START_V51,
+    )
+
+    rows = []
+    # All 15 venue/asset series and all five blocks appear, but the raw ledger
+    # intentionally omits OKX and KuCoin in block 5.
+    for venue in ALLOWED_VENUES_V51:
+        for asset in ALLOWED_ASSETS_V51:
+            for block in range(1, N_BLOCKS_V51 + 1):
+                if block == N_BLOCKS_V51 and venue != "coinex":
+                    continue
+                close_ts = PROSPECTIVE_START_V51 + pd.Timedelta(
+                    days=BLOCK_DAYS_V51 * (block - 1), hours=4
+                )
+                rows.append(_row(
+                    venue=venue,
+                    symbol=f"{asset}/USDT",
+                    close=close_ts.isoformat(),
+                    seen=(close_ts + pd.Timedelta(minutes=5)).isoformat(),
+                ))
+
+    evidence = pd.DataFrame(rows)
+    support = pd.DataFrame([
+        {"venue": venue, "prospective_block_v51": block,
+         "evidence_present": True, "conflict_cohorts": 20}
+        for venue in ALLOWED_VENUES_V51
+        for block in range(1, N_BLOCKS_V51 + 1)
+    ])
+    decision, audit = terminal_route_v51(
+        evidence=evidence,
+        venue_block_support=support,
+        conflict_counts=[20, 20, 20, 20, 20],
+        expectancy_deltas=[1, 1, 1, 1, 1],
+        aggregate_expectancy_a0=0.0,
+        aggregate_expectancy_a1=1.0,
+        profit_factor_a0=1.0,
+        profit_factor_a1=2.0,
+        stress_profit_factor_a0=1.0,
+        stress_profit_factor_a1=2.0,
+        worst_drawdown_a1=-0.01,
+        causal_checks_passed=True,
+    )
+    assert audit.eligible_series == 15
+    assert audit.eligible_blocks == N_BLOCKS_V51
+    assert decision == "V51_INCOMPLETE_EVIDENCE"
