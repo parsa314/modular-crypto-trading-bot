@@ -25,6 +25,9 @@ on:
       - "tests/test_tradingview_mt5_bridge.py"
       - "tests/test_tradingview_mt5_ui.py"
       - "tests/test_demo_experience.py"
+      - "tests/test_metaapi_demo_readonly.py"
+      - "tests/test_mt5_transport_gateway.py"
+      - "scripts/metaapi_demo_preflight.py"
       - "pyproject.toml"
 
 jobs:
@@ -54,6 +57,7 @@ jobs:
           python -m compileall -q research_bot/demo_experience.py
           python -m compileall -q scripts/start_mt5_tradingview_ui.py
           python -m compileall -q scripts/run_mt5_direct_demo_strategy.py
+          python -m compileall -q scripts/metaapi_demo_preflight.py
 
       - name: Run focused tests
         run: |
@@ -64,4 +68,6 @@ jobs:
             tests/test_multitimeframe_strategies_v19.py \
             tests/test_tradingview_mt5_bridge.py \
             tests/test_tradingview_mt5_ui.py \
-            tests/test_demo_experience.py
+            tests/test_demo_experience.py \
+            tests/test_metaapi_demo_readonly.py \
+            tests/test_mt5_transport_gateway.py
