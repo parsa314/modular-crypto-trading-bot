@@ -121,6 +121,55 @@ python -m pip install -e '.[deep]'
 python -m pip install -e '.[rl]'
 ```
 
+## MT5 DEMO forward-execution validation
+
+An isolated, fail-closed MetaTrader 5 DEMO adapter is available for
+forward/execution validation without changing the canonical exchange target or
+enabling real-money trading. It rejects non-DEMO MT5 accounts, requires an
+explicit symbol allowlist, validates fresh executable quotes and broker volume
+constraints, requires a server-side stop by default, performs order_check
+before order_send, and keeps submission disabled unless explicitly opted in.
+
+This path is an **execution-validation venue**, not a claim that broker CFD
+returns equal crypto-exchange Spot/Perpetual returns. See
+[docs/MT5_DEMO_VALIDATION.md](docs/MT5_DEMO_VALIDATION.md) for the architecture,
+scientific boundary, TradingView role, setup and validation ladder.
+
+Optional Windows MT5 environment:
+
+```bash
+python -m pip install -e '.[dev,mt5]'
+```
+
+## TradingView -> MT5 DEMO bridge
+
+The engineering validation branch also includes a dedicated TradingView webhook
+bridge. TradingView alerts can send JSON over HTTPS to a Windows/VPS service
+running beside the MT5 terminal; the service journals the event, rejects
+duplicates, verifies the configured route/source controls, and routes eligible
+BUY/SELL intents through the DEMO-only MT5 executor.
+
+This is deliberately separate from the canonical research FastAPI service and
+does not change LIVE/PAPER authorization. See
+[docs/TRADINGVIEW_MT5_BRIDGE_SETUP.md](docs/TRADINGVIEW_MT5_BRIDGE_SETUP.md) and the one-click Windows guide at [docs/MT5_TRADINGVIEW_CONTROL_PANEL.md](docs/MT5_TRADINGVIEW_CONTROL_PANEL.md)
+and the Pine transport test at
+[tradingview/mt5_demo_bridge_test.pine](tradingview/mt5_demo_bridge_test.pine).
+
+## Direct registered strategy -> MT5 DEMO
+
+The local MT5 panel can also run the project's registered deterministic strategy
+candidates **without TradingView**. Completed MT5 bars are fed directly into
+`STRATEGY_REGISTRY`, then ATR-based bracket construction, risk sizing,
+spread/notional guards, persistent signal idempotency and DEMO-only execution
+are applied before `order_send()`.
+
+The browser UI exposes strategy selection/start/stop/status controls. A headless
+Windows/VPS runner is also available at
+`scripts/run_mt5_direct_demo_strategy.py`.
+
+This remains DEMO forward/execution validation. It does not authorize
+real-money MT5 or exchange LIVE execution.
+
 ## Reproducibility rule
 
 Every promotable experiment preserves source SHA, frozen hypothesis/config, data provenance, dependency environment, dataset/artifact fingerprints, validation-only selection logic, fresh evaluation evidence, cost/risk assumptions, machine-readable decision output and explicit PAPER/LIVE authorization flags.

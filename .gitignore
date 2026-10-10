@@ -19,3 +19,11 @@ build/
 dist/
 *.egg-info/
 .DS_Store
+
+# Local MT5 credential/profile files.
+mt5_credentials.local.json
+mt5_profile.local.json
+*.mt5-secret.json
+
+# Local MT5 Demo credentials/config
+.env.mt5.local

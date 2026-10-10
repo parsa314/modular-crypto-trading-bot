@@ -80,6 +80,13 @@ STRATEGY_REGISTRY: tuple[StrategySpec, ...] = (
     _spec("H1_FIB_INSTITUTIONAL_RETRACE", "1h", "fib_institutional", "Advanced Technical Analysis: institutional candle + 50/61.8/78.6 retracement"),
     _spec("H1_CORRELATION_DIVERGENCE", "1h", "correlation_divergence", "Advanced Technical Analysis/ICT SMT: correlated-asset divergence"),
     _spec("H1_ICHIMOKU_PULLBACK", "1h", "ichimoku_pullback", "Project Ichimoku + confirmed pullback research family"),
+    _spec(
+        "H4_V59_CONFLUENCE_DEMO",
+        "4h",
+        "v59_confluence",
+        "Demo confluence: Ichimoku + ICT/SMC + Brooks-style price action + regime/S6",
+        rr=2.5,
+    ),
     _spec("H4_S6_BREAKOUT", "4h", "s6_breakout", "Project v0.17 S6: 20-bar breakout + positive EMA200 slope"),
     _spec("H4_KUMO_TRIANGLE", "4h", "kumo_triangle", "Project triangle-under-Kumo causal detector"),
     _spec("H4_OB_BOS_RETEST", "4h", "confirmed_ob", "Order Blocks HTF BOS/retest"),
@@ -179,6 +186,46 @@ def build_features(frame: pd.DataFrame, peer: pd.DataFrame | None = None) -> pd.
     x["prior_low20"] = lo20
     x["bull_retracement"] = (hi20 - x["close"]) / rng
     x["bear_retracement"] = (x["close"] - lo20) / rng
+
+    # Causal Al-Brooks-style price-action proxies. These are algorithmic
+    # research features inspired by trend/range/breakout/follow-through ideas;
+    # they are not a claim to reproduce discretionary Brooks reading verbatim.
+    bar_range = (x["high"] - x["low"]).replace(0, np.nan)
+    body_abs = (x["close"] - x["open"]).abs()
+    close_location = (x["close"] - x["low"]) / bar_range
+    overlap = (
+        pd.concat([x["high"], x["high"].shift(1)], axis=1).min(axis=1)
+        - pd.concat([x["low"], x["low"].shift(1)], axis=1).max(axis=1)
+    ).clip(lower=0.0)
+    x["brooks_body_ratio"] = body_abs / bar_range
+    x["brooks_close_location"] = close_location
+    x["brooks_overlap_ratio"] = overlap / bar_range
+    x["brooks_trend_strength"] = (x["ema20"] - x["ema50"]) / x["atr"].replace(0, np.nan)
+    x["brooks_breakout_up_atr"] = (x["close"] - x["prior_high20"]) / x["atr"].replace(0, np.nan)
+    x["brooks_breakout_down_atr"] = (x["prior_low20"] - x["close"]) / x["atr"].replace(0, np.nan)
+
+    bull_signal_bar = (
+        (x["close"] > x["open"])
+        & (x["brooks_body_ratio"] >= 0.55)
+        & (x["brooks_close_location"] >= 0.70)
+    )
+    bear_signal_bar = (
+        (x["close"] < x["open"])
+        & (x["brooks_body_ratio"] >= 0.55)
+        & (x["brooks_close_location"] <= 0.30)
+    )
+    x["brooks_bull_signal_bar"] = bull_signal_bar
+    x["brooks_bear_signal_bar"] = bear_signal_bar
+    x["brooks_bull_follow_through"] = bull_signal_bar & bull_signal_bar.shift(1, fill_value=False)
+    x["brooks_bear_follow_through"] = bear_signal_bar & bear_signal_bar.shift(1, fill_value=False)
+    x["brooks_microchannel_up"] = (
+        (x["low"] > x["low"].shift(1))
+        & (x["low"].shift(1) > x["low"].shift(2))
+    )
+    x["brooks_microchannel_down"] = (
+        (x["high"] < x["high"].shift(1))
+        & (x["high"].shift(1) < x["high"].shift(2))
+    )
 
     body = (x["close"] - x["open"]).abs()
     x["base_candle"] = body <= 0.35 * x["atr"]
@@ -289,6 +336,112 @@ def generate_direction(spec: StrategySpec, frame: pd.DataFrame, peer: pd.DataFra
         bear = (x["close"] < x["cloud_bottom"]) & (x["tenkan"] < x["kijun"])
         long = bull & (x["low"] <= x["tenkan"]) & (x["close"] > x["open"])
         short = bear & (x["high"] >= x["tenkan"]) & (x["close"] < x["open"])
+    elif spec.family == "v59_confluence":
+        # 1) Ichimoku state / momentum.
+        kijun_slope = x["kijun"].diff(3)
+        ichi_long = (
+            (x["close"] > x["cloud_top"])
+            & (x["tenkan"] > x["kijun"])
+            & (kijun_slope > 0)
+        )
+        ichi_short = (
+            (x["close"] < x["cloud_bottom"])
+            & (x["tenkan"] < x["kijun"])
+            & (kijun_slope < 0)
+        )
+
+        # 2) ICT/SMC structure: sweep/BOS, FVG rejection or OB mitigation.
+        ict_long = (
+            (_recent(x["sweep_down"], 12) & _recent(x["bos_up"], 8))
+            | (
+                _recent(x["bull_fvg"], 8)
+                & x["bull_fvg_mid"].notna()
+                & (x["low"] <= x["bull_fvg_mid"])
+                & (x["close"] > x["bull_fvg_mid"])
+            )
+            | (
+                _recent(x["bos_up"], 16)
+                & x["bull_ob_mid"].notna()
+                & (x["low"] <= x["bull_ob_mid"])
+                & (x["close"] > x["bull_ob_mid"])
+            )
+        )
+        ict_short = (
+            (_recent(x["sweep_up"], 12) & _recent(x["bos_down"], 8))
+            | (
+                _recent(x["bear_fvg"], 8)
+                & x["bear_fvg_mid"].notna()
+                & (x["high"] >= x["bear_fvg_mid"])
+                & (x["close"] < x["bear_fvg_mid"])
+            )
+            | (
+                _recent(x["bos_down"], 16)
+                & x["bear_ob_mid"].notna()
+                & (x["high"] >= x["bear_ob_mid"])
+                & (x["close"] < x["bear_ob_mid"])
+            )
+        )
+
+        # 3) Brooks-style price-action quality.
+        brooks_long = (
+            (x["brooks_trend_strength"] >= 0.30)
+            & (x["brooks_overlap_ratio"] <= 0.70)
+            & (
+                x["brooks_bull_signal_bar"].fillna(False)
+                | x["brooks_bull_follow_through"].fillna(False)
+                | x["brooks_microchannel_up"].fillna(False)
+                | (x["brooks_breakout_up_atr"] >= 0.10)
+            )
+        )
+        brooks_short = (
+            (x["brooks_trend_strength"] <= -0.30)
+            & (x["brooks_overlap_ratio"] <= 0.70)
+            & (
+                x["brooks_bear_signal_bar"].fillna(False)
+                | x["brooks_bear_follow_through"].fillna(False)
+                | x["brooks_microchannel_down"].fillna(False)
+                | (x["brooks_breakout_down_atr"] >= 0.10)
+            )
+        )
+
+        # 4) Regime / structural trend and 20-bar breakout evidence.
+        regime_long = tl & (x["ema20"] > x["ema50"])
+        regime_short = ts & (x["ema20"] < x["ema50"])
+        breakout_long = (x["close"] > x["prior_high20"]) & (x["ema200_slope"] > 0)
+        breakout_short = (x["close"] < x["prior_low20"]) & (x["ema200_slope"] < 0)
+
+        long_score = (
+            ichi_long.astype(int)
+            + ict_long.astype(int)
+            + brooks_long.astype(int)
+            + regime_long.astype(int)
+            + breakout_long.astype(int)
+        )
+        short_score = (
+            ichi_short.astype(int)
+            + ict_short.astype(int)
+            + brooks_short.astype(int)
+            + regime_short.astype(int)
+            + breakout_short.astype(int)
+        )
+
+        x["v59_ichi_long"] = ichi_long.astype(float)
+        x["v59_ichi_short"] = ichi_short.astype(float)
+        x["v59_ict_smc_long"] = ict_long.astype(float)
+        x["v59_ict_smc_short"] = ict_short.astype(float)
+        x["v59_brooks_long"] = brooks_long.astype(float)
+        x["v59_brooks_short"] = brooks_short.astype(float)
+        x["v59_regime_long"] = regime_long.astype(float)
+        x["v59_regime_short"] = regime_short.astype(float)
+        x["v59_breakout_long"] = breakout_long.astype(float)
+        x["v59_breakout_short"] = breakout_short.astype(float)
+        x["v59_long_score"] = long_score.astype(float)
+        x["v59_short_score"] = short_score.astype(float)
+
+        # Require broad confirmation and a two-vote margin over the opposite
+        # side. This avoids a weak 3-vs-2 mixed-state trade.
+        long = (long_score >= 3) & ((long_score - short_score) >= 2)
+        short = (short_score >= 3) & ((short_score - long_score) >= 2)
     elif spec.family == "s6_breakout":
         long = (x["close"] > x["prior_high20"]) & (x["ema200_slope"] > 0)
         short = (x["close"] < x["prior_low20"]) & (x["ema200_slope"] < 0)
