@@ -7,7 +7,6 @@ accepted, transmitted, or stored by this module. No order methods exposed.
 """
 from __future__ import annotations
 
-import asyncio
 import os
 from typing import Any
 
@@ -88,11 +87,3 @@ class MetaApiDemoReadOnly:
         if connection is not None:
             await connection.close()
 
-    def connect(self) -> None:
-        asyncio.run(self.connect_async())
-
-    def account_summary(self) -> dict[str, Any]:
-        return asyncio.run(self.account_summary_async())
-
-    def shutdown(self) -> None:
-        asyncio.run(self.shutdown_async())
