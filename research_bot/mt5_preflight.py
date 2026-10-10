@@ -91,6 +91,15 @@ def main() -> int:
         else:
             print("06_AI=NOT_RUN")
 
+        # Connectivity and diagnostic completion are not trading authorization.
+        # A missing signal or AI rejection must never be reported as trade-ready.
+        trade_ready = bool(
+            decision.signal is not None
+            and decision.ai_result is not None
+            and decision.ai_result.approved
+        )
+        print("07_TRADE_READINESS=" + ("CANDIDATE_ONLY" if trade_ready else "NOT_READY"))
+        print("07_TRADE_AUTHORIZATION=DENIED_PREFLIGHT")
         print("07_EXECUTION=BLOCKED_BY_PREFLIGHT")
         print("PREFLIGHT_COMPLETE")
         return 0
