@@ -96,6 +96,13 @@ Source-derived trading concepts are treated as **hypothesis generators**, never 
 
 ## Research / defense navigation
 
+Jamalian course integration is an independent **HYPOTHESIS / ENGINEERING-ONLY**
+research path. See the [source audit and integration report](docs/JAMALIAN_INTEGRATION_REPORT.md)
+and [revised integration specification](docs/JAMALIAN_INTEGRATION_PROMPT.md).
+Its four generators produce non-actionable `SignalEvidence`; the event simulator
+is offline and the frozen v0.51 experiment is not changed. No economic validation
+or PAPER/LIVE authorization is implied.
+
 - [`AGENTS.md`](AGENTS.md) — repository and execution-governance contract
 - [`docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md`](docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md) — canonical current scientific state
 - [`docs/PROJECT_STATUS_2026-09-11.md`](docs/PROJECT_STATUS_2026-09-11.md) — historical integrated snapshot
