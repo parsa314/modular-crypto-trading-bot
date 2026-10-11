@@ -45,3 +45,6 @@ include = ["research_bot*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.setuptools.package-data]
+"research_bot.course" = ["configs/*.json"]

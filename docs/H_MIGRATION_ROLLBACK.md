@@ -1,0 +1,13 @@
+# H — Migration and rollback
+
+This is an additive course research integration, not a merge of PR62/80/110/111/113 and not an edit of v50/v51 scientific evidence. No frozen document, preregistration, canonical experiment config, Kraken holdout or admission/cost/exit rule of v51 is changed.
+
+Modified existing files: `research_bot/decision.py` (nonfinite/invalid cost input rejection), `risk.py` (nonfinite tail input rejection), `execution.py` (NoOrderTransport), `orchestrator.py` (default research sink and candidate adapter), `service.py` (read-only monitoring), `pyproject.toml` (ship JSON config package data). Additive package: `research_bot/course/`; additive tests/scripts/docs listed in DELIVERY_MANIFEST.json.
+
+No application runtime dependency was added. Existing pandas/numpy/sklearn/stdlib provide research calculations; the existing FastAPI service provides monitoring. Temporary pytest/ruff/mypy/ccxt/psycopg dependencies were installed for verification and are recorded in evidence. Three versioned JSON configs ship inside the package; all strategy defaults are disabled, unverified candidates. Evaluation parameter provenance is validated at load time.
+
+Suggested isolated branch: `engineering/course-integration-research-only-v2`. Start from the recorded main SHA; inspect divergence before applying. `git apply --check course-integration.patch`, then apply and run pytest. Do not blindly apply over unrelated execution.py package refactors on PR110 or stacked branches. The exact base and patch checks are in the delivery manifest. No branch/commit/PR was created remotely.
+
+Phase acceptance: discovery has source hashes/compatibility; contracts have PIT/unit/schema rejection; strategy reconstruction has prefix/crossover/exit tests; stateful engineering has reservation/partial/restart invariants; cognitive integration has canonical Decision/Risk/evidence and NoOrder tests; statistical machinery has synthetic reproducibility and conditional applicability only; monitoring has GET-only bounded report projection. Real data, full learned CPCV, preregistered economic ablations and independent prospective/risk acceptance remain blocked. Phases do not upgrade one another's scientific status.
+
+Rollback before merge: discard patch/work directory. After review and commits: revert course-integration commits, restore the six existing files from their own parent, remove additive package/tests/script/new reports. Preserve evidence artifacts as immutable records; never delete/rewrite scientific trials to make a negative result disappear. Existing course stores can be detached from monitoring without deleting them. No exchange order/account state requires reversal because none was changed.

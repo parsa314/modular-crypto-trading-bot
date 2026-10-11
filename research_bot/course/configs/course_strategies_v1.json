@@ -1,0 +1,1165 @@
+{
+  "schema": "COURSE_STRATEGIES_V1",
+  "version": "1.0.0",
+  "strategies": {
+    "sma_crossover": {
+      "enabled": false,
+      "status": "RESEARCH_CANDIDATE",
+      "provenance": "REUSE_AS_CONCEPT",
+      "source_cell": "Python_5_Trade_Strategy.ipynb:cell4",
+      "invalidation": "REVERSE_CROSS_EXIT_NOT_SHORT_ENTRY",
+      "parameters": {
+        "fast": {
+          "value": 50,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 50,
+          "source": "Python_5_Trade_Strategy.ipynb:cell4",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "slow": {
+          "value": 150,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 150,
+          "source": "Python_5_Trade_Strategy.ipynb:cell4",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "warmup": {
+          "value": 151,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 151,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "stop_loss": {
+          "value": 0.02,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.02,
+          "source": "Python_5_Trade_Strategy.ipynb:cell4",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "take_profit": {
+          "value": 0.05,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.05,
+          "source": "Python_5_Trade_Strategy.ipynb:cell4",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "max_age_seconds": {
+          "value": 14400,
+          "type": "integer",
+          "unit": "seconds",
+          "range": [
+            1,
+            14400
+          ],
+          "reference": 14400,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "cost_bps": {
+          "value": 24,
+          "type": "integer",
+          "unit": "round_trip_bps",
+          "range": [
+            0,
+            500
+          ],
+          "reference": 24,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "timeout_bars": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observed_bars",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_research_protocol_reference_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        }
+      }
+    },
+    "bollinger_reversion": {
+      "enabled": false,
+      "status": "RESEARCH_CANDIDATE",
+      "provenance": "REUSE_AS_CONCEPT",
+      "source_cell": "Python_5_Trade_Strategy.ipynb:cell6",
+      "invalidation": "MEAN_REVERSION_EXIT_NOT_FILL_GUARANTEE",
+      "parameters": {
+        "window": {
+          "value": 20,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 20,
+          "source": "Python_5_Trade_Strategy.ipynb:cell6",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "std_multiplier": {
+          "value": 2,
+          "type": "integer",
+          "unit": "standard_deviations",
+          "range": [
+            0.1,
+            10
+          ],
+          "reference": 2,
+          "source": "Python_5_Trade_Strategy.ipynb:cell6",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "warmup": {
+          "value": 20,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 20,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "stop_loss": {
+          "value": 0.05,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.05,
+          "source": "Python_5_Trade_Strategy.ipynb:cell6",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "take_profit": {
+          "value": 0.15,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.15,
+          "source": "Python_5_Trade_Strategy.ipynb:cell6",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "max_age_seconds": {
+          "value": 14400,
+          "type": "integer",
+          "unit": "seconds",
+          "range": [
+            1,
+            14400
+          ],
+          "reference": 14400,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "cost_bps": {
+          "value": 24,
+          "type": "integer",
+          "unit": "round_trip_bps",
+          "range": [
+            0,
+            500
+          ],
+          "reference": 24,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "timeout_bars": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observed_bars",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_research_protocol_reference_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        }
+      }
+    },
+    "rsi_reversal": {
+      "enabled": false,
+      "status": "RESEARCH_CANDIDATE",
+      "provenance": "REUSE_AS_CONCEPT",
+      "source_cell": "Python_5_Trade_Strategy.ipynb:cell9",
+      "invalidation": "OPPOSITE_RSI_THRESHOLD_EXIT",
+      "parameters": {
+        "window": {
+          "value": 14,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 14,
+          "source": "Python_5_Trade_Strategy.ipynb:cell9",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "oversold": {
+          "value": 20,
+          "type": "integer",
+          "unit": "RSI_points",
+          "range": [
+            0,
+            100
+          ],
+          "reference": 20,
+          "source": "Python_5_Trade_Strategy.ipynb:cell9",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "overbought": {
+          "value": 80,
+          "type": "integer",
+          "unit": "RSI_points",
+          "range": [
+            0,
+            100
+          ],
+          "reference": 80,
+          "source": "Python_5_Trade_Strategy.ipynb:cell9",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "warmup": {
+          "value": 15,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 15,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "stop_loss": {
+          "value": 0.07,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.07,
+          "source": "Python_5_Trade_Strategy.ipynb:cell9",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "take_profit": {
+          "value": 0.2,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.2,
+          "source": "Python_5_Trade_Strategy.ipynb:cell9",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "max_age_seconds": {
+          "value": 14400,
+          "type": "integer",
+          "unit": "seconds",
+          "range": [
+            1,
+            14400
+          ],
+          "reference": 14400,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "cost_bps": {
+          "value": 24,
+          "type": "integer",
+          "unit": "round_trip_bps",
+          "range": [
+            0,
+            500
+          ],
+          "reference": 24,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "timeout_bars": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observed_bars",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_research_protocol_reference_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        }
+      }
+    },
+    "donchian_breakout": {
+      "enabled": false,
+      "status": "RESEARCH_CANDIDATE",
+      "provenance": "REUSE_AS_CONCEPT",
+      "source_cell": "Python_5_Trade_Strategy.ipynb:cell11",
+      "invalidation": "CURRENT_CHANNEL_MID_EXIT",
+      "parameters": {
+        "window": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "Python_5_Trade_Strategy.ipynb:cell11",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "warmup": {
+          "value": 31,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 31,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "stop_loss": {
+          "value": 0.02,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.02,
+          "source": "Python_5_Trade_Strategy.ipynb:cell11",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "take_profit": {
+          "value": 0.05,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.05,
+          "source": "Python_5_Trade_Strategy.ipynb:cell11",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "max_age_seconds": {
+          "value": 14400,
+          "type": "integer",
+          "unit": "seconds",
+          "range": [
+            1,
+            14400
+          ],
+          "reference": 14400,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "cost_bps": {
+          "value": 24,
+          "type": "integer",
+          "unit": "round_trip_bps",
+          "range": [
+            0,
+            500
+          ],
+          "reference": 24,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "timeout_bars": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observed_bars",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_research_protocol_reference_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        }
+      }
+    },
+    "macd_crossover": {
+      "enabled": false,
+      "status": "RESEARCH_CANDIDATE",
+      "provenance": "REUSE_AS_CONCEPT",
+      "source_cell": "Python_5_Trade_Strategy.ipynb:cell13",
+      "invalidation": "OPPOSITE_MACD_CROSS_EXIT",
+      "parameters": {
+        "fast": {
+          "value": 12,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 12,
+          "source": "Python_5_Trade_Strategy.ipynb:cell13",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "slow": {
+          "value": 26,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 26,
+          "source": "Python_5_Trade_Strategy.ipynb:cell13",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "signal": {
+          "value": 9,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 9,
+          "source": "Python_5_Trade_Strategy.ipynb:cell13",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "warmup": {
+          "value": 35,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 35,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "stop_loss": {
+          "value": 0.02,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.02,
+          "source": "Python_5_Trade_Strategy.ipynb:cell13",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "take_profit": {
+          "value": 0.05,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.05,
+          "source": "Python_5_Trade_Strategy.ipynb:cell13",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "max_age_seconds": {
+          "value": 14400,
+          "type": "integer",
+          "unit": "seconds",
+          "range": [
+            1,
+            14400
+          ],
+          "reference": 14400,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "cost_bps": {
+          "value": 24,
+          "type": "integer",
+          "unit": "round_trip_bps",
+          "range": [
+            0,
+            500
+          ],
+          "reference": 24,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "timeout_bars": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observed_bars",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_research_protocol_reference_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        }
+      }
+    },
+    "technical_confluence": {
+      "enabled": false,
+      "status": "RESEARCH_CANDIDATE",
+      "provenance": "REUSE_AS_CONCEPT",
+      "source_cell": "Python_5_Trade_Strategy.ipynb:cell16",
+      "invalidation": "OPPOSITE_MACD_CROSS_EXIT",
+      "parameters": {
+        "fast": {
+          "value": 12,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 12,
+          "source": "Python_5_Trade_Strategy.ipynb:cell16",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "slow": {
+          "value": 26,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 26,
+          "source": "Python_5_Trade_Strategy.ipynb:cell16",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "signal": {
+          "value": 9,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 9,
+          "source": "Python_5_Trade_Strategy.ipynb:cell16",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "rsi_window": {
+          "value": 14,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 14,
+          "source": "Python_5_Trade_Strategy.ipynb:cell16",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "rsi_mid": {
+          "value": 50,
+          "type": "integer",
+          "unit": "RSI_points",
+          "range": [
+            0,
+            100
+          ],
+          "reference": 50,
+          "source": "Python_5_Trade_Strategy.ipynb:cell16",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "ema_window": {
+          "value": 50,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 50,
+          "source": "Python_5_Trade_Strategy.ipynb:cell16",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "warmup": {
+          "value": 51,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 51,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "stop_loss": {
+          "value": 0.03,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.03,
+          "source": "Python_5_Trade_Strategy.ipynb:cell16",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "take_profit": {
+          "value": 0.07,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.07,
+          "source": "Python_5_Trade_Strategy.ipynb:cell16",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "max_age_seconds": {
+          "value": 14400,
+          "type": "integer",
+          "unit": "seconds",
+          "range": [
+            1,
+            14400
+          ],
+          "reference": 14400,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "cost_bps": {
+          "value": 24,
+          "type": "integer",
+          "unit": "round_trip_bps",
+          "range": [
+            0,
+            500
+          ],
+          "reference": 24,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "timeout_bars": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observed_bars",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_research_protocol_reference_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        }
+      }
+    },
+    "simple_scalper": {
+      "enabled": false,
+      "status": "RESEARCH_CANDIDATE",
+      "provenance": "ENGINEERING_EXTENSION",
+      "source_cell": "Python_6_Build_Bot.ipynb:cell4",
+      "invalidation": "ABSOLUTE_PRICE_TRIGGER_NOT_SCALPING_EVIDENCE",
+      "parameters": {
+        "buy_threshold": {
+          "value": 5000,
+          "type": "integer",
+          "unit": "quote_per_base_same_market_as_input",
+          "range": [
+            1e-06,
+            1000000000000000.0
+          ],
+          "reference": 5000,
+          "source": "Python_6_Build_Bot.ipynb:cell4",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "warmup": {
+          "value": 1,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 1,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "take_profit": {
+          "value": 0.01,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.01,
+          "source": "Python_6_Build_Bot.ipynb:cell4",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "max_age_seconds": {
+          "value": 14400,
+          "type": "integer",
+          "unit": "seconds",
+          "range": [
+            1,
+            14400
+          ],
+          "reference": 14400,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "cost_bps": {
+          "value": 24,
+          "type": "integer",
+          "unit": "round_trip_bps",
+          "range": [
+            0,
+            500
+          ],
+          "reference": 24,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "stop_loss": {
+          "value": 0.01,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.01,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "unoptimized_research_exit_placeholder_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        },
+        "timeout_bars": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observed_bars",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_research_protocol_reference_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        }
+      }
+    },
+    "order_book_imbalance": {
+      "enabled": false,
+      "status": "RESEARCH_CANDIDATE",
+      "provenance": "REUSE_AS_CONCEPT",
+      "source_cell": "Python_6_Build_Bot.ipynb:cell8",
+      "invalidation": "NEGATIVE_IMBALANCE_STANDASIDE_NO_HISTORY_BACKTEST",
+      "parameters": {
+        "depth": {
+          "value": 5,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 5,
+          "source": "Python_6_Build_Bot.ipynb:cell8",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "threshold": {
+          "value": 0.2,
+          "type": "number",
+          "unit": "dimensionless_imbalance",
+          "range": [
+            0,
+            1
+          ],
+          "reference": 0.2,
+          "source": "Python_6_Build_Bot.ipynb:cell8",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "max_age_seconds": {
+          "value": 10,
+          "type": "integer",
+          "unit": "seconds",
+          "range": [
+            1,
+            14400
+          ],
+          "reference": 10,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "warmup": {
+          "value": 1,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 1,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "take_profit": {
+          "value": 0.02,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.02,
+          "source": "Python_6_Build_Bot.ipynb:cell8",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "stop_loss": {
+          "value": 0.01,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.01,
+          "source": "Python_6_Build_Bot.ipynb:cell8",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "cost_bps": {
+          "value": 24,
+          "type": "integer",
+          "unit": "round_trip_bps",
+          "range": [
+            0,
+            500
+          ],
+          "reference": 24,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "timeout_bars": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observed_bars",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_research_protocol_reference_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        }
+      }
+    },
+    "rsi_moving_average": {
+      "enabled": false,
+      "status": "RESEARCH_CANDIDATE",
+      "provenance": "ENGINEERING_EXTENSION",
+      "source_cell": "Python_6_Build_Bot.ipynb:cell11",
+      "invalidation": "CLOSED_CANDLE_PROXY_FOR_TICKER_POLL_RULE",
+      "parameters": {
+        "rsi_window": {
+          "value": 14,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 14,
+          "source": "Python_6_Build_Bot.ipynb:cell11",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "ma_window": {
+          "value": 20,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 20,
+          "source": "Python_6_Build_Bot.ipynb:cell11",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "oversold": {
+          "value": 30,
+          "type": "integer",
+          "unit": "RSI_points",
+          "range": [
+            0,
+            100
+          ],
+          "reference": 30,
+          "source": "Python_6_Build_Bot.ipynb:cell11",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "warmup": {
+          "value": 21,
+          "type": "integer",
+          "unit": "observations",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 21,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "take_profit": {
+          "value": 0.006,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.006,
+          "source": "Python_6_Build_Bot.ipynb:cell11",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "max_age_seconds": {
+          "value": 14400,
+          "type": "integer",
+          "unit": "seconds",
+          "range": [
+            1,
+            14400
+          ],
+          "reference": 14400,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "cost_bps": {
+          "value": 24,
+          "type": "integer",
+          "unit": "round_trip_bps",
+          "range": [
+            0,
+            500
+          ],
+          "reference": 24,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_unoptimized_reference",
+          "scientific_status": "UNVERIFIED"
+        },
+        "stop_loss": {
+          "value": 0.01,
+          "type": "number",
+          "unit": "price_fraction",
+          "range": [
+            1e-06,
+            0.99
+          ],
+          "reference": 0.01,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "unoptimized_research_exit_placeholder_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        },
+        "timeout_bars": {
+          "value": 30,
+          "type": "integer",
+          "unit": "observed_bars",
+          "range": [
+            1,
+            10000
+          ],
+          "reference": 30,
+          "source": "ENGINEERING_EXTENSION",
+          "version": "1.0.0",
+          "method": "fixed_research_protocol_reference_never_execution_risk_policy",
+          "scientific_status": "UNVERIFIED"
+        }
+      }
+    }
+  }
+}

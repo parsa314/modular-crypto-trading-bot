@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
-from typing import Iterable
+from collections.abc import Iterable
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -97,6 +97,7 @@ class RiskEngine:
             or snapshot.turnover < 0.0
             or snapshot.spread_bps < 0.0
             or snapshot.slippage_bps < 0.0
+            or any(not math.isfinite(float(value)) for value in snapshot.recent_returns)
         )
         if invalid:
             return RiskDecision(

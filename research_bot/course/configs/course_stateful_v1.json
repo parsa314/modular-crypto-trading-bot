@@ -1,0 +1,39 @@
+{
+  "schema_version": "COURSE_STATEFUL_RESEARCH_V1",
+  "provenance": "ENGINEERING_EXTENSION",
+  "status": "RESEARCH_CANDIDATE",
+  "enabled": false,
+  "mode": "OFFLINE_REPLAY_NOT_PAPER",
+  "paper_execution": false,
+  "live_execution": false,
+  "scientific_approval": "UNTESTED_ECONOMIC_HYPOTHESIS",
+  "grid": {
+    "version": "COURSE_GRID_RESEARCH_V1",
+    "enabled": false,
+    "parameters": {
+      "max_levels": {"type": "integer", "unit": "orders", "allowed_range": [1, 100], "reference_value": 10, "source": "ENGINEERING_EXTENSION", "version": "1", "selection_method": "explicit_example_not_optimized", "scientific_status": "UNAPPROVED"},
+      "maker_fee_rate": {"type": "decimal_string", "unit": "fraction_of_quote_notional", "allowed_range": ["0", "1_exclusive"], "reference_value": "0.001", "source": "SIMULATION_ASSUMPTION_NOT_BITPIN_FEE", "version": "1", "selection_method": "replace_with_documented_market_fee", "scientific_status": "UNAPPROVED"},
+      "taker_fee_rate": {"type": "decimal_string", "unit": "fraction_of_output_currency", "allowed_range": ["0", "1_exclusive"], "reference_value": "0.002", "source": "SIMULATION_ASSUMPTION_NOT_BITPIN_FEE", "version": "1", "selection_method": "explicit_scenario_for_unwind_assessment_only", "scientific_status": "UNAPPROVED"},
+      "max_inventory_base": {"type": "decimal_string", "unit": "market_base_currency", "allowed_range": ["positive_finite"], "reference_value": "1", "source": "ENGINEERING_EXTENSION_LOCAL_SIMULATED_WALLET", "version": "1", "selection_method": "explicit_plan_capacity_not_canonical_risk_override", "scientific_status": "UNAPPROVED"},
+      "breakout_lower": {"type": "decimal_string", "unit": "quote_per_base", "allowed_range": ["0_exclusive", "breakout_upper_exclusive"], "reference_value": "1", "source": "EDUCATIONAL_EXAMPLE_REQUIRES_MARKET_SPECIFIC_PREREGISTRATION", "version": "1", "selection_method": "preregister_before_experiment", "scientific_status": "UNAPPROVED"},
+      "breakout_upper": {"type": "decimal_string", "unit": "quote_per_base", "allowed_range": ["breakout_lower_exclusive", "finite"], "reference_value": "1000000", "source": "EDUCATIONAL_EXAMPLE_REQUIRES_MARKET_SPECIFIC_PREREGISTRATION", "version": "1", "selection_method": "preregister_before_experiment", "scientific_status": "UNAPPROVED"}
+    },
+    "range_preregistration_ref": null,
+    "level_policy": "explicit_quantity_price_side_plan_with_whole_plan_reservation",
+    "fill_policy": "external_queue_trade_witness_required_never_ohlc_touch",
+    "recenter_policy": "cancel_old_plan_then_new_point_in_time_range_approval",
+    "inventory_skew_policy": "explicit_asymmetric_level_quantities_no_automatic_repricing"
+  },
+  "arbitrage": {
+    "version": "COURSE_TRIANGLE_RESEARCH_V1",
+    "enabled": false,
+    "fee_currency_policy": "OUTPUT_ONLY_OTHER_CONVENTIONS_REJECTED",
+    "parameters": {
+      "max_snapshot_age": {"type": "decimal_string", "unit": "seconds", "allowed_range": ["positive_finite"], "reference_value": "10", "source": "ENGINEERING_EXTENSION", "version": "1", "selection_method": "preregister_per_venue", "scientific_status": "UNAPPROVED"},
+      "max_snapshot_skew": {"type": "decimal_string", "unit": "seconds", "allowed_range": ["nonnegative_finite"], "reference_value": "1", "source": "ENGINEERING_EXTENSION", "version": "1", "selection_method": "preregister_per_venue", "scientific_status": "UNAPPROVED"},
+      "latency": {"type": "decimal_string", "unit": "seconds_between_leg_resolutions", "allowed_range": ["positive_finite"], "reference_value": "0.1", "source": "SIMULATION_ASSUMPTION_NOT_MEASURED_API_LATENCY", "version": "1", "selection_method": "replace_with_prospective_latency_distribution", "scientific_status": "UNAPPROVED"},
+      "risk_buffer_bps": {"type": "decimal_string", "unit": "bps_of_initial_capital", "allowed_range": ["nonnegative_finite"], "reference_value": "10", "source": "ENGINEERING_EXTENSION", "version": "1", "selection_method": "preregister_sensitivity_scenarios", "scientific_status": "UNAPPROVED"}
+    }
+  },
+  "activation_policy": "explicit_offline_scenario_construction_only_configuration_is_not_execution_authorization"
+}

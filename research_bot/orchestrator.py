@@ -1,11 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from .contracts import Decision, EvidenceStamp, SignalEvidence
 from .decision import DecisionEngine
-from .execution import ExecutionFill, ExecutionRequest, OrderSide, PaperExecutionEngine
+from .execution import (
+    ExecutionFill,
+    ExecutionRequest,
+    NoOrderTransport,
+    OrderSide,
+    PaperExecutionEngine,
+)
 from .risk import RiskDecision, RiskEngine, RiskSnapshot
 
 
@@ -30,11 +38,27 @@ class ResearchTradingOrchestrator:
         *,
         decision_engine: DecisionEngine | None = None,
         risk_engine: RiskEngine | None = None,
-        execution_engine: PaperExecutionEngine | None = None,
+        execution_engine: PaperExecutionEngine | NoOrderTransport | None = None,
     ) -> None:
         self.decision_engine = decision_engine or DecisionEngine()
         self.risk_engine = risk_engine or RiskEngine()
-        self.execution_engine = execution_engine or PaperExecutionEngine()
+        self.execution_engine = execution_engine or NoOrderTransport()
+
+    def process_research_candidates(self, **kwargs):
+        """Course hypotheses use the same decision and risk engines, never orders."""
+        from .course.integration import process_batch
+        return process_batch(self, **kwargs)
+
+    def process_research_signals(
+        self, signals: Sequence[SignalEvidence], **kwargs: Any
+    ) -> list[dict[str, Any]]:
+        """Canonical course signals enter the existing research gates and store."""
+        from .course.hypotheses import candidates_from_signals
+        if "candidates" in kwargs:
+            raise ValueError("SIGNAL_INPUT_MUST_NOT_OVERRIDE_CANDIDATES")
+        return self.process_research_candidates(
+            candidates=candidates_from_signals(signals), **kwargs
+        )
 
     def process_forecast(
         self,
@@ -75,6 +99,9 @@ class ResearchTradingOrchestrator:
         risk = self.risk_engine.evaluate(risk_snapshot)
         if not risk.approved:
             return PipelineOutcome(signal=signal, risk=risk, fill=None, status="RISK_REJECTED")
+
+        if isinstance(self.execution_engine, NoOrderTransport):
+            return PipelineOutcome(signal=signal, risk=risk, fill=None, status="EXECUTION_DENIED_RESEARCH_ONLY")
 
         side = OrderSide.BUY if signal.decision is Decision.BUY_CANDIDATE else OrderSide.SELL
         fill = self.execution_engine.execute(

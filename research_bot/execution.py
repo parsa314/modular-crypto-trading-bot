@@ -1,16 +1,25 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-import math
 
 from .contracts import ExecutionMode
+
+_MINIMUM_EXECUTION_TIME = datetime.min.replace(tzinfo=timezone.utc)
 
 
 class OrderSide(str, Enum):
     BUY = "BUY"
     SELL = "SELL"
+
+
+class NoOrderTransport:
+    """Research firewall: no network client, credentials or submission method."""
+
+    def execute(self, request: object, **kwargs: object) -> None:
+        raise RuntimeError("EXECUTION_DENIED_RESEARCH_ONLY")
 
 
 class OrderType(str, Enum):
@@ -51,7 +60,7 @@ class ExecutionRequest:
     reference_price: float
     order_type: OrderType = OrderType.MARKET
     limit_price: float | None = None
-    created_at: datetime = datetime.min.replace(tzinfo=timezone.utc)
+    created_at: datetime = _MINIMUM_EXECUTION_TIME
 
     @property
     def notional(self) -> float:

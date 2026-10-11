@@ -1,0 +1,240 @@
+{
+  "version": "COURSE_EVALUATION_V1",
+  "cost_bps": [
+    0.0,
+    24.0,
+    36.0,
+    50.0
+  ],
+  "reference_cost_bps": 24.0,
+  "min_train": 60,
+  "test_size": 20,
+  "embargo_seconds": 0,
+  "cpcv_groups": 4,
+  "cpcv_test_groups": 2,
+  "bootstrap_block": 8,
+  "bootstrap_runs": 400,
+  "random_seed": 42,
+  "cvar_alpha": 0.05,
+  "model_names": [
+    "logistic",
+    "hgb"
+  ],
+  "probability_threshold": 0.6,
+  "baseline_admissible": false,
+  "regular_period_seconds": null,
+  "periods_per_year": null,
+  "frozen_holdout_start": null,
+  "independent_trials": null,
+  "trial_sharpe_std": null,
+  "parameter_governance": {
+    "version": {
+      "type": "str",
+      "unit": "dimensionless",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": "COURSE_EVALUATION_V1",
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "cost_bps": {
+      "type": "list",
+      "unit": "basis_points_round_trip",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": [
+        0.0,
+        24.0,
+        36.0,
+        50.0
+      ],
+      "source": "MASTER_PROMPT_V2 cost scenarios",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "reference_cost_bps": {
+      "type": "float",
+      "unit": "basis_points_round_trip",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 24.0,
+      "source": "MASTER_PROMPT_V2 cost scenarios",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "min_train": {
+      "type": "int",
+      "unit": "count",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 60,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "test_size": {
+      "type": "int",
+      "unit": "count",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 20,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "embargo_seconds": {
+      "type": "int",
+      "unit": "seconds",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 0,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "cpcv_groups": {
+      "type": "int",
+      "unit": "count",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 4,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "cpcv_test_groups": {
+      "type": "int",
+      "unit": "count",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 2,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "bootstrap_block": {
+      "type": "int",
+      "unit": "count",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 8,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "bootstrap_runs": {
+      "type": "int",
+      "unit": "count",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 400,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "random_seed": {
+      "type": "int",
+      "unit": "count",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 42,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "cvar_alpha": {
+      "type": "float",
+      "unit": "tail_probability",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 0.05,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "model_names": {
+      "type": "list",
+      "unit": "dimensionless",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": [
+        "logistic",
+        "hgb"
+      ],
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "probability_threshold": {
+      "type": "float",
+      "unit": "probability",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": 0.6,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "baseline_admissible": {
+      "type": "bool",
+      "unit": "dimensionless",
+      "allowed_domain": "EvaluationConfig validation",
+      "reference_value": false,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "regular_period_seconds": {
+      "type": "optional",
+      "unit": "seconds",
+      "allowed_domain": "EvaluationConfig validation; null disables unsupported inference",
+      "reference_value": null,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "periods_per_year": {
+      "type": "optional",
+      "unit": "periods_per_year",
+      "allowed_domain": "EvaluationConfig validation; null disables unsupported inference",
+      "reference_value": null,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "frozen_holdout_start": {
+      "type": "optional",
+      "unit": "dimensionless",
+      "allowed_domain": "EvaluationConfig validation; null disables unsupported inference",
+      "reference_value": null,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "independent_trials": {
+      "type": "optional",
+      "unit": "dimensionless",
+      "allowed_domain": "EvaluationConfig validation; null disables unsupported inference",
+      "reference_value": null,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    },
+    "trial_sharpe_std": {
+      "type": "optional",
+      "unit": "dimensionless",
+      "allowed_domain": "EvaluationConfig validation; null disables unsupported inference",
+      "reference_value": null,
+      "source": "ENGINEERING_EXTENSION fixture design; not optimized",
+      "version": "COURSE_EVALUATION_V1",
+      "determination_method": "Fixed before synthetic engineering exercise",
+      "scientific_approval": "NOT_APPROVED_FOR_PROMOTION"
+    }
+  }
+}

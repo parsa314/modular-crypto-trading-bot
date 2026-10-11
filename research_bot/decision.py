@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -41,6 +42,13 @@ class DecisionEngine:
         confidence = float(confidence)
         if not 0.0 <= confidence <= 1.0:
             raise ValueError("confidence must be in [0, 1]")
+        if timestamp.tzinfo is None:
+            raise ValueError("timestamp must be timezone-aware")
+        if not all(math.isfinite(float(value)) for value in
+                   (expected_return, expected_cost, risk_penalty, uncertainty_penalty)):
+            raise ValueError("NONFINITE_FORECAST")
+        if any(float(value) < 0 for value in (expected_cost, risk_penalty, uncertainty_penalty)):
+            raise ValueError("NEGATIVE_COST_OR_PENALTY")
 
         net_alpha = (
             float(expected_return)
