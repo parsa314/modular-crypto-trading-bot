@@ -13,6 +13,7 @@ from research_bot.hypothesis import canonical_json
 from research_bot.jamalian_data import Candle, OrderBook, BookLevel
 from research_bot.strategies.baselines import RsiMaConfluenceHypothesis, RsiMaParams
 from research_bot.completion.models import CompletionPolicy
+from research_bot.completion.execution.input_validation import SimulationStressInput
 from research_bot.completion.journal import TradeJournal
 from research_bot.completion.strategies.grid_hypothesis import GridHypothesisGenerator, GridParameters
 from research_bot.completion.strategies.triangular_arb_hypothesis import TriangularArbitrageHypothesis
@@ -48,15 +49,18 @@ def build_bundle() -> StrategyBundle:
         EmaCrossHypothesis(), Decimal(100))
 
 
-def run_example(journal_path: Path | str, cycles: int = 80, mode: str = "PAPER") -> dict:
+def run_example(journal_path: Path | str, cycles: int = 80, mode: str = "PAPER",
+                stress: SimulationStressInput | None = None) -> dict:
     journal = TradeJournal(journal_path, "jamalian_completion_synthetic_v1")
     try:
+        policy = (stress or SimulationStressInput()).to_policy(CompletionPolicy(mode=mode))
         runner = BacktestRunner(journal, build_bundle(), {"USDT": Decimal(1000), "IRT": Decimal(1000), "BTC": Decimal(1)},
-            CompletionPolicy(mode=mode), quote_currency="IRT")
+            policy, quote_currency="IRT")
         report = runner.run(synthetic_frames(cycles))
         report["arbitration"] = [e["payload"] for e in journal.events("ARBITRATION")]
         report["journal_events"] = len(journal.events())
         report["strategies_observed"] = sorted({e["payload"]["strategy_id"] for e in journal.events("HYPOTHESIS")})
+        report["execution_assumptions"] = policy.to_dict()
         return report
     finally:
         journal.close()
@@ -66,8 +70,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--journal", type=Path, required=True)
     parser.add_argument("--cycles", type=int, default=80)
+    parser.add_argument("--displayed-depth-fraction", default="0.10")
+    parser.add_argument("--min-submission-interval-ms", type=int, default=100)
     args = parser.parse_args()
-    report = run_example(args.journal, args.cycles)
+    stress = SimulationStressInput.model_validate({"displayed_depth_fraction": args.displayed_depth_fraction,
+        "min_submission_interval_ms": args.min_submission_interval_ms})
+    report = run_example(args.journal, args.cycles, stress=stress)
     print(json.dumps(report, ensure_ascii=False, allow_nan=False))
 
 

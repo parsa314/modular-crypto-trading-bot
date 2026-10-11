@@ -100,6 +100,7 @@ class EventDrivenExecutionSimulator:
         self._scheduled: list[dict] = []
         self._books: dict[str, dict] = {}
         self._clock: datetime | None = None
+        self._next_submission_at: datetime | None = None
         self._sequence = 0
         checkpoint = journal.restore("simulator")
         self.graduation = journal.restore("graduation")
@@ -119,13 +120,15 @@ class EventDrivenExecutionSimulator:
         return {"policy": self.policy.to_dict(), "initial_balances": {k: str(v) for k, v in self._initial_balances.items()},
             "balances": {k: str(v) for k, v in self._balances.items()}, "orders": self._orders,
             "scheduled": self._scheduled, "books": self._books,
-            "clock": utc_text(self._clock) if self._clock else None, "sequence": self._sequence}
+            "clock": utc_text(self._clock) if self._clock else None, "sequence": self._sequence,
+            "next_submission_at": utc_text(self._next_submission_at) if self._next_submission_at else None}
 
     def _load(self, row: dict) -> None:
         self._balances = {k: Decimal(v) for k, v in row["balances"].items()}
         self._orders, self._scheduled, self._books = row["orders"], row["scheduled"], row["books"]
         self._clock = datetime.fromisoformat(row["clock"]) if row["clock"] else None
         self._sequence = row["sequence"]
+        self._next_submission_at = datetime.fromisoformat(row["next_submission_at"]) if row.get("next_submission_at") else None
 
     @contextmanager
     def atomic(self) -> Iterator[None]:
@@ -167,6 +170,8 @@ class EventDrivenExecutionSimulator:
     def _transition(self, identity: str, state: OrderState, at: datetime, reason: str = "", fill: dict | None = None) -> None:
         o = self._orders[identity]
         o["state"] = state.value
+        if state is OrderState.ACKNOWLEDGED:
+            o["acknowledged_at"] = utc_text(at)
         if state in TERMINAL:
             o["reserved"] = "0"
         self._sequence += 1
@@ -174,7 +179,11 @@ class EventDrivenExecutionSimulator:
             {"client_order_id": identity, "state": state.value, "reason": reason,
                 "filled_quantity": o["filled_quantity"], "reserved": o["reserved"],
                 "balances": {k: str(v) for k, v in self._balances.items()}, "fill": fill,
-                "mode": self.policy.mode, "live_execution": False})
+                "mode": self.policy.mode, "live_execution": False,
+                "execution_model_sha256": self.policy.execution_model_sha256(),
+                "displayed_depth_fraction": str(self.policy.displayed_depth_fraction),
+                "min_submission_interval_ms": self.policy.min_submission_interval_ms,
+                "model_status": "UNCALIBRATED_EXECUTION_ASSUMPTIONS"})
 
     def _schedule(self, identity: str, state: OrderState, at: datetime) -> None:
         priority = 0 if state in {OrderState.CANCELLED, OrderState.EXPIRED} else 2 if state is OrderState.ACKNOWLEDGED else 1
@@ -193,7 +202,19 @@ class EventDrivenExecutionSimulator:
                 identity, target = event["id"], OrderState(event["state"])
                 if OrderState(self._orders[identity]["state"]) in TERMINAL:
                     continue
-                self._transition(identity, target, datetime.fromisoformat(event["at"]))
+                event_at = datetime.fromisoformat(event["at"])
+                if target is OrderState.SUBMITTED_SIMULATED:
+                    if self._next_submission_at is not None and event_at < self._next_submission_at:
+                        self.journal.append("submission_delay:" + identity + ":" + utc_text(event_at),
+                            "SIMULATED_RATE_LIMIT", event_at,
+                            {"client_order_id": identity, "retry_at": utc_text(self._next_submission_at),
+                                "reason": "MODELED_VENUE_SUBMISSION_PACING", "live_execution": False})
+                        self._schedule(identity, target, self._next_submission_at)
+                        continue
+                    self._next_submission_at = event_at + timedelta(milliseconds=self.policy.min_submission_interval_ms)
+                    self._schedule(identity, OrderState.ACKNOWLEDGED,
+                        event_at + timedelta(milliseconds=self.policy.ack_latency_ms))
+                self._transition(identity, target, event_at)
             self._clock = at
 
     def submit(self, request: OrderRequest, approved: bool) -> OrderSnapshot:
@@ -209,7 +230,8 @@ class EventDrivenExecutionSimulator:
             reservation = request.quantity * request.protection_price if request.side == "BUY" else request.quantity
             free = self.free(reserve_currency)
             self._orders[identity] = {"request": request.to_dict(), "state": "CREATED", "filled_quantity": "0",
-                "reserved": "0", "reserve_currency": reserve_currency, "fills": [], "cancel_at": None}
+                "reserved": "0", "reserve_currency": reserve_currency, "fills": [], "cancel_at": None,
+                "acknowledged_at": None}
             self._transition(identity, OrderState.CREATED, request.created_at)
             reason = ""
             if approved is not True:
@@ -228,7 +250,6 @@ class EventDrivenExecutionSimulator:
                 jitter = int(sha256(f"{self.policy.seed}:{identity}".encode()).hexdigest(), 16) % (self.policy.jitter_ms + 1)
                 submitted = request.created_at + timedelta(milliseconds=self.policy.latency_ms + jitter)
                 self._schedule(identity, OrderState.SUBMITTED_SIMULATED, submitted)
-                self._schedule(identity, OrderState.ACKNOWLEDGED, submitted + timedelta(milliseconds=self.policy.ack_latency_ms))
                 if request.expires_at is not None:
                     self._schedule(identity, OrderState.EXPIRED, request.expires_at)
         return self.order(identity)
@@ -255,16 +276,23 @@ class EventDrivenExecutionSimulator:
         if key in self._books:
             if self._books[key]["digest"] != digest:
                 raise ValueError("previously consumed book revised")
+            self.advance(at)
             return ()
         fills = []
         with self.atomic():
             self.advance(at)
-            depth = {"BUY": [[l.price, l.quantity] for l in book.asks], "SELL": [[l.price, l.quantity] for l in book.bids]}
+            # One conservative eligible budget per level/snapshot, shared by all
+            # orders. Retries do not replenish it. This is not a maker queue model.
+            depth = {"BUY": [[l.price, l.quantity * self.policy.displayed_depth_fraction] for l in book.asks],
+                "SELL": [[l.price, l.quantity * self.policy.displayed_depth_fraction] for l in book.bids]}
             for identity, o in sorted(self._orders.items(), key=lambda kv: (kv[1]["request"]["created_at"], kv[0])):
                 request = OrderRequest.from_dict(o["request"])
                 if request.symbol != book.symbol or o["state"] not in {"ACKNOWLEDGED", "PARTIALLY_FILLED"} or book.stamp.observed_at <= request.created_at:
                     continue
-                if request.not_before is not None and at < request.not_before:
+                eligible_at = datetime.fromisoformat(o["acknowledged_at"])
+                if request.not_before is not None:
+                    eligible_at = max(eligible_at, request.not_before)
+                if book.stamp.observed_at < eligible_at:
                     continue
                 base, quote = currencies(request.symbol)
                 for level in depth[request.side]:

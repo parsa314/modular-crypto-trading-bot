@@ -82,7 +82,7 @@ economic forecasts, so the arbiter explicitly rejects them with
 `UNCALIBRATED_OR_UNSIZED_HYPOTHESIS`; their hypotheses still appear in the journal.
 This is four generators operating together, not proof of four approved strategies.
 
-Observed engineering run: 30 simulated fills, 1,673 operational events, eight
+Historical engineering run at `34983f8`: 30 simulated fills, 1,673 operational events, eight
 arbitrage cycles expiring, net total return about **-0.22565%**. These synthetic
 negative outcomes are retained. Annualized one-second Sharpe is only a declared
 sampling diagnostic, not evidence of annual economic performance. A close/reopen
@@ -99,6 +99,15 @@ It is statement coverage, not branch coverage or economic validation. GitHub
 main-integrity runs this gate alongside the entire existing pytest suite and
 the existing execution-firewall checks.
 
+Step 3 hardening and corrected supervisor ADR-003 are documented in
+[ADR-COMP-008](ADR-COMP-008_LOW_LIQUIDITY_EXECUTION.md). Current defaults use a
+10% shared displayed-depth budget and 100ms simulated submission spacing. These
+are stress assumptions, not calibrated venue parameters. CLI settings use strict
+Pydantic validation. Old checkpoints cannot resume under the changed policy
+hash; keep their evidence and select a new SQLite file. The separate Decimal
+cost/liquidity preflight requires sourced daily statistics and does not
+automatically add uncalibrated impact to the four-generator replay.
+
 ## Operational SQLite records
 
 `completion_events` has sequence, independent experiment_id, event_id, kind,
@@ -107,6 +116,7 @@ state/reason/fill/balances, PAPER or BACKTEST mode and LIVE=false. Other kinds:
 FIRST_SEEN, HYPOTHESIS, ARBITRATION, OPPORTUNITY_DECAY, CANCEL_REQUESTED,
 CYCLE_OUTCOME, UNWIND_REQUESTED/REJECTED/OUTCOME, TRADE_CLOSE, REPLAY_FRAME,
 VALIDATION_DIAGNOSTIC and GRADUATION.
+Step 3 adds SIMULATED_RATE_LIMIT and explicitly composed EXECUTION_COST_PREFLIGHT.
 
 `completion_checkpoints` contains integrity-checked simulator, arbiter, cycles,
 runner and graduation state. `completion_first_seen` records original source

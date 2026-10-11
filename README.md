@@ -20,6 +20,11 @@ service and v0.51 execution gates above retain their existing state. Research
 PAPER requires a separate recorded graduation decision; synthetic results cannot
 graduate. See [audit, usage and migration](docs/COMPLETION_LAYER_AUDIT_AND_MIGRATION.md)
 and [architecture decisions](docs/COMPLETION_LAYER_ADRS.md).
+Step 3 now uses a shared 10% displayed-depth budget and 100ms simulated submission
+spacing. These are uncalibrated stress assumptions; corrected Decimal impact and
+spot liquidity preflight are described in
+[ADR-COMP-008](docs/ADR-COMP-008_LOW_LIQUIDITY_EXECUTION.md).
+Use a new journal file when upgrading the execution policy.
 
 ```bash
 python -m scripts.run_completion_paper --journal /tmp/completion.sqlite --cycles 80

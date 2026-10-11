@@ -6,6 +6,10 @@ Date: 2026-10-11. Engineering baseline: main
 These decisions establish an offline engineering implementation, not empirical
 alpha or a change to any frozen experiment.
 
+Step 3 extends execution assumptions in
+[ADR-COMP-008](ADR-COMP-008_LOW_LIQUIDITY_EXECUTION.md), including corrected
+supervisor ADR-003 inverse arithmetic, spot preflight and strict validation.
+
 ## ADR-COMP-001 — scope, contracts and journal
 
 **Problem:** Section 2 requests PAPER simulation while the deployed service and

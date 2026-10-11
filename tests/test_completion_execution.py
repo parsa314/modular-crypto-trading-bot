@@ -21,7 +21,7 @@ class ExecutionTests(unittest.TestCase):
     def setUp(self):
         self.journal = TradeJournal(":memory:", "completion_execution_tests")
         self.sim = EventDrivenExecutionSimulator({"USDT": D("300")}, self.journal,
-            CompletionPolicy(fee_rate=D("0.01"), slippage_rate=D(0)))
+            CompletionPolicy(fee_rate=D("0.01"), slippage_rate=D(0), displayed_depth_fraction=D(1)))
 
     def tearDown(self):
         self.journal.close()
@@ -80,7 +80,7 @@ class ExecutionTests(unittest.TestCase):
         self.journal.close()
         self.journal = TradeJournal(":memory:", "zero")
         self.sim = EventDrivenExecutionSimulator({"BTC": D(1)}, self.journal,
-            CompletionPolicy(latency_ms=0, ack_latency_ms=0, slippage_rate=D(0), fee_rate=D("0.01")))
+            CompletionPolicy(latency_ms=0, ack_latency_ms=0, slippage_rate=D(0), fee_rate=D("0.01"), displayed_depth_fraction=D(1)))
         self.sim.submit(replace(request(), side="SELL", protection_price=D("99")), True)
         self.sim.on_book(book(at=T + timedelta(seconds=1)))
         self.assertEqual(self.sim.order("one").state, OrderState.FILLED)
@@ -99,7 +99,7 @@ class ExecutionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "journal.sqlite"
             balances = {"USDT": D(300)}
-            p = CompletionPolicy(seed=9, jitter_ms=30, slippage_rate=D(0))
+            p = CompletionPolicy(seed=9, jitter_ms=30, slippage_rate=D(0), displayed_depth_fraction=D(1))
             left = TradeJournal(path, "restart")
             sim = EventDrivenExecutionSimulator(balances, left, p)
             sim.submit(request(), True)
@@ -136,7 +136,7 @@ class MultiLegTests(unittest.TestCase):
     def setUp(self):
         self.journal = TradeJournal(":memory:", "multi")
         self.sim = EventDrivenExecutionSimulator({"IRT": D(1000)}, self.journal,
-            CompletionPolicy(fee_rate=D(0), slippage_rate=D(0)))
+            CompletionPolicy(fee_rate=D(0), slippage_rate=D(0), displayed_depth_fraction=D(1)))
         self.cycles = SequentialCycleSimulator(self.sim, timedelta(seconds=2))
         p = ArbitrageParameters(fee_rate=D(0), slippage_buffer=D(0), non_atomic_penalty=D(0),
             residual_penalty=D(0), uncertainty_penalty=D(0))
@@ -184,7 +184,7 @@ class MultiLegTests(unittest.TestCase):
 
     def test_actual_receipts_below_later_leg_minimum_fail_closed(self):
         self.sim = EventDrivenExecutionSimulator({"IRT": D(1000)}, self.journal,
-            CompletionPolicy(fee_rate=D("0.01"), slippage_rate=D(0)))
+            CompletionPolicy(fee_rate=D("0.01"), slippage_rate=D(0), displayed_depth_fraction=D(1)))
         self.cycles = SequentialCycleSimulator(self.sim)
         generator = TriangularArbitrageHypothesis(ArbitrageParameters(fee_rate=D(0), slippage_buffer=D(0),
             non_atomic_penalty=D(0), residual_penalty=D(0), uncertainty_penalty=D(0)),

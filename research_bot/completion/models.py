@@ -92,6 +92,8 @@ class CompletionPolicy:
     purpose: str = "SYNTHETIC_ENGINEERING"
     fee_rate: Decimal = Decimal("0.001")  # Paid in received currency.
     slippage_rate: Decimal = Decimal("0.0002")
+    displayed_depth_fraction: Decimal = Decimal("0.10")
+    min_submission_interval_ms: int = 100
     latency_ms: int = 10
     ack_latency_ms: int = 10
     cancel_latency_ms: int = 10
@@ -105,11 +107,13 @@ class CompletionPolicy:
             raise ValueError("RESEARCH_ONLY / PAPER_EXECUTION / LIVE_OFF required")
         if self.mode not in {"PAPER", "BACKTEST"} or self.purpose not in {"SYNTHETIC_ENGINEERING", "GRADUATED_RESEARCH"}:
             raise ValueError("only offline BACKTEST/PAPER purposes are supported")
-        for name in ("fee_rate", "slippage_rate", "max_order_notional"):
-            object.__setattr__(self, name, decimal_value(getattr(self, name), positive=name == "max_order_notional"))
+        for name in ("fee_rate", "slippage_rate", "max_order_notional", "displayed_depth_fraction"):
+            object.__setattr__(self, name, decimal_value(getattr(self, name), positive=name in {"max_order_notional", "displayed_depth_fraction"}))
+        if self.displayed_depth_fraction > ONE:
+            raise ValueError("displayed depth fraction must be in (0,1]")
         if self.fee_rate >= ONE or self.slippage_rate >= ONE or self.max_book_age <= timedelta(0):
             raise ValueError("invalid simulator rates or age")
-        for name in ("latency_ms", "ack_latency_ms", "cancel_latency_ms", "jitter_ms", "seed"):
+        for name in ("latency_ms", "ack_latency_ms", "cancel_latency_ms", "jitter_ms", "seed", "min_submission_interval_ms"):
             if type(getattr(self, name)) is not int or getattr(self, name) < 0:
                 raise ValueError("nonnegative integer time/seed required")
 
