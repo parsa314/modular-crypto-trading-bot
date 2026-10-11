@@ -79,6 +79,9 @@ jobs:
             grep -q 'Execution firewall violation' "/tmp/${flag}.err"
           done
 
+      - name: Verify independent offline completion coverage
+        run: python -m scripts.verify_completion_coverage --output /tmp/completion-coverage.json --threshold 80
+
       - name: Verify canonical status and dependency contract
         run: |
           python - <<'PY'

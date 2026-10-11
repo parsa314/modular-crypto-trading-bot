@@ -13,6 +13,20 @@
 
 ## Canonical current state
 
+The owner's 2026-10-11 **Section 2 completion layer** authorizes an independent
+offline PAPER simulator under `research_bot/completion/`. Its four-generator
+synthetic example uses SQLite and has no exchange-order transport. The original
+service and v0.51 execution gates above retain their existing state. Research
+PAPER requires a separate recorded graduation decision; synthetic results cannot
+graduate. See [audit, usage and migration](docs/COMPLETION_LAYER_AUDIT_AND_MIGRATION.md)
+and [architecture decisions](docs/COMPLETION_LAYER_ADRS.md).
+
+```bash
+python -m scripts.run_completion_paper --journal /tmp/completion.sqlite --cycles 80
+python -m scripts.run_completion_paper --journal /tmp/completion.sqlite --cycles 90
+python -m scripts.verify_completion_coverage --output /tmp/completion-coverage.json
+```
+
 Use [`docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md`](docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md) as the current navigation record. It distinguishes:
 
 - the moving default branch and deployment surface;

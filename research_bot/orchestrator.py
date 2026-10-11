@@ -2,6 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
+from typing import Mapping, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .completion.backtest.runner import BacktestRunner
+    from .completion.journal import TradeJournal
+    from .completion.models import CompletionPolicy
+    from .completion.strategies.bundle import StrategyBundle
 
 from .contracts import Decision, EvidenceStamp, SignalEvidence
 from .decision import DecisionEngine
@@ -45,6 +53,20 @@ class ResearchTradingOrchestrator:
         """Phase-one hypothesis -> existing decision engine -> research abstention."""
         signal = evaluate_hypothesis(candidate, self.decision_engine)
         return self.process_hypothesis(signal, risk_snapshot=risk_snapshot)
+
+    def create_completion_runner(
+        self, *, journal: TradeJournal, strategies: StrategyBundle,
+        balances: Mapping[str, Decimal], policy: CompletionPolicy,
+        quote_currency: str = "USDT", periods_per_year: int = 365 * 86400,
+    ) -> BacktestRunner:
+        """Compose the explicitly authorized independent offline PAPER layer.
+
+        This runner owns its own canonical DecisionEngine/risk constraints and
+        journal namespace. Existing forecast/hypothesis paths retain their gates.
+        No scenario forecast is promoted into the original execution engine.
+        """
+        from .completion.backtest.runner import BacktestRunner
+        return BacktestRunner(journal, strategies, balances, policy, quote_currency, periods_per_year)
 
     def process_hypothesis(
         self, signal: SignalEvidence, *, risk_snapshot: RiskSnapshot | None = None,

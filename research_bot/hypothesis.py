@@ -23,11 +23,16 @@ class HypothesisFamily(str, Enum):
     TECHNICAL_BASELINE = "TECHNICAL_BASELINE"
     MEAN_REVERSION = "MEAN_REVERSION"
     CONFLUENCE = "CONFLUENCE"
+    GRID = "GRID"
+    TRIANGULAR_ARBITRAGE = "TRIANGULAR_ARBITRAGE"
 
 
 class HypothesisSide(str, Enum):
     LONG = "LONG"
     NEUTRAL = "NEUTRAL"
+    BUY = "BUY"
+    SELL = "SELL"
+    MULTI_LEG = "MULTI_LEG"
 
 
 def utc_text(value: datetime) -> str:

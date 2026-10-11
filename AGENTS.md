@@ -160,3 +160,15 @@ Railway deployment source
 ```
 
 **Evidence Before Opinion. Reproduce before promoting. Attribute infrastructure failures before changing scientific logic.**
+
+## 12. Section 2 completion simulation authorization — 2026-10-11
+
+The owner explicitly requested `RESEARCH_ONLY=true / PAPER_EXECUTION=true /
+LIVE_EXECUTION=false` for the Jamalian completion layer. This authorization is
+scoped to the independent offline `research_bot/completion/` package and its
+synthetic engineering demonstration. It does not enable the service's execution
+environment flags, reopen v0.51, alter frozen scientific records, or authorize
+deployment/live orders. Research PAPER on real observations requires the new
+recorded graduation gate and matching frozen strategy/execution configuration.
+Historical backfill never becomes prospective evidence. Read
+`docs/COMPLETION_LAYER_AUDIT_AND_MIGRATION.md` before extending this layer.
