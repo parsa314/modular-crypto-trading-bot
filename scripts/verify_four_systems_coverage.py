@@ -20,7 +20,7 @@ def verify(output: Path, threshold: float = 80.0) -> int:
     tracer = trace.Trace(count=True, trace=False, ignoredirs=[sys.base_prefix])
 
     def run_tests() -> unittest.TestResult:
-        suite = unittest.defaultTestLoader.discover(str(root / "tests"), pattern="test_four_systems.py")
+        suite = unittest.defaultTestLoader.discover(str(root / "tests"), pattern="test_four_systems*.py")
         return unittest.TextTestRunner(verbosity=1).run(suite)
 
     result = tracer.runfunc(run_tests)

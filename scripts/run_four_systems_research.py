@@ -13,6 +13,7 @@ import pandas as pd
 from research_bot.four_systems.experiment import ExperimentConfig,run_ablation
 from research_bot.four_systems.hypotheses import FourSystemHypothesisGenerator
 from research_bot.four_systems.risk import tail_risk_ceiling
+from research_bot.four_systems.binance_history import read_research_csv
 from research_bot.contracts import EvidenceStamp
 from research_bot.hypothesis import canonical_json
 from research_bot.orchestrator import ResearchTradingOrchestrator
@@ -34,6 +35,13 @@ def run(journal_path: Path, frame: pd.DataFrame | None = None) -> dict:
     synthetic=frame is None
     config=ExperimentConfig(purpose='ENGINEERING_SYNTHETIC',min_train=150,min_calibration=100,test_size=80,min_class=10) if synthetic else ExperimentConfig()
     report,dataset,models=run_ablation(synthetic_bars() if synthetic else frame,config)
+    if not synthetic and (not models or any(r['status']=='INSUFFICIENT_SUPPORT' for r in report['results'])):
+        raise ValueError('insufficient class or calibration support in a registered variant')
+    report.update({'status':'ENGINEERING_ONLY' if synthetic else 'HISTORICAL_CONTEXT',
+        'evidence_state':'SYNTHETIC' if synthetic else 'HISTORICAL_CONTEXT',
+        'availability_basis':'SYNTHETIC_DECLARED' if synthetic else frame.attrs.get('availability_basis','INPUT_DECLARED_NOT_VERIFIED'),
+        'dsr_status':'NOT_RUN','pbo_status':'NOT_RUN','cost_model_id':'DECLARED_24BPS_LABEL_HURDLE_NOT_EXECUTION_COST',
+        'RESEARCH_ONLY':True,'PAPER_EXECUTION':False,'LIVE_EXECUTION':False})
     report['runner_sha256']=sha256(Path(__file__).read_bytes()).hexdigest()
     journal_path.parent.mkdir(parents=True,exist_ok=True)
     experiment='four_systems:'+sha256(canonical_json([report['dataset_sha256'],report['protocol_sha256'],
@@ -48,7 +56,8 @@ def run(journal_path: Path, frame: pd.DataFrame | None = None) -> dict:
                 rows=dataset.iloc[[index]];at=rows.available_at.iloc[0].to_pydatetime()
                 candidate=generator.generate(rows,at)[0]
                 outcome=orchestrator.process_candidate(candidate)
-                assert outcome.fill is None
+                if outcome.fill is not None:
+                    raise RuntimeError('research hypothesis path must never create a fill')
                 journal.append('four_hypothesis:'+candidate.hypothesis_id,'FOUR_SYSTEM_HYPOTHESIS',at,
                     {'candidate':candidate.to_dict(),'pipeline_status':outcome.status,'decision':outcome.signal.decision.value,
                         'execution_authorized':False,'prospective_evidence':False})
@@ -75,11 +84,24 @@ def main() -> None:
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     # Missing real data never silently becomes synthetic.
-    frame=pd.read_csv(args.csv) if args.csv else None
-    report=run(args.journal,frame)
+    print(json.dumps({'event':'RESEARCH_START','RESEARCH_ONLY':True,'PAPER_EXECUTION':False,
+        'LIVE_EXECUTION':False,'synthetic':args.csv is None}),flush=True)
+    try:
+        frame=read_research_csv(args.csv) if args.csv else None
+        report=run(args.journal,frame)
+    except (ValueError,FileNotFoundError,pd.errors.ParserError) as error:
+        if args.csv is None:raise
+        insufficient='insufficient' in str(error).lower() or 'both classes' in str(error).lower()
+        report={'status':'FAILED_INSUFFICIENT_DATA' if insufficient else 'FAILED_INVALID_DATA',
+            'reason_code':'INSUFFICIENT_MODEL_SUPPORT' if insufficient else 'INVALID_OR_MISSING_HISTORICAL_CSV',
+            'reason':str(error),'evidence_state':'HISTORICAL_CONTEXT','dsr_status':'NOT_RUN','pbo_status':'NOT_RUN',
+            'cost_model_id':'DECLARED_24BPS_LABEL_HURDLE_NOT_EXECUTION_COST','synthetic_fallback':False,
+            'RESEARCH_ONLY':True,'PAPER_EXECUTION':False,'LIVE_EXECUTION':False,'live_execution':False,
+            'execution_authorized':False,'paper_graduated':False,'economic_validation':False,'prospective_evidence':False}
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
-    print(json.dumps({k:report[k] for k in ('experiment','trials','hypotheses_logged','economic_validation','live_execution')},allow_nan=False))
+    print(json.dumps({k:report.get(k) for k in ('status','evidence_state','trials','hypotheses_logged','economic_validation','live_execution')},allow_nan=False))
+    if report['status'].startswith('FAILED'):raise SystemExit(1)
 
 
 if __name__=='__main__':main()

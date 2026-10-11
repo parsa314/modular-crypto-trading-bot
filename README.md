@@ -158,6 +158,10 @@ python -m pip install -e '.[deep]'
 python -m pip install -e '.[rl]'
 ```
 
+## Narrow Binance data gate
+
+The [BTC_USDT 1h preparation script and gate](docs/BINANCE_1H_DATA_GATE.md) validates exact closed-bar boundaries, complete pagination and a SHA256 sidecar before research. Historical availability is explicitly modeled, not prospective evidence. Run `python -m scripts.prepare_binance_1h --years 3`, then pass its CSV to `scripts.run_four_systems_research`. Orders remain disabled; DSR/PBO remain NOT_RUN.
+
 ## Reproducibility rule
 
 The independent [four-system causal/calibration challenger](docs/FOUR_SYSTEMS_LITERATURE_AND_UPGRADE.md)
