@@ -1,0 +1,32 @@
+supplied_id,supplied_title,source_type,audit_status,primary_or_metadata_url,verified_scope,supplied_claim_NOT_BOT_RESULT,accessed_utc
+1,A Dual-Timeframe Deep Learning Framework Based on Ichimoku Cloud and Optimized CNN for Trend Prediction in the Forex Market,RESEARCH_ARTICLE_CLAIM,SECONDARY_METADATA_ONLY,https://www.magiran.com/volume/245422,Title/authors located; primary full text and claimed affiliation not verified,Improved prediction; no audited metric,2026-10-11
+2,Adaptive Stock Trading with Ichimoku Cloud and Reinforcement Learning,THESIS,REPOSITORY_METADATA_ONLY,https://kth.diva-portal.org/smash/get/diva2%3A1986675/FULLTEXT01.pdf,Thesis metadata located; full-text performance not checked,Acceptable bull/bear performance,2026-10-11
+3,Variational Autoencoder-Based Dimension Reduction of Ichimoku Features,RESEARCH_ARTICLE_CLAIM,PUBLISHER_METADATA_ONLY,https://www.sciencedirect.com/science/article/pii/S2773186324000653,Publisher metadata; full text unavailable; not proof that reduction is necessary,Reduced dimensions / improved analysis,2026-10-11
+4,Enhancing Investment Performance of the Ichimoku Cloud with XGBoost,ARTICLE_CLAIM,UNVERIFIED,,No primary URL/DOI checked,Improved investment performance,2026-10-11
+5,Hybrid Deep Learning Architectures for Multi-Target Bitcoin Forecasting,RESEARCH_ARTICLE_CLAIM,UNVERIFIED,,No primary URL/DOI checked,Successful Ichimoku feature use,2026-10-11
+6,The Interpretability of Models Using Ichimoku or Fibonacci Retracement,ARXIV_CLAIM,UNVERIFIED,,Exact preprint not checked,Practical interpretability,2026-10-11
+7,Risk-Constrained Trade Sizing via Calibrated ML Probabilities and Linear Programming on SMC/ICT-Driven Structural Signals,JOURNAL_ARTICLE,PRIMARY_FULL_TEXT_CHECKED,https://www.informatica.si/index.php/informatica/article/download/12899/6712,DOI 10.31449/inf.v50i13.12899; development and held-out periods distinguished; not reproduced,XAUUSD development: 46.7% / Sharpe 1.18 / MDD 6.8%,2026-10-11
+8,XAUUSD Trading AI: A Machine Learning Approach Using Smart Money Concepts,SELF_PUBLISHED_WHITEPAPER,PRIMARY_CLAIM_CHECKED_NOT_REPLICATED,https://huggingface.co/JonusNattapong/xauusd-trading-ai-smc-v2/blob/main/XAUUSD_Trading_AI_Technical_Whitepaper.md,Self-published claim exists; peer review and independently audited trades not established,85.4% win rate / 1247 trades,2026-10-11
+9,QUANTA: Quantitative Unified Autonomous Neural Trading Agent,PREPRINT_CLAIM,UNRESOLVED_TITLE_ATTRIBUTION,,Related LSTM/LightGBM title located; supplied title and primary TechRxiv attribution unconfirmed,Cloud SMC infrastructure,2026-10-11
+10,"Integrating AI into 3 Smart Money Concepts: OB, BOS, and FVG",MQL5_TUTORIAL_CLAIM,UNVERIFIED,,Implementation inspiration; not a verified peer-reviewed result,Improved stability / accuracy,2026-10-11
+11,Decoding ICT with Neural Networks: Institutional WTI Crude Oil Execution,MQL5_TUTORIAL_CLAIM,UNVERIFIED,,No primary page checked; implementation inspiration,Practical ICT + NN framework,2026-10-11
+12,Optimizing ICT Algorithmic Trading Strategies Using Neural Networks,MEDIUM_POST_CLAIM,UNVERIFIED,,No primary page checked,Improved adaptation,2026-10-11
+13,AI Models for Intraday ICT Analysis,ENCYCLOPEDIA_CLAIM,UNVERIFIED,,No primary study or dataset verified,89-91% accuracy,2026-10-11
+14,ICT-ML-Trading,GITHUB_PROJECT_CLAIM,UNVERIFIED,,No exact repository/protocol supplied or verified,89-91% accuracy,2026-10-11
+15,Midnight Opening Gap (MNOG): A Feasibility Study within ICT/SMC Frameworks,ZENODO_CLAIM,UNVERIFIED,,No primary record/DOI checked,Scalability across assets,2026-10-11
+16,"Development of an Adaptive Algorithmic Trading Strategy Using SMC, AMH, and Non-Linear Predictive Analytics",SCRIBD_DOCUMENT_CLAIM,UNVERIFIED,,No primary publication verified,Improved adaptive performance,2026-10-11
+17,AI turned 478 pages of Al Brooks into a working strategy,FORUM_POST_CLAIM,UNVERIFIED,,No peer-review or primary experiment verified,Automated extraction,2026-10-11
+18,Al Brooks H2/L2 Strategy v2.1,TRADINGVIEW_STRATEGY_CLAIM,UNVERIFIED,,No exact code/protocol verified,Higher-timeframe bias helps,2026-10-11
+19,Intraday Gold-Futures Trading Assistant (Al Brooks + SMC + Order Flow + Volume Profile),GITHUB_PROJECT_CLAIM,UNVERIFIED,,No exact repository supplied or verified,Agent skill with four systems,2026-10-11
+20,Al Brooks Framework interprets market phenomena as manifestations of order flow,FORUM_DISCUSSION_CLAIM,UNVERIFIED,,Not primary empirical evidence,ML may aid systematic trading,2026-10-11
+21,Open-source Al Brooks AI autonomous quantitative system,BILIBILI_PROJECT_CLAIM,UNVERIFIED,,Translated catalog label; no exact project verified,Multi-asset DeepSeek system,2026-10-11
+22,Brooks Price Action Scalper,TRADINGVIEW_INDICATOR_CLAIM,UNVERIFIED,,No exact code/protocol verified,One-minute price-action system,2026-10-11
+23,A Survey of Time Series-Based Automated Trading Strategies in Stock Markets Using ML and DL,ZENODO_SURVEY_CLAIM,UNVERIFIED,,No primary record/DOI checked,Taxonomy,2026-10-11
+24,Leveraging Machine Learning for Algorithmic Trading: A Survey Paper,AIP_SURVEY_CLAIM,UNVERIFIED,,No primary publication/DOI checked,Model comparison,2026-10-11
+25,Artificial Intelligence and Machine Learning in Stock Market Prediction and Trading,IEEE_SURVEY_CLAIM,UNVERIFIED,,No exact publication/DOI checked,AI changes financial markets,2026-10-11
+26,Deep Learning for Algorithmic Trading: A Systematic Review,ARRAY_REVIEW_CLAIM,UNVERIFIED,,No primary publication/DOI checked,Optimization framework,2026-10-11
+27,Systematic Review on Algorithmic Trading,REVIEW_CLAIM,UNVERIFIED,,No primary publication/DOI checked,ATS taxonomy,2026-10-11
+28,"Artificial Intelligence in Equity and Crypto Markets: Progress, Profitability Evidence, and Limits",ARXIV_REVIEW_CLAIM,UNVERIFIED,,No exact preprint checked,Critical review,2026-10-11
+29,"Agentic Quantitative Trading: A Survey of Workflows, Systems, and Evaluation",ARXIV_PREPRINT,PRIMARY_PREPRINT_PAGE_CHECKED,https://arxiv.org/abs/2608.31041,Preprint metadata/abstract checked; not peer-reviewed performance evidence,System/workflow/evaluation framing,2026-10-11
+30,Artificial Intelligence in Automated Trading Systems: Assessing Impact on Market Efficiency,IEEE_ARTICLE_CLAIM,UNVERIFIED,,No primary publication/DOI checked,Profitability/stability claim,2026-10-11
+31,Machine Learning Integration in Cryptocurrency Trading and Its Fintech Implications,SPRINGER_ARTICLE_CLAIM,UNVERIFIED,,No primary publication/DOI checked,ML transforms crypto trading,2026-10-11

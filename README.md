@@ -160,6 +160,19 @@ python -m pip install -e '.[rl]'
 
 ## Reproducibility rule
 
+The independent [four-system causal/calibration challenger](docs/FOUR_SYSTEMS_LITERATURE_AND_UPGRADE.md)
+adds closed 1h/4h Ichimoku, ICT/SMC and Brooks-inspired features, purged chronological
+train/calibration/test ablations, optional training-only PCA and Decimal ES size
+ceilings. It emits hypotheses into the existing research abstention pipeline and
+SQLite journal; this new experiment remains **RESEARCH_ONLY / PAPER_OFF / LIVE_OFF**.
+The [ADR](docs/ADR-COMP-010_CAUSAL_FOUR_SYSTEMS.md) and
+[source audit catalog](docs/FOUR_SYSTEMS_SOURCE_CATALOG.csv) distinguish checked
+methodology from unverified performance claims. Run its offline synthetic example:
+
+```bash
+python -m scripts.run_four_systems_research --journal /tmp/four-system.sqlite --output /tmp/four-system-report.json
+```
+
 Every promotable experiment preserves source SHA, frozen hypothesis/config, data provenance, dependency environment, dataset/artifact fingerprints, validation-only selection logic, fresh evaluation evidence, cost/risk assumptions, machine-readable decision output and explicit PAPER/LIVE authorization flags.
 
 A successful workflow means the experiment executed according to contract. It does **not** automatically mean the strategy is economically valid.
