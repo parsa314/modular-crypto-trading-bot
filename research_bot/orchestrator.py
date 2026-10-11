@@ -8,6 +8,8 @@ from .decision import DecisionEngine
 from .execution import ExecutionFill, ExecutionRequest, OrderSide, PaperExecutionEngine
 from .risk import RiskDecision, RiskEngine, RiskSnapshot
 from .jamalian_data import available
+from .hypothesis import HypothesisCandidate
+from .hypothesis_adapter import evaluate_hypothesis
 
 
 @dataclass(frozen=True)
@@ -36,6 +38,13 @@ class ResearchTradingOrchestrator:
         self.decision_engine = decision_engine or DecisionEngine()
         self.risk_engine = risk_engine or RiskEngine()
         self.execution_engine = execution_engine or PaperExecutionEngine()
+
+    def process_candidate(
+        self, candidate: HypothesisCandidate, *, risk_snapshot: RiskSnapshot | None = None,
+    ) -> PipelineOutcome:
+        """Phase-one hypothesis -> existing decision engine -> research abstention."""
+        signal = evaluate_hypothesis(candidate, self.decision_engine)
+        return self.process_hypothesis(signal, risk_snapshot=risk_snapshot)
 
     def process_hypothesis(
         self, signal: SignalEvidence, *, risk_snapshot: RiskSnapshot | None = None,

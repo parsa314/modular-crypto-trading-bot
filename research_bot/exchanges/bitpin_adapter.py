@@ -89,12 +89,18 @@ class BitpinAdapter:
     def __init__(self, *, transport: Transport | None = None,
                  credentials: Credentials | None = None, auth_read: bool = False,
                  timeout: float = 10, retries: int = 2,
+                 base_url: str = BASE_URL,
                  clock: Callable[[], datetime] | None = None,
                  sleep: Callable[[float], None] = time.sleep):
         if not math.isfinite(timeout) or not 0 < timeout <= 30:
             raise ValueError("timeout must be in (0, 30]")
         if type(retries) is not int or not 0 <= retries <= 3:
             raise ValueError("retries must be an integer in [0, 3]")
+        # Operator-selected host only. No silent cross-host token forwarding,
+        # automatic fallback or claim that a notebook endpoint is current.
+        if base_url not in {"https://api.bitpin.ir", "https://api.bitpin.org"}:
+            raise ValueError("explicit allowlisted HTTPS Bitpin base URL required")
+        self._base_url = base_url
         self._transport = transport or UrllibTransport()
         self._credentials = credentials
         self._auth_read = auth_read is True
@@ -117,7 +123,7 @@ class BitpinAdapter:
         body = None if payload is None else json.dumps(payload).encode()
         for attempt in range(self._retries + 1):
             try:
-                response = self._transport.request(method, self.BASE_URL + path,
+                response = self._transport.request(method, self._base_url + path,
                     headers=headers or {}, body=body, timeout=self._timeout)
             except Exception:
                 raise BitpinError("transport failed") from None

@@ -4,6 +4,11 @@
 مبنای کد: `fa31e6f5ceb09f4f14ae13fef50706f2e10e1835` روی `main`.
 وضعیت خروجی: **پیاده‌سازی پژوهشی و آزمون مهندسی؛ بدون تأیید اقتصادی**.
 
+**اصلاح Phase‑1 پس از دریافت V3:** معماری فعال، یافته‌های پکیج جدید و شواهد
+جدید در [JAMALIAN_V3_REVIEW.md](JAMALIAN_V3_REVIEW.md) ثبت شده‌اند. توصیف‌های
+SignalEvidence به‌عنوان خروجی generator در این گزارش مربوط به نمونه‌های
+مهندسی اولیه‌اند؛ مسیر جدید HypothesisCandidate و Baselineهای سه‌گانه است.
+
 ## دامنه و محدودیت شواهد
 
 پنج نوت‌بوک ارسالی، سلول‌های کد و توضیحات آن‌ها به‌صورت ایستا بررسی شدند.
@@ -11,8 +16,8 @@
 نوت‌بوک‌ها شواهد اجرای فعلی یا سودآوری نیستند. فایل‌های اصلی دوره، خروجی کیف پول،
 تصاویر و تاریخچهٔ سفارش‌ها در این تغییر به مخزن عمومی منتقل نشده‌اند.
 
-`Python_1`، `config_bitpin.py`، `Mall_Customers.csv` و فایل پکیج نهایی ادعاشده
-دریافت نشده‌اند. متن ارسالی کاربر مشخصات هدف ادغام است؛ متن کامل Master Prompt
+`Python_1`، `config_bitpin.py`، `Mall_Customers.csv` و فایل پکیج اولیهٔ ادعاشده
+دریافت نشده‌اند؛ بستهٔ V3 بعداً دریافت و در گزارش مستقل بررسی شد. متن کامل Master Prompt
 و §14 آن در دسترس نیست. بنابراین انطباق دقیق با آن بخش ادعا نمی‌شود.
 
 شناسهٔ سلول‌ها در این گزارش **از صفر** و بر اساس آرایهٔ `cells` است.
@@ -146,11 +151,12 @@ warmup، دادهٔ آینده/غایب، واحد IRT، هم‌زمانی مث�
 ## اجرای مسیر پژوهشی
 
 ```bash
-python -m scripts.run_jamalian_research --input closed_bars.json --output research_run.json
+python -m scripts.run_jamalian_research --input closed_bars.json --output research_run.json --events phase_one_events.jsonl
 python -m unittest discover -s tests -p 'test_jamalian*.py' -q
 ```
 
-CLI برای RSI+MA و MACD+RSI+EMA است. ورودی شامل `strategy`، `decision_time`،
+CLI فعلی Phase‑1 برای MA Cross، RSI و RSI+MA است؛ MACD از این مسیر کنار گذاشته
+شده است. ورودی شامل `strategy`، `decision_time`،
 `parameters` اختیاری و آرایهٔ `candles` با فیلدهای `symbol`، `close` به صورت
 رشتهٔ decimal، `closed_at`، `available_at` و `source` است. timestampها باید
 timezone داشته باشند؛ `closed_at` زمان بسته‌شدن کندل است. خروجی در فایل جدید

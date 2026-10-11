@@ -99,9 +99,14 @@ Source-derived trading concepts are treated as **hypothesis generators**, never 
 Jamalian course integration is an independent **HYPOTHESIS / ENGINEERING-ONLY**
 research path. See the [source audit and integration report](docs/JAMALIAN_INTEGRATION_REPORT.md)
 and [revised integration specification](docs/JAMALIAN_INTEGRATION_PROMPT.md).
-Its four generators produce non-actionable `SignalEvidence`; the event simulator
-is offline and the frozen v0.51 experiment is not changed. No economic validation
-or PAPER/LIVE authorization is implied.
+The active interface is now the [V3 phase-one correction](docs/JAMALIAN_V3_REVIEW.md):
+immutable hypotheses from MA Cross / RSI / RSI+MA, an abstention adapter, a separate
+operational event ledger and offline capital feasibility arbitration. Advanced
+prototypes are excluded from this interface pending a separate baseline protocol.
+The three phase-one generators emit `HypothesisCandidate`; decision evidence is
+created by the abstention adapter. Earlier engineering prototypes and the offline
+event simulator remain available for regression coverage. The frozen v0.51
+experiment is unchanged; no economic validation or PAPER/LIVE authorization is implied.
 
 - [`AGENTS.md`](AGENTS.md) — repository and execution-governance contract
 - [`docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md`](docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md) — canonical current scientific state

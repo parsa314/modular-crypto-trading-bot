@@ -1,65 +1,55 @@
-# پرامپت اصلاح‌شدهٔ ادغام پژوهشی دورهٔ جمالیان
+# پرامپت اصلاح‌شدهٔ Phase‑1 پژوهشی جمالیان
 
-این متن مشخصات قابل اجرا برای ادامهٔ توسعه است؛ جایگزین متن کامل Master Prompt
-ارسال‌نشده نیست. پیاده‌سازی فعلی و محدودیت‌های آن در گزارش همراه ثبت شده‌اند.
+در مخزن canonical `parsa314/modular-crypto-trading-bot`، AGENTS، README و سند
+وضعیت canonical و SHAهای علمی منجمد را بخوان. head مخزن و PR را از GitHub
+تأیید کن. تغییر جدید main جای gate علمی را نمی‌گیرد. RESEARCH_ONLY، PAPER_OFF،
+LIVE_OFF و sealed Kraken را حفظ کن؛ v17 milestones و آزمایش v0.51 تغییر نکنند.
+متن کامل Master Prompt دریافت نشده است؛ انطباق با §14 ادعا نکن.
 
-در مخزن canonical `parsa314/modular-crypto-trading-bot` کار کن. ابتدا AGENTS،
-وضعیت canonical، README و قراردادهای واقعی SignalEvidence/EvidenceStamp را
-بخوان؛ وضعیت branch، SHA و PRها را از GitHub تأیید کن. به deployment shell
-یا پروژهٔ مستقل Crypto Intelligence Studio کد علمی منتقل نکن.
+پنج نوت‌بوک و ZIP ارسالی را ایستا و با hash و محل دقیق یافته بررسی کن.
+توصیف «تحویل شد» را وجود کد یا تست تلقی نکن. خروجی خصوصی یا سلول سفارش‌گذاری
+را اجرا یا منتشر نکن. Python_1 و داده/تنظیمات غایب را صریح ثبت کن.
 
-نوت‌بوک‌های دوره را به‌صورت ایستا و با SHA-256 و شمارهٔ سلول بررسی کن.
-نبود فایل، تنظیمات، داده یا Master Prompt را صریح ثبت کن. هیچ کد سفارش‌گذاری
-یا خروجی خصوصی notebook را اجرا یا منتشر نکن. متن توصیفی پکیج را وجود فایل
-پیاده‌سازی‌شده تلقی نکن.
+ترتیب علمی: Contracts → MA Cross / RSI / RSI+MA → Operational Event Ledger
+→ Independent Portfolio Arbiter → ارزیابی اقتصادی Baselineها → سپس پروتکل
+جداگانهٔ Grid/Arbitrage. به‌دلیل وجود نمونهٔ مهندسی قدیمی، gate علمی را باز نکن.
 
-چهار فرضیهٔ مستقل RSI+MA، MACD+RSI+EMA، Grid و Triangle ایجاد یا تکمیل کن.
-جهت و ویژگی‌های سناریویی را در metadata بنویس. اگر بازده مورد انتظار و
-confidence کالیبره از شواهد معتبر نداریم، SignalEvidence باید confidence=0،
-forecast_available=false و decision=NO_TRADE داشته باشد. حد سود، RSI یا
-سود هندسی مثلث جای پیش‌بینی بازده معتبر نیست. SHORT به معنی مجوز فروش spot
-یا ایجاد موقعیت مشتقه نیست.
+قرارداد HypothesisCandidate را مستقل از Decision/SignalEvidence نگه دار؛ در
+این مخزن contracts.py فایل است، پس پوشهٔ contracts/hypothesis.py را کپی نکن.
+داده، parameters و metadata immutable و detached؛ شناسهٔ قطعی شامل زمان
+صریح، پارامتر و provenance. عدد بازده یا confidence از indicator یا حد سود
+نساز. Adapter نازک از DecisionEngine موجود استفاده کند و تا نبود کالیبراسیون
+مستقل فقط NO_TRADE، confidence=0 و forecast_available=false بسازد.
 
-زمان observed_at در candle زمان بسته‌شدن آن است؛ available_at زمان اولین
-دسترسی واقعی است. کندل نامنظم، غایب یا تکراری، timestamp ساده و دادهٔ آینده
-را کنترل کن. source/hash/time هر ورودی در شواهد مشتق حفظ شود. receipt time
-را به‌عنوان exchange event time جا نزن. Decimal برای قیمت، حجم، fee و رزرو؛
-قراردادهای float موجود را بدون بررسی producer/consumer تغییر نده.
+هر قیمت از candle بسته‌شدهٔ منظم با observed/available واقعی بیاید؛ future،
+gap، duplicate، stale، warmup و timezone کنترل شوند. قیمت و حجم و reserve
+Decimal باشند. RSI ثابت=۵۰ و روش RSI ثبت شود. زمان execution باید بعد از
+تصمیم باشد؛ حد زمانی به‌تنهایی به معنی پرشدن یا صحت execution مدل نیست.
 
-آداپتر Bitpin باید شبکه را پشت port/transport قابل آزمون نگه دارد. public GET
-و auth-read صریح را allowlist کن؛ POST فقط برای احراز هویت. سفارش، لغو، bulk،
-ایجاد آدرس و هر mutation دیگر باید پیش از transport fail-closed باشد. timeout،
-retry محدود، کنترل schema/مقادیر محدود و عدم انتقال token در redirect را تست کن.
-سازگاری جاری API را فقط پس از بررسی مستندات رسمی و contract check گزارش کن.
+OperationalResearchEventLedger مستقل، experiment namespace و event ID روشن
+داشته باشد؛ dedup، retry متعارض، JSON محدود، hash chain، chronology، restart
+و append durable آزموده شوند. محدودیت اصالت و suffix truncation ثبت شود.
+این دفتر Scientific Milestone Ledger یا شاهد prospective v0.51 نیست.
 
-شبیه‌ساز صرفاً آفلاین است: CREATED، WORKING، PARTIALLY_FILLED، CANCEL_PENDING،
-FILLED، CANCELLED، EXPIRED و REJECTED؛ رزرو سرمایه و موجودی، fee، tick/lot،
-latency، protection price و idempotency صریح. ثبت سفارش fill نیست. خرید پرنشده
-نباید موجودی برای فروش بسازد. نقدشوندگی بین سفارش‌ها مشترک و هر snapshot
-فقط یک بار مصرف شود. لغو قبل از ack می‌تواند با fill رقابت کند. نبود سفارش
-در فهرست فعال به معنی fill نیست. فرض‌های queue/impact/trigger را مستند کن.
+PortfolioConflictArbiter مستقل فقط feasibility آفلاین بسازد: سرمایهٔ آزاد
+پس از رزروهای قبلی، exposure و equity همگی در quote یکسان؛ رتبه‌بندی قبل از
+capacity filtering، کنترل سرمایه در هر پذیرش، conflict نماد و ID و state
+برگشتی immutable. sizing/fee budget صریح از پروتکل جدا بیاید. admission به
+معنی alpha، تأیید Decision یا مجوز execution نیست. policyهای اجرا نشده را
+تبلیغ نکن و net-edge دلخواه مبنای رتبه‌بندی قرار نده.
 
-Grid را با موجودی آزادِ مبتنی بر fill/cancel/expiry بساز؛ در breakout کاندید
-جدید را متوقف کن و نیاز به بررسی لغو سفارش‌های شبیه‌سازی‌شدهٔ قبلی را ثبت کن.
-Triangle باید واحدهای IRT/IRR/USDT، عمق، هزینه، تازگی و اختلاف زمان، rounding
-و min-notional، residual inventory و شکست هر leg را صریح داشته باشد. خروجی
-آن تا مدل‌شدن این محدودیت‌ها سناریو است، نه سود قابل اجرا.
+Bitpin فقط public read و opt-in auth-read؛ write پیش از transport مسدود.
+timeout و retry محدود، schema fail-closed، redirect و host fallback خاموش.
+دامنهٔ رسمی و schema جاری فقط با منبع اصلی و contract check تأیید شوند؛
+انتخاب صریح allowlisted host به معنی تأیید API جاری نیست.
 
-از Orchestrator مسیر non-actionable جدا داشته باش؛ ارزیابی risk هم اجازهٔ
-execution ایجاد نمی‌کند. تاریخی evidence_ledger_v17 را دست‌نخورده نگه دار و
-دفتر مستقل برای فرضیه‌ها بساز. v0.51 predictor، universe، هزینه و policy منجمد
-دارد؛ فرضیه‌های جدید را داخل آن ثبت نکن. scientific-status، eligibility و
-provenance را صریح نگه دار. مسیرهای واقعی PAPER/TESTNET/LIVE این ادغام خاموش‌اند.
+پیش از ValidationHarness، داده/بازار/پنجره‌ها/هزینه/خروج/horizon/بودجه و تمام
+trials و معیار رد preregister و freeze شوند. fixed-path CPCV با purge/embargo،
+CSCV/PBO و DSR diagnostic هستند؛ refit و execution یا promotion را اثبات
+نمی‌کنند. dependence با inference بلوکی بررسی شود. دادهٔ مصنوعی فقط smoke
+است؛ نبود داده و هزینه را با آمار تصادفی یا ادعای آمادگی پایان‌نامه جبران نکن.
 
-برای ارزیابی، پروتکل تازه و freezeشده شامل baseline، پنجره‌های داده، خروج‌ها،
-بودجه، هزینه و معیار رد لازم است. همهٔ configurations و نتایج منفی ثبت شوند.
-CPCV روی label intervals با purge/embargo، CSCV/PBO روی ماتریس هم‌زمان تمام
-trials و DSR با تعداد واقعی trials به کار بروند؛ این‌ها با هم یکی نیستند و
-هیچ‌کدام به‌تنهایی promotion نیست. Grid/Triangle بدون دادهٔ لازم DATA_UNAVAILABLE
-می‌مانند. دادهٔ مصنوعی فقط engineering smoke است و inference دارای dependence
-به آزمون بلوکی نیاز دارد. Kraken باز نشود؛ same-test rescue tuning انجام نشود.
-
-تست‌ها باید عدم mutation شبکه، causality، state transitions، محافظت سرمایه،
-هزینه، replay/idempotency و import compatibility را نشان دهند. دستور و نتیجهٔ
-واقعی هر تست و محدودیت محیط را ثبت کن. پس از بررسی diff، تغییر را در شاخهٔ
-مستقل GitHub و PR قابل مرور ذخیره کن؛ شاخهٔ علمی منجمد و main را خودکار ادغام نکن.
+تست سازگاری import، PIT، immutability، replay identity، منع execution،
+رزرو تجمیعی و عدم تغییر ماژول‌های منجمد را اجرا کن. نتیجهٔ واقعی و SHA CI
+تازه را ثبت کن؛ CI قبلی به head جدید تعمیم داده نشود. تغییر قابل مرور را در
+شاخهٔ مستقل و Draft PR ذخیره کن. merger یا فعال‌سازی paper/live انجام نده.
