@@ -44,6 +44,7 @@ jobs:
           csv=Path("data/historical/BTC_USDT_1h_closed.csv")
           prep=subprocess.run([sys.executable,"-m","scripts.prepare_binance_1h","--years","3","--out",str(csv)],capture_output=True,text=True,timeout=900)
           (out/"preparation.log").write_text(prep.stdout+prep.stderr)
+          print(prep.stdout+prep.stderr,flush=True)
           result={"source_sha":os.environ["PUBLIC_SOURCE_SHA"],"status":"VALIDATED_DATA" if prep.returncode==0 else "BLOCKED_OR_INVALID_DATA",
               "data_preparation_exit":prep.returncode,"csv_exists":csv.exists(),"RESEARCH_ONLY":True,"PAPER_EXECUTION":False,"LIVE_EXECUTION":False,
               "economic_validation":False,"prospective_evidence":False,"dsr_status":"NOT_RUN","pbo_status":"NOT_RUN"}
@@ -55,6 +56,7 @@ jobs:
               result["status"]="HISTORICAL_CONTEXT_REPORTED" if research.returncode==0 else "FAILED_HISTORICAL_RESEARCH"
           else:
               result["reason"]="Public Binance preparation failed; no historical model or synthetic fallback was run. See preparation.log."
+              result["preparation_message"]=(prep.stdout+prep.stderr)[-2000:]
           (out/"data-gate.json").write_text(json.dumps(result,indent=2)+"\n")
           print(json.dumps(result))
           PY
