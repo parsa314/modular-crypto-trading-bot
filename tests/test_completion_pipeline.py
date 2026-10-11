@@ -311,11 +311,16 @@ class GraduationTests(unittest.TestCase):
         policy = CompletionPolicy(purpose="GRADUATED_RESEARCH")
         bundle = build_bundle()
         configuration = sha256(canonical_json({"strategies": bundle.configuration(),
-            "execution_model_sha256": policy.execution_model_sha256()}).encode()).hexdigest()
+            "execution_model_sha256": policy.execution_model_sha256(),
+            "admission": {"admission": None, "portfolio_limits":
+                {k: str(v) for k, v in PortfolioLimits().__dict__.items()}}}).encode()).hexdigest()
         self.journal.checkpoint("graduation", {"paper_allowed": True, "eligible_strategy_ids": ["test_model"],
             "configuration_sha256": configuration, "execution_model_sha256": policy.execution_model_sha256()})
         runner = BacktestRunner(self.journal, bundle, {"USDT": D(1000), "IRT": D(1000), "BTC": D(1)}, policy, "IRT")
         self.assertEqual(runner.configuration_sha256(), configuration)
+        with self.assertRaisesRegex(ValueError, "configuration"):
+            BacktestRunner(self.journal, bundle, {"USDT": D(1000), "IRT": D(1000), "BTC": D(1)}, policy, "IRT",
+                portfolio_limits=PortfolioLimits(max_asset_weight=D("0.10")))
         with self.assertRaisesRegex(ValueError, "fresh prospective"):
             runner.step(replace(synthetic_frames(1)[0], data_class="HISTORICAL"))
         with self.assertRaisesRegex(ValueError, "verified clean"):

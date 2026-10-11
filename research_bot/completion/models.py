@@ -90,6 +90,7 @@ class CompletionPolicy:
     live_execution: bool = False
     mode: str = "PAPER"
     purpose: str = "SYNTHETIC_ENGINEERING"
+    execution_revision: str = "DEMO_COMPATIBILITY_V2"
     fee_rate: Decimal = Decimal("0.001")  # Paid in received currency.
     slippage_rate: Decimal = Decimal("0.0002")
     displayed_depth_fraction: Decimal = Decimal("0.10")
@@ -105,6 +106,8 @@ class CompletionPolicy:
     def __post_init__(self) -> None:
         if self.research_only is not True or self.paper_execution is not True or self.live_execution is not False:
             raise ValueError("RESEARCH_ONLY / PAPER_EXECUTION / LIVE_OFF required")
+        if self.execution_revision != "DEMO_COMPATIBILITY_V2":
+            raise ValueError("execution revision is immutable")
         if self.mode not in {"PAPER", "BACKTEST"} or self.purpose not in {"SYNTHETIC_ENGINEERING", "GRADUATED_RESEARCH"}:
             raise ValueError("only offline BACKTEST/PAPER purposes are supported")
         for name in ("fee_rate", "slippage_rate", "max_order_notional", "displayed_depth_fraction"):

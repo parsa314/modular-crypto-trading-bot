@@ -42,9 +42,13 @@ class OrderRequest:
     rules: MarketRules = MarketRules()
     not_before: datetime | None = None
     strategy_id: str = ""
+    additional_impact_bps: Decimal = ZERO
 
     def __post_init__(self) -> None:
         currencies(self.symbol)
+        object.__setattr__(self, "additional_impact_bps", decimal_value(self.additional_impact_bps))
+        if self.additional_impact_bps > Decimal(25):
+            raise ValueError("additional impact cannot exceed the unchanged slippage ceiling")
         aware(self.created_at)
         if not self.client_order_id.strip() or self.side not in {"BUY", "SELL"}:
             raise ValueError("order identity/side invalid")
@@ -68,14 +72,16 @@ class OrderRequest:
             "quantity": str(self.quantity), "protection_price": str(self.protection_price),
             "created_at": utc_text(self.created_at), "expires_at": utc_text(self.expires_at) if self.expires_at else None,
             "rules": {k: str(v) for k, v in self.rules.__dict__.items()},
-            "not_before": utc_text(self.not_before) if self.not_before else None, "strategy_id": self.strategy_id}
+            "not_before": utc_text(self.not_before) if self.not_before else None, "strategy_id": self.strategy_id,
+            "additional_impact_bps": str(self.additional_impact_bps)}
 
     @classmethod
     def from_dict(cls, row: dict) -> OrderRequest:
         return cls(row["client_order_id"], row["symbol"], row["side"], Decimal(row["quantity"]),
             Decimal(row["protection_price"]), datetime.fromisoformat(row["created_at"]),
             datetime.fromisoformat(row["expires_at"]) if row["expires_at"] else None, MarketRules(**row["rules"]),
-            datetime.fromisoformat(row["not_before"]) if row.get("not_before") else None, row.get("strategy_id", ""))
+            datetime.fromisoformat(row["not_before"]) if row.get("not_before") else None, row.get("strategy_id", ""),
+            decimal_value(row.get("additional_impact_bps", "0")))
 
 
 @dataclass(frozen=True)
@@ -177,7 +183,7 @@ class EventDrivenExecutionSimulator:
         self._sequence += 1
         self.journal.append(f"sim:{self._sequence}", "ORDER_TRANSITION", at,
             {"client_order_id": identity, "state": state.value, "reason": reason,
-                "filled_quantity": o["filled_quantity"], "reserved": o["reserved"],
+                "filled_quantity": o["filled_quantity"], "reserved": o["reserved"], "request": o["request"],
                 "balances": {k: str(v) for k, v in self._balances.items()}, "fill": fill,
                 "mode": self.policy.mode, "live_execution": False,
                 "execution_model_sha256": self.policy.execution_model_sha256(),
@@ -236,6 +242,8 @@ class EventDrivenExecutionSimulator:
             reason = ""
             if approved is not True:
                 reason = "RISK_OR_DECISION_REJECTED"
+            elif self.policy.slippage_rate * Decimal(10000) + request.additional_impact_bps > Decimal(25):
+                reason = "TOTAL_SLIPPAGE_EXCEEDS_UNCHANGED_LIMIT"
             elif self.policy.mode == "PAPER" and self.policy.purpose == "GRADUATED_RESEARCH" and request.strategy_id not in self.graduation.get("eligible_strategy_ids", ()):
                 reason = "STRATEGY_NOT_GRADUATED"
             elif request.quantity * request.protection_price > self.policy.max_order_notional:
@@ -299,7 +307,8 @@ class EventDrivenExecutionSimulator:
                     remaining = request.quantity - Decimal(o["filled_quantity"])
                     if remaining == ZERO:
                         break
-                    price = level[0] * (ONE + self.policy.slippage_rate if request.side == "BUY" else ONE - self.policy.slippage_rate)
+                    adverse_rate = self.policy.slippage_rate + request.additional_impact_bps / Decimal(10000)
+                    price = level[0] * (ONE + adverse_rate if request.side == "BUY" else ONE - adverse_rate)
                     if (request.side == "BUY" and price > request.protection_price) or (request.side == "SELL" and price < request.protection_price):
                         break
                     quantity = floor_step(min(remaining, level[1]), request.rules.quantity_step)
@@ -320,7 +329,9 @@ class EventDrivenExecutionSimulator:
                     fill = {"client_order_id": identity, "symbol": request.symbol, "side": request.side,
                         "quantity": str(quantity), "price": str(price), "fee": str(fee), "fee_currency": received_currency,
                         "received": str(gross_received - fee), "received_currency": received_currency,
-                        "timestamp": utc_text(at), "slippage_quote": str(abs(price - level[0]) * quantity)}
+                        "timestamp": utc_text(at), "slippage_quote": str(abs(price - level[0]) * quantity),
+                        "additional_impact_bps": str(request.additional_impact_bps),
+                        "additional_impact_quote": str(level[0] * quantity * request.additional_impact_bps / Decimal(10000))}
                     o["fills"].append(fill)
                     fills.append(dict(fill))
                     state = OrderState.FILLED if Decimal(o["filled_quantity"]) == request.quantity else OrderState.PARTIALLY_FILLED

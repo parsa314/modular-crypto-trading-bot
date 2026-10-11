@@ -13,6 +13,12 @@
 
 ## Canonical current state
 
+The uploaded complete_demo_bot now has a verified offline PAPER migration:
+`python -m scripts.run_demo_migration --journal /tmp/demo-migration.sqlite --cycles 80`.
+See [actual-source audit and migration](docs/COMPLETE_DEMO_BOT_AUDIT_AND_MIGRATION.md).
+HPT remains disabled; existing REAL journal tables are a compatibility view of
+the exact namespaced event ledger. No live execution is added.
+
 The owner's 2026-10-11 **Section 2 completion layer** authorizes an independent
 offline PAPER simulator under `research_bot/completion/`. Its four-generator
 synthetic example uses SQLite and has no exchange-order transport. The original

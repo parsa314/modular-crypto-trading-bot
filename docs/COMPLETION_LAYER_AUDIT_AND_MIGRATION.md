@@ -7,6 +7,12 @@ baseline is main `fa31e6f5ceb09f4f14ae13fef50706f2e10e1835`; Phase-1 parent is
 
 ## Audit findings and evidence limits
 
+**Later attachment update:** the actual complete_demo_bot archive has now been
+audited. The missing-source observations below record the earlier audit state;
+see [verified demo migration](COMPLETE_DEMO_BOT_AUDIT_AND_MIGRATION.md) and
+[ADR-COMP-009](ADR-COMP-009_DEMO_COMPATIBILITY.md) for the confirmed contracts,
+four-table projection, replacement entry point and remaining limitations.
+
 Five supplied notebooks were statically audited, not executed. Detailed cell
 locations, hashes, write-path hazards, optimistic fill assumptions and research
 references remain in [course report](JAMALIAN_INTEGRATION_REPORT.md) and

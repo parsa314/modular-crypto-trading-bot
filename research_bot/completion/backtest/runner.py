@@ -5,18 +5,18 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from hashlib import sha256
 import copy
-from typing import Mapping, Sequence
+from typing import Mapping, Sequence, Protocol
 import pandas as pd
 
 from ...contracts import EvidenceStamp
-from ...hypothesis import canonical_json, utc_text, HypothesisSide
+from ...hypothesis import canonical_json, utc_text, HypothesisSide, HypothesisCandidate
 from ...jamalian_data import Candle, OrderBook, BookLevel, available, currencies, decimal_value
 from ..models import CompletionPolicy, ZERO, ONE, MarketRules, floor_step
 from ..journal import TradeJournal, FirstSeenRegistry
 from ..strategies.bundle import StrategyBundle
 from ..execution.event_driven_simulator import EventDrivenExecutionSimulator, OrderRequest, TERMINAL
 from ..execution.multileg import SequentialCycleSimulator
-from ..portfolio.conflict_arbiter import PortfolioConflictArbiter, PortfolioView
+from ..portfolio.conflict_arbiter import PortfolioConflictArbiter, PortfolioView, PortfolioLimits, RiskGate
 from .metrics import performance_metrics
 
 
@@ -53,6 +53,13 @@ class ReplayFrame:
                 "asks": [[str(l.price), str(l.quantity)] for l in b.asks]} for b in self.books]}
 
 
+class ExecutionAdmissionPort(Protocol):
+    def configuration(self) -> dict: ...
+    def reject_multileg(self, candidate: HypothesisCandidate, at: datetime) -> None: ...
+    def assess(self, request: OrderRequest, candidate: HypothesisCandidate, view: PortfolioView,
+               book: OrderBook, simulator: EventDrivenExecutionSimulator, at: datetime) -> OrderRequest | None: ...
+
+
 class BacktestRunner:
     """Same generators, simulator and SQLite schema for replay and PAPER.
 
@@ -62,20 +69,24 @@ and cannot pass the default graduation gate as historical order-book evidence.
 """
     def __init__(self, journal: TradeJournal, strategies: StrategyBundle, balances: Mapping[str, Decimal],
                  policy: CompletionPolicy | None = None, quote_currency: str = "USDT",
-                 periods_per_year: int = 365 * 86400) -> None:
+                 periods_per_year: int = 365 * 86400, admission: ExecutionAdmissionPort | None = None,
+                 portfolio_limits: PortfolioLimits | None = None) -> None:
         self.journal, self.strategies = journal, strategies
+        self.admission, self.portfolio_limits = admission, portfolio_limits or PortfolioLimits()
         self.policy = policy or CompletionPolicy(mode="BACKTEST")
         self.simulator = EventDrivenExecutionSimulator(balances, journal, self.policy)
         if (self.policy.mode == "PAPER" and self.policy.purpose == "GRADUATED_RESEARCH"
                 and self.simulator.graduation.get("configuration_sha256") != self.configuration_sha256()):
             raise ValueError("graduated strategy configuration does not match PAPER bundle")
         self.cycles = SequentialCycleSimulator(self.simulator)
-        self.arbiter, self.first_seen = PortfolioConflictArbiter(journal), FirstSeenRegistry(journal)
+        self.arbiter, self.first_seen = PortfolioConflictArbiter(journal, risk_gate=RiskGate(self.portfolio_limits)), FirstSeenRegistry(journal)
         self.quote_currency, self.periods_per_year = quote_currency, periods_per_year
         self.state = journal.restore("runner") or {"frames": {}, "curve": [], "grid_links": {}, "peak": "0", "lots": {}, "pnls": {}}
         if "strategies" in self.state:
             if self.state["quote_currency"] != quote_currency or self.state["periods_per_year"] != periods_per_year:
                 raise ValueError("run valuation or sampling configuration changed")
+            if self.state.get("admission_configuration") != self._admission_configuration():
+                raise ValueError("execution admission or portfolio limits changed")
             strategies.restore(self.state["strategies"])
 
     def _books(self, frame: ReplayFrame) -> tuple[OrderBook, ...]:
@@ -153,6 +164,7 @@ and cannot pass the default graduation gate as historical order-book evidence.
                 record = self._step(frame, digest)
                 self.state["strategies"] = self.strategies.checkpoint()
                 self.state["quote_currency"], self.state["periods_per_year"] = self.quote_currency, self.periods_per_year
+                self.state["admission_configuration"] = self._admission_configuration()
                 self.journal.checkpoint("runner", self.state)
                 return record
         except BaseException:
@@ -226,13 +238,20 @@ and cannot pass the default graduation gate as historical order-book evidence.
         result = self.arbiter.resolve(hypotheses, view, at)
         for h in result.approved:
             if h.side is HypothesisSide.MULTI_LEG:
+                if self.admission is not None:
+                    self.admission.reject_multileg(h, at)
+                    continue
                 self.cycles.start(h, at, True)
                 continue
             plan = h.metadata["plan"][0]
             request = OrderRequest(h.hypothesis_id, plan["symbol"], plan["side"], Decimal(plan["quantity"]),
                 Decimal(plan["limit_price"]), at, at + timedelta(seconds=30),
                 MarketRules(plan["quantity_step"], plan["price_tick"], plan.get("min_notional", "0")), h.earliest_executable, h.strategy_id)
-            order = self.simulator.submit(request, True)
+            assessed = self.admission.assess(request, h, view, next(b for b in books if b.symbol == request.symbol),
+                self.simulator, at) if self.admission is not None else request
+            if assessed is not None and (assessed.to_dict() | {"additional_impact_bps": str(request.additional_impact_bps)}) != request.to_dict():
+                raise ValueError("admission cannot silently resize or redirect an approved plan")
+            order = self.simulator.submit(assessed or request, assessed is not None)
             if grid and "level_id" in h.metadata:
                 self.state["grid_links"][h.hypothesis_id] = h.metadata["level_id"]
                 if order.state in TERMINAL:
@@ -252,7 +271,8 @@ and cannot pass the default graduation gate as historical order-book evidence.
             "rejected": [{"id": r.candidate.hypothesis_id, "reason": r.reason} for r in result.rejected],
             "fills": len(fills), "data_class": frame.data_class,
             "fill_model": "BOOK_REPLAY" if frame.books else "OHLCV_SYNTHETIC_DEPTH",
-            "paper_execution": self.policy.paper_execution, "live_execution": False}
+            "paper_execution": self.policy.paper_execution, "live_execution": False,
+            "quote_currency": self.quote_currency, "balances": {k: str(v) for k, v in inventory.balances.items()}}
         self.state["frames"][utc_text(at)] = record
         self.journal.append("frame:" + digest, "REPLAY_FRAME", at, record)
         return copy.deepcopy(record)
@@ -264,7 +284,12 @@ and cannot pass the default graduation gate as historical order-book evidence.
 
     def configuration_sha256(self) -> str:
         return sha256(canonical_json({"strategies": self.strategies.configuration(),
-            "execution_model_sha256": self.policy.execution_model_sha256()}).encode()).hexdigest()
+            "execution_model_sha256": self.policy.execution_model_sha256(),
+            "admission": self._admission_configuration()}).encode()).hexdigest()
+
+    def _admission_configuration(self) -> dict:
+        return {"admission": self.admission.configuration() if self.admission is not None else None,
+            "portfolio_limits": {k: str(v) for k, v in self.portfolio_limits.__dict__.items()}}
 
     def report(self) -> dict:
         if not self.state["curve"]:
