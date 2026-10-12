@@ -19,6 +19,7 @@ import pandas as pd
 from research_bot.four_systems.binance_history import read_research_csv
 from research_bot.strategies.baselines import BASELINE_REGISTRY
 from scripts.run_jamalian_research import run as run_phase_one
+from research_bot.decision_trace import phase_one_trace
 
 
 def _git_commit() -> str | None:
@@ -97,6 +98,9 @@ def run_cycle(
     phase = run_phase_one(document, dataset_sha256=dataset_hash, events_path=events)
     decisions = phase["records"]
     histogram: Counter[str] = Counter()
+    contributing_histogram: Counter[str] = Counter()
+    engine_histogram: Counter[str] = Counter()
+    decision_traces = []
     no_trade = 0
     matched = 0
     risk_evaluated = 0
@@ -105,9 +109,14 @@ def run_cycle(
         decision = signal["decision"]
         if decision == "NO_TRADE":
             no_trade += 1
+            trace = phase_one_trace(row)
+            decision_traces.append(trace)
+            histogram[trace["primary_reason"]] += 1
+            contributing_histogram.update(trace["contributing_reasons"])
+            engine_histogram.update(trace["engine_reasons"])
         matched += int(bool(signal["metadata"].get("candidate", False)))
         risk_evaluated += int(row["risk"] is not None)
-        histogram.update(signal["reasons"] or ["NO_DECISION_REASON_RECORDED"])
+
     commit = _git_commit()
     identity = {
         "dataset_sha256": dataset_hash,
@@ -146,6 +155,10 @@ def run_cycle(
             "total": len(decisions),
             "no_trade": no_trade,
             "reason_histogram": dict(sorted(histogram.items())),
+            "contributing_reason_histogram": dict(sorted(contributing_histogram.items())),
+            "engine_reason_histogram": dict(sorted(engine_histogram.items())),
+            "decision_traces": decision_traces,
+            "reason_histogram_semantics": "ONE_PRIMARY_REASON_PER_NO_TRADE",
         },
         "model": {"status": "NOT_TRAINED", "calibration": "NOT_RUN"},
         "risk": {"status": "NOT_EVALUATED" if not risk_evaluated else "PARTIALLY_EVALUATED",
