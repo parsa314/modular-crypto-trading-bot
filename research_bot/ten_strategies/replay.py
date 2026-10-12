@@ -38,6 +38,8 @@ class ColumnResult:
 
 def replay_column(view: pd.DataFrame,strategy: str,config: TenConfig,journal: JournalPort | None=None) -> ColumnResult:
     if strategy not in IDS or view.empty:raise ValueError("registered nonempty replay required")
+    # Heavy history belongs to the event ledger, never to per-row pandas attrs.
+    view=pd.DataFrame(view,copy=False)
     number=IDS.index(strategy)+1;cash=Decimal(10000);qty=ZERO;peak=cash;previous=cash
     anchor=Anchor();pending=None;entry=None;entry_index=-1;entry_cost=ZERO;entry_raw=ZERO
     stopped=False;curves=[];returns=[];trades=[];hypotheses=0;rejected=0
@@ -111,11 +113,13 @@ def replay_column(view: pd.DataFrame,strategy: str,config: TenConfig,journal: Jo
 def build_matrix(frame: pd.DataFrame,config: TenConfig=TenConfig(),journal: JournalPort | None=None,
                  implementation_sha256: str="UNBOUND") -> tuple[pd.DataFrame,dict]:
     view=detect(frame)
+    detector_events=view.attrs.pop("events")
+    view.attrs.clear()
     dataset=sha256(canonical_json(view[["timestamp","available_at","symbol","open","high","low","close","volume"]].astype(str).to_dict("records")).encode()).hexdigest()
     if journal:journal.append("ten_protocol","TEN_PROTOCOL",view.available_at.iloc[0].to_pydatetime(),
         {"protocol":config.document(),"dataset_sha256":dataset,"implementation_sha256":implementation_sha256})
     if journal:
-        for event in view.attrs["events"]:
+        for event in detector_events:
             identity=sha256(canonical_json(event).encode()).hexdigest()
             journal.append("detector:"+identity,"TEN_DETECTOR_EVENT",pd.Timestamp(event["available_at"]).to_pydatetime(),event)
     rows={};columns={}
@@ -131,7 +135,7 @@ def build_matrix(frame: pd.DataFrame,config: TenConfig=TenConfig(),journal: Jour
             "pending_at_end":result.pending_at_end,"trades":list(result.trades)}
     matrix=pd.DataFrame(columns,index=pd.DatetimeIndex(view.timestamp,name="timestamp_close"))
     report={"protocol_sha256":config.digest,"dataset_sha256":dataset,"implementation_sha256":implementation_sha256,
-        "rows":len(matrix),"columns":list(IDS),"results":rows,"events":view.attrs["events"],
+        "rows":len(matrix),"columns":list(IDS),"results":rows,"events":detector_events,
         "orders_placed":0,"paper_execution":False,"live_execution":False,"execution_authorized":False,
         "evidence_state":"HISTORICAL_DIAGNOSTIC","cost_model_id":"DECLARED_SCENARIO:"+config.digest[:16],"declared_costs":{"fee_per_side":str(config.fee),"slippage_per_side":str(config.slippage)},
         "economic_validation":False,"preregistered":False,"prospective_evidence":False}

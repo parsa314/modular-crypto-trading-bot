@@ -150,6 +150,13 @@ class TenReplayTests(unittest.TestCase):
         matrix,report=build_matrix(x)
         self.assertTrue((matrix==0).all().all())
         self.assertTrue(all(r["closed_trades"]==0 and Decimal(r["net_total_return"])==0 for r in report["results"].values()))
+    def test_replay_does_not_deepcopy_event_history(self):
+        class History:
+            def __deepcopy__(self,memo):raise AssertionError("event history copied per row")
+        f=scenario(50);f.attrs["events"]=History()
+        result=replay_column(f,"S1",TenConfig())
+        self.assertEqual(len(result.returns),50)
+        self.assertIsInstance(f.attrs["events"],History)
     def test_decimal_es_and_invalid_money(self):
         with localcontext() as ctx:
             ctx.prec=36
