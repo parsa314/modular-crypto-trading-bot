@@ -221,10 +221,10 @@ class TenArchiveTests(unittest.TestCase):
 class TenCliTests(unittest.TestCase):
     def test_real_files_and_second_replay(self):
         from scripts.run_ten_strategies_research import run
-        with tempfile.TemporaryDirectory() as d:
+        with tempfile.TemporaryDirectory() as d, patch("scripts.run_ten_strategies_research.synthetic_bars",return_value=synthetic_bars(400)):
             p=Path(d);output=p/"report.json";journal=p/"research.sqlite"
             a=run(None,output,journal,True);b=run(None,output,journal,True)
             self.assertEqual(a["journal_events"],b["journal_events"])
             self.assertEqual(a["matrix_sha256"],b["matrix_sha256"])
             self.assertEqual(pd.read_csv(output.with_suffix(".net_returns.csv")).shape[1],11)
-            with self.assertRaises(ValueError):run(p/"missing.csv",p/"missing.json",journal)
+            with self.assertRaises(FileNotFoundError):run(p/"missing.csv",p/"missing.json",journal)
