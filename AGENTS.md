@@ -1,6 +1,6 @@
 # Agent Operating Contract — Repository Routing and Source of Truth
 
-> **Effective date:** 2026-09-13  
+> **Effective date:** 2026-10-12  
 > **Project:** MSc AI cryptocurrency trading-bot research  
 > **Primary repository:** `parsa314/modular-crypto-trading-bot`
 
@@ -59,21 +59,17 @@ This is a deployment-routing fact, **not** a statement that `miladchicomobot` is
 
 Before changing Railway source routing, verify the current Railway service configuration and obtain explicit approval for any migration/repointing action.
 
-## 5. Intentional Fail-Closed Behavior
+## 5. Owner Authorization for Live Trading
 
-The current deployment is intentionally research-only and fail-closed.
+**Effective 2026-10-12: the owner explicitly authorizes live trading.**
 
-The following state is intentional unless a later scientific gate explicitly changes it:
+**اجازه معامله زنده دارد.**
 
-- `LIVE_EXECUTION = false`
-- `PAPER_EXECUTION = false`
-- forward-paper execution disabled
-- no exchange-order endpoint enabled
-- Kraken holdout sealed
+This authorization supersedes the previous research-only authorization and the instruction to preserve `LIVE_EXECUTION=false` and `PAPER_EXECUTION=false` pending scientific promotion. Agents may implement and configure live execution within the owner's requested scope.
 
-A missing or locked execution endpoint is **not automatically a bug**. Inspect the actual source and scientific gate before attempting to change such behavior.
+Authorization is distinct from runtime state: this documentation update does not start the bot, place orders, change deployment variables, or establish that runtime execution is enabled. Risk limits, credential protection, execution validation and scientific evidence integrity remain applicable. The Kraken holdout remains sealed; trading permission does not unseal research data.
 
-Do not enable live or paper execution merely to make a smoke test pass.
+Historical research records retain their original execution state as provenance and do not override this later owner authorization.
 
 ## 6. Dependency Authority
 
@@ -118,7 +114,7 @@ When continuing this project:
 3. Verify the latest commit, PR and CI state; do not assume an older chat-reported version is current.
 4. Treat `miladchicomobot` as a deployment shell unless the owner explicitly changes repository governance.
 5. Separate code, dependency, database, Railway and external-provider causes before patching.
-6. Preserve `LIVE_EXECUTION=false` and `PAPER_EXECUTION=false` unless explicit authorization and the project governance gate both permit otherwise.
+6. Live trading is explicitly authorized by the owner as of 2026-10-12. Follow section 5 for execution permissions; preserve risk controls and report actual runtime state separately.
 7. Never rewrite or discard negative experimental evidence merely to obtain a passing result.
 8. Prefer reproducible fixes in the canonical repository over ad-hoc changes made only in a running environment.
 9. Never label infrastructure blockage as a scientific rejection and never substitute an offline smoke test for required prospective evidence.
