@@ -60,7 +60,8 @@ def _detect(x: pd.DataFrame, timeframe: str) -> pd.DataFrame:
             fraction=max(0.,min(1.,(z.high-l[i])/(z.high-z.low) if z.side==1 else (h[i]-z.low)/(z.high-z.low)))
             old_state,old_fraction=zone_state.get(z.identity,("ACTIVE",0.))
             fraction=float(max(old_fraction,fraction))
-            if z.kind=="FVG" and state=="TOUCHED":state="PARTIALLY_MITIGATED"
+            if z.kind=="FVG" and state in ("TOUCHED","ACTIVE"):
+                state="PARTIALLY_MITIGATED" if fraction>0 else "ACTIVE"
             elif z.kind=="OB" and old_state=="TOUCHED" and state=="ACTIVE":state="TOUCHED"
             if (state,fraction)!=(old_state,old_fraction):
                 events.append({**z.payload(),"state":state,"age_bars":age,"mitigation_fraction":fraction,

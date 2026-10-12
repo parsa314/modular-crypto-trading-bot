@@ -69,6 +69,18 @@ class TenDetectorTests(unittest.TestCase):
         flat=x.copy()
         for k in ("open","high","low","close"):flat[k]=100.
         a=detect(flat);self.assertFalse(a.ready.any());self.assertTrue(a.body.isna().all())
+    def test_fvg_boundary_contact_and_partial_state_persist(self):
+        x=synthetic_bars(400)
+        for k,v in (("open",100.),("close",100.),("high",101.),("low",99.)):x[k]=v
+        x.loc[10,["open","high","low","close"]]=[105.,107.,105.,106.]
+        x.loc[11,["open","high","low","close"]]=[106.,107.,105.,106.]
+        x.loc[12,["open","high","low","close"]]=[105.,106.,103.,105.5]
+        x.loc[13,["open","high","low","close"]]=[106.,108.,106.,107.]
+        events=[e for e in detect(x).attrs["events"] if e["kind"]=="FVG" and e["confirmed"]==10
+            and pd.Timestamp(e["available_at"])<=x.available_at.iloc[13]]
+        self.assertEqual(events[-1]["state"],"PARTIALLY_MITIGATED")
+        self.assertEqual(events[-1]["mitigation_fraction"],.5)
+        self.assertFalse(any(e["state"]=="PARTIALLY_MITIGATED" and e.get("mitigation_fraction")==0 for e in events))
     def test_pivot_confirmation_and_fvg_origin(self):
         x=synthetic_bars(400);a=detect(x)
         for event in a.attrs["events"]:
