@@ -12,13 +12,15 @@ This file is the default navigation record for the current scientific and engine
 
 See `AGENTS.md` before changing repository routing, scientific lineage, execution flags or Railway source configuration.
 
-## Safety state
+## Execution authorization — updated 2026-10-12
 
-Current authorized mode is:
+**The owner explicitly authorizes live trading. اجازه معامله زنده دارد.**
 
-`RESEARCH_ONLY / PAPER_OFF / LIVE_OFF / KRAKEN_SEALED`
+This replaces the prior current-authorization instruction `RESEARCH_ONLY / PAPER_OFF / LIVE_OFF`. See section 5 of `AGENTS.md` for the authoritative owner authorization.
 
-A successful CI run, backtest, research artifact or service healthcheck does not authorize PAPER or LIVE execution and does not prove profitable alpha.
+This is a permission update, not evidence that execution is running or that deployment flags have changed. Risk controls remain applicable and the Kraken research holdout remains sealed. Successful CI, backtests and healthchecks do not prove profitable alpha.
+
+The scientific results and provenance below are historical records dated 2026-09-13 and remain unchanged.
 
 ## Latest completed scientific result — v0.50
 
