@@ -1,0 +1,71 @@
+{
+  "schema": "V58_FOUR_FRAMEWORK_EVENT_REGISTRY",
+  "version": "58.0-lab-freeze1",
+  "execution": {
+    "paper": false,
+    "live": false
+  },
+  "frameworks": {
+    "ICHIMOKU": [
+      "ICH_I1",
+      "ICH_I2",
+      "ICH_I3",
+      "ICH_I4"
+    ],
+    "ICT": [
+      "ICT_C1",
+      "ICT_C2",
+      "ICT_C3",
+      "ICT_C4"
+    ],
+    "SMC": [
+      "SMC_S1",
+      "SMC_S2",
+      "SMC_S3",
+      "SMC_S4"
+    ],
+    "AL_BROOKS": [
+      "BRK_B1",
+      "BRK_B2",
+      "BRK_B3",
+      "BRK_B4",
+      "BRK_B5"
+    ]
+  },
+  "confluence": [
+    "PAIR_ICH_ICT",
+    "PAIR_ICH_SMC",
+    "PAIR_ICH_BROOKS",
+    "PAIR_ICT_SMC",
+    "PAIR_ICT_BROOKS",
+    "PAIR_SMC_BROOKS",
+    "ALL_FOUR"
+  ],
+  "required_event_fields": [
+    "event_id",
+    "symbol",
+    "venue",
+    "timestamp",
+    "framework",
+    "setup_id",
+    "direction",
+    "entry_time",
+    "entry_price",
+    "stop_price",
+    "target_price",
+    "holding_horizon",
+    "regime",
+    "feature_snapshot_id",
+    "data_version",
+    "code_version"
+  ],
+  "required_analysis_fields": [
+    "framework_bitmask",
+    "number_of_frameworks_active",
+    "directional_agreement",
+    "timing_dispersion",
+    "atomic_component_mask"
+  ],
+  "future_based_event_mutation_forbidden": true,
+  "primary_model_training_authorized": false
+}

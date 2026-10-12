@@ -1,0 +1,79 @@
+version: 58
+lab: FOUR_FRAMEWORK_STRATEGY_LAB
+mode: STRICT_SCIENTIFIC_RESEARCH
+paper_execution: false
+live_execution: false
+model_training_authorized: false
+
+primary_timeframe: 4h
+common_barrier_contract:
+  atr_period: 14
+  stop_atr: 1.5
+  minimum_stop_fraction_of_entry: 0.0005
+  reward_target_R: 3.0
+  max_hold_bars_after_entry: 30
+  entry: NEXT_EXECUTABLE_BAR_OPEN
+  same_bar_policy: STOP_FIRST
+
+frameworks:
+  ICHIMOKU:
+    status: PARTIALLY_MATURE
+    primary_setups:
+      - ICH_I1_KUMO_BREAKOUT
+      - ICH_I2_KIJUN_PULLBACK_REJECTION
+      - ICH_I3_TK_CROSS_CONDITIONAL
+      - ICH_I4_KUMO_BREAKOUT_RETEST
+    primary_parameters:
+      tenkan: 9
+      kijun: 26
+      senkou_b: 52
+    parameter_search_primary: false
+
+  ICT:
+    status: PARTIAL_IMPLEMENTATION_REQUIRES_STANDARDIZATION
+    primary_setups:
+      - ICT_C1_SWEEP_DISPLACEMENT_MSS_FVG_RETRACE
+      - ICT_C2_SWEEP_MSS_NO_FVG
+      - ICT_C3_FVG_ONLY_RETEST
+      - ICT_C4_PREMIUM_DISCOUNT_CONDITIONAL
+
+  SMC:
+    status: PARTIAL_IMPLEMENTATION_REQUIRES_SEPARATION_FROM_ICT
+    primary_setups:
+      - SMC_S1_BOS_OB_MITIGATION
+      - SMC_S2_CHOCH_STRUCTURE_REVERSAL
+      - SMC_S3_SUPPLY_DEMAND_RETURN
+      - SMC_S4_SWEEP_OB_RETEST
+
+  AL_BROOKS:
+    status: REQUIRES_FORMALIZATION
+    primary_setups:
+      - BRK_B1_TREND_PULLBACK
+      - BRK_B2_BREAKOUT_FOLLOW_THROUGH
+      - BRK_B3_FAILED_BREAKOUT_REVERSAL
+      - BRK_B4_TRADING_RANGE_FADE
+      - BRK_B5_SIGNAL_BAR_QUALITY_STUDY
+
+confluence:
+  hard_confirmation_count_as_primary_strategy: false
+  pairwise:
+    - PAIR_ICH_ICT
+    - PAIR_ICH_SMC
+    - PAIR_ICH_BROOKS
+    - PAIR_ICT_SMC
+    - PAIR_ICT_BROOKS
+    - PAIR_SMC_BROOKS
+  all_four:
+    - ALL_FOUR
+  preserve_nonconfluent_events: true
+
+scientific_controls:
+  causal_only: true
+  future_pivots_forbidden: true
+  future_validated_zones_forbidden: true
+  threshold_tuning_on_final_holdout_forbidden: true
+  individual_framework_before_confluence: true
+  costs_required: true
+  regime_results_required: true
+  multi_asset_results_required: true
+  no_trade_is_valid: true
