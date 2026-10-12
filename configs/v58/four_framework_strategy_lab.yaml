@@ -46,13 +46,21 @@ frameworks:
       - SMC_S4_SWEEP_OB_RETEST
 
   AL_BROOKS:
-    status: REQUIRES_FORMALIZATION
+    status: E2_DETERMINISTIC_CAUSAL_IMPLEMENTATION
     primary_setups:
       - BRK_B1_TREND_PULLBACK
       - BRK_B2_BREAKOUT_FOLLOW_THROUGH
       - BRK_B3_FAILED_BREAKOUT_REVERSAL
       - BRK_B4_TRADING_RANGE_FADE
       - BRK_B5_SIGNAL_BAR_QUALITY_STUDY
+    evidence:
+      branch: research/v58-al-brooks-engine
+      implementation_commit: cc91558c266aadbeec20a26394a9c6eb19e20b23
+      github_actions_run: 38289766608
+      focused_tests: 9_passed
+      v58_regression: 33_passed
+      full_repository_regression: 196_passed_1_skipped_0_failed
+      evidence_level: E2
 
 confluence:
   hard_confirmation_count_as_primary_strategy: false
