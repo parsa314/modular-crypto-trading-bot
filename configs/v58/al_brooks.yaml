@@ -1,0 +1,52 @@
+version: 58
+engine: AL_BROOKS_PHASE1
+status: FROZEN_MECHANICAL_DETECTORS
+model_training_authorized: false
+paper_execution: false
+live_execution: false
+
+timeframe: 4h
+
+thresholds:
+  range_window: 20
+  trend_strength_min_atr: 0.25
+  prior_micro_channel_min: 2
+  pullback_min_atr: 0.25
+  pullback_max_atr: 2.00
+  signal_body_fraction_min: 0.50
+  signal_close_location_long_min: 0.65
+  signal_close_location_short_max: 0.35
+  breakout_strength_min_atr: 0.10
+  follow_through_body_fraction_min: 0.40
+  failed_breakout_lifetime_bars: 2
+  range_trend_abs_max_atr: 0.20
+  range_overlap_min: 0.45
+  range_width_max_atr: 6.0
+  range_min_boundary_touches: 2
+  range_boundary_tolerance_fraction: 0.10
+  range_fade_tolerance_atr: 0.25
+
+setups:
+  BRK_B1_TREND_PULLBACK:
+    executable_event: true
+    concept: established_trend_then_pullback_then_signal_bar_continuation
+  BRK_B2_BREAKOUT_FOLLOW_THROUGH:
+    executable_event: true
+    concept: prior_range_breakout_then_directional_follow_through
+  BRK_B3_FAILED_BREAKOUT_REVERSAL:
+    executable_event: true
+    concept: breakout_then_close_back_inside_original_reference_range
+  BRK_B4_TRADING_RANGE_FADE:
+    executable_event: true
+    concept: mechanically_defined_range_boundary_rejection
+  BRK_B5_SIGNAL_BAR_QUALITY_STUDY:
+    executable_event: false
+    concept: continuous_signal_bar_quality_only
+
+scientific_constraints:
+  future_confirmed_pivots_forbidden: true
+  centered_windows_forbidden: true
+  event_mutation_after_outcome_forbidden: true
+  b5_cannot_emit_trade_event: true
+  thresholds_are_research_defaults_not_claimed_optima: true
+  tuning_on_sealed_holdout_forbidden: true

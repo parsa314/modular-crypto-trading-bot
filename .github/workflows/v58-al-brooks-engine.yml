@@ -1,0 +1,46 @@
+name: v58 al brooks engine
+
+on:
+  push:
+    branches:
+      - research/v58-al-brooks-engine
+    paths:
+      - 'research_bot/v58/brooks.py'
+      - 'tests/v58/test_brooks_engine.py'
+      - 'configs/v58/al_brooks.yaml'
+      - 'docs/v58/V58_AL_BROOKS_ENGINE_PHASE1.md'
+      - '.github/workflows/v58-al-brooks-engine.yml'
+  pull_request:
+    paths:
+      - 'research_bot/v58/brooks.py'
+      - 'tests/v58/test_brooks_engine.py'
+      - 'configs/v58/al_brooks.yaml'
+      - 'docs/v58/V58_AL_BROOKS_ENGINE_PHASE1.md'
+
+permissions:
+  contents: read
+
+jobs:
+  brooks-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LIVE_EXECUTION: 'false'
+      PAPER_EXECUTION: 'false'
+      BOT_FORWARD_PAPER_ENABLED: 'false'
+      BOT_PAPER_EXECUTION_ENABLED: 'false'
+      EXECUTION_MODE: RESEARCH_ONLY
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m compileall -q research_bot/v58/brooks.py tests/v58/test_brooks_engine.py
+      - name: Brooks focused tests
+        run: python -m pytest -q tests/v58/test_brooks_engine.py
+      - name: V58 regression
+        run: python -m pytest -q tests/v58
+      - name: Full repository regression
+        run: python -m pytest -q

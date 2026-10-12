@@ -67,5 +67,19 @@
     "atomic_component_mask"
   ],
   "future_based_event_mutation_forbidden": true,
-  "primary_model_training_authorized": false
+  "primary_model_training_authorized": false,
+  "implementation_status": {
+    "AL_BROOKS": {
+      "status": "E2_DETERMINISTIC_CAUSAL_IMPLEMENTATION",
+      "module": "research_bot/v58/brooks.py",
+      "focused_tests": 9,
+      "v58_regression_tests": 33,
+      "full_repository_tests_passed": 196,
+      "full_repository_tests_skipped": 1,
+      "github_actions_run": 38289766608,
+      "implementation_commit": "cc91558c266aadbeec20a26394a9c6eb19e20b23",
+      "empirical_alpha_evidence": false,
+      "model_training_authorized": false
+    }
+  }
 }
