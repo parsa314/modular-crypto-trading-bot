@@ -227,4 +227,7 @@ class TenCliTests(unittest.TestCase):
             self.assertEqual(a["journal_events"],b["journal_events"])
             self.assertEqual(a["matrix_sha256"],b["matrix_sha256"])
             self.assertEqual(pd.read_csv(output.with_suffix(".net_returns.csv")).shape[1],11)
-            with self.assertRaises(ValueError):run(p/"missing.csv",p/"missing.json",journal)
+            with self.assertRaisesRegex(ValueError,"HISTORICAL_INPUT_NOT_FOUND"):
+                run(p/"missing.csv",p/"missing.json",journal)
+            self.assertFalse((p/"missing.protocol.json").exists())
+            self.assertFalse((p/"missing.json").exists())
