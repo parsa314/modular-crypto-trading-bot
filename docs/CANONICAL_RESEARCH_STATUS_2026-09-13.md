@@ -14,9 +14,13 @@ See `AGENTS.md` before changing repository routing, scientific lineage, executio
 
 ## Safety state
 
-Current authorized mode is:
+Owner permission updated on 2026-10-12: **OWNER_LIVE_TRADING_PERMISSION = GRANTED** (مالک اجازه معامله زنده را صادر کرده است). This replaces the prior default assumption that the owner has not consented to live trading.
+
+Effective deployment / order authorization remains:
 
 `RESEARCH_ONLY / PAPER_OFF / LIVE_OFF / KRAKEN_SEALED`
+
+Owner permission is necessary but not sufficient for production order routing. A separate, reviewed scientific promotion and exchange-specific operational-readiness change is still required to set LIVE_EXECUTION=true. No code, order endpoint, credential or deployed execution flags are changed by this documentation update.
 
 A successful CI run, backtest, research artifact or service healthcheck does not authorize PAPER or LIVE execution and does not prove profitable alpha.
 
