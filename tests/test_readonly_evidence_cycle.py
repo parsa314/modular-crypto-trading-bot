@@ -47,6 +47,13 @@ class ReadonlyEvidenceCycleTests(unittest.TestCase):
             self.assertEqual(result["signals"]["count"], 1)
             self.assertEqual(result["decisions"]["total"], 1)
             self.assertEqual(result["decisions"]["no_trade"], 1)
+            self.assertEqual(result["decisions"]["reason_histogram"],
+                             {"STRATEGY_RULE_NOT_MATCHED": 1})
+            self.assertEqual(result["decisions"]["engine_reason_histogram"],
+                             {"CONFIDENCE_BELOW_THRESHOLD": 1})
+            self.assertEqual(result["decisions"]["contributing_reason_histogram"]["EXECUTION_NOT_AUTHORIZED"], 1)
+            self.assertEqual(sum(result["decisions"]["reason_histogram"].values()),
+                             result["decisions"]["no_trade"])
             self.assertEqual(result["risk"]["status"], "NOT_EVALUATED")
             self.assertIsNone(result["risk"]["cvar_95"])
             self.assertFalse(result["signals"]["full_prefix_invariance_proven_by_this_run"])
