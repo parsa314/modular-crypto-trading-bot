@@ -1,0 +1,33 @@
+{
+  "schema_version": "R1_CONTENT_MANIFEST_1",
+  "status": "DESIGN_SNAPSHOT_NOT_EXPERIMENTAL_REGISTRATION",
+  "evidence_state": "ENGINEERING_ONLY",
+  "baseline_source_sha": "a54c94795d29663b043f126920dbb7d6627c1007",
+  "attachment_sha256": "12501858a2354e37992742465ef11d9d6e3fb4ded42464fdccbb95c288ada74d",
+  "hash_semantics": "SHA256 exact UTF-8 file bytes; content identity only, not proof of preregistration time, observed availability or scientific acceptance",
+  "files_sha256": {
+    "docs/r1/FOUR_SYSTEMS_R1_SPECIFICATION.md": "511ef9a2208107aff9baebd6aa8ac96be87e37e4b0bb25895d335961bec72778",
+    "docs/r1/FOUR_SYSTEMS_R1_REVIEW.md": "0255f225f93af2045acedef0bf8a2ae5237e800d15a0c2f3b4e45073a431b657",
+    "docs/r1/FOUR_SYSTEMS_R1_PROTOCOL.json": "f7cdee4946501ddc15b230e7e8112bca5414e6df08f77f3cc3201a04aa8b6af6"
+  },
+  "read_only_reproduction": {
+    "negative_shift_prefix_before": false,
+    "negative_shift_prefix_after": true,
+    "first_lower_hit_expected_utc": "2025-01-01T02:00:00+00:00",
+    "supplied_idxmin_utc": "2025-01-01T00:00:00+00:00",
+    "datetime_index_failure": "IndexError",
+    "supplied_upper_barrier": "1000.02",
+    "correct_relative_upper_barrier": "1020",
+    "full_function_test_suite_run": false
+  },
+  "checks": {
+    "json_parse": true,
+    "governance_flags": true,
+    "horizon_and_embargo_preserved": true,
+    "risk_ceilings_preserved": true,
+    "binding_nulls_reported": true,
+    "production_code_changed": false,
+    "new_R2_acceptance_tests_run": false,
+    "economic_statistics_run": false
+  }
+}
