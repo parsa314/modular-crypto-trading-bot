@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .cognitive_core.bridge import DetectorEvent, Forecast
 
 from .contracts import Decision, EvidenceStamp, SignalEvidence
 from .decision import DecisionEngine
@@ -35,6 +39,19 @@ class ResearchTradingOrchestrator:
         self.decision_engine = decision_engine or DecisionEngine()
         self.risk_engine = risk_engine or RiskEngine()
         self.execution_engine = execution_engine or PaperExecutionEngine()
+
+    def process_detector_event(
+        self, event: DetectorEvent, forecast: Forecast | None = None,
+    ) -> PipelineOutcome:
+        """Evaluate canonical research evidence without risk sizing or execution.
+
+        Journal consumers may persist this outcome. BUY_CANDIDATE here is only
+        the existing decision engine's fixture result, never an order permission.
+        """
+        from .cognitive_core.bridge import bridge_signal
+
+        signal = bridge_signal(event, forecast, decision_engine=self.decision_engine)
+        return PipelineOutcome(signal, None, None, "RESEARCH_EVIDENCE_ONLY")
 
     def process_forecast(
         self,
