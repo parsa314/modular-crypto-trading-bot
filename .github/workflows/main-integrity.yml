@@ -85,6 +85,9 @@ jobs:
       - name: Verify causal four-system research coverage
         run: python -m scripts.verify_four_systems_coverage --output /tmp/four-system-coverage.json --threshold 80
 
+      - name: Verify ten-rule research coverage
+        run: python -m scripts.verify_ten_strategies_coverage --output /tmp/ten-rule-coverage.json --threshold 80
+
       - name: Verify canonical status and dependency contract
         run: |
           python - <<'PY'

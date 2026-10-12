@@ -1,0 +1,1424 @@
+{
+  "baseline_source": "ef46b513af079dd38d6a91a331d64c1353030680",
+  "audit_method": "All tracked paths inventoried; local research Python source AST-parsed; behavioral review of critical seams, not a manual every-line review",
+  "files": [
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+      "git_blob_sha": "0783e59ec5e41a8cfe337a21bccf036686a03e08"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/research_hypothesis.yml",
+      "git_blob_sha": "b9334cb7012f969573832ea27d6e476286270572"
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "git_blob_sha": "ace9bd5a08b2302f99ba765a174763802d7f994f"
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "git_blob_sha": "6bf276f8827df8f5c1a5515bc0f0155c18e2aa5f"
+    },
+    {
+      "path": ".github/workflows/binance-1h-data-research.yml",
+      "git_blob_sha": "6d5037b0b352f8bef88c8a5d2ca27a9a5c7a6faa"
+    },
+    {
+      "path": ".github/workflows/binance-public-2022-2023.yml",
+      "git_blob_sha": "9e7a834f7b1787ea8ad50f62d43690c7b1bb4f4e"
+    },
+    {
+      "path": ".github/workflows/coinex-real-history.yml",
+      "git_blob_sha": "c9c8337766455edbc485505435c3c355ac254801"
+    },
+    {
+      "path": ".github/workflows/main-integrity.yml",
+      "git_blob_sha": "2dadcc33744acb5bdd53926fd3df3a3c427689ec"
+    },
+    {
+      "path": ".github/workflows/nobitex-testnet-readonly-preflight.yml",
+      "git_blob_sha": "709abd02e6b5a6c6916c5b561044e7cf3b2abc9d"
+    },
+    {
+      "path": ".github/workflows/okx-demo-readonly-preflight.yml",
+      "git_blob_sha": "b185b63963eb2eaf1eb489a33cd0c74c8c81c82e"
+    },
+    {
+      "path": ".github/workflows/research-baseline.yml",
+      "git_blob_sha": "a28ca2e9277916d06daed605e36ee43a722adc22"
+    },
+    {
+      "path": ".github/workflows/v06-cross-sectional.yml",
+      "git_blob_sha": "0097a5c48b1b7077b4ea79a393418e7fdf67dc8d"
+    },
+    {
+      "path": ".github/workflows/v08-live-discovery.yml",
+      "git_blob_sha": "af9402baa78f75d017c7f4a7b5b286036613eef3"
+    },
+    {
+      "path": ".github/workflows/v08-research-core.yml",
+      "git_blob_sha": "13dabfa6c81553f652e6d2fc0b49f2afbc0c0546"
+    },
+    {
+      "path": ".github/workflows/v09-live-eligibility.yml",
+      "git_blob_sha": "ddc65f25a1a6449274f136cfc7a82e809e41818b"
+    },
+    {
+      "path": ".github/workflows/v1-finalization.yml",
+      "git_blob_sha": "83207081002cda198fca6e069d40f96e5449af28"
+    },
+    {
+      "path": ".github/workflows/v1-production-smoke.yml",
+      "git_blob_sha": "2c5c4a87aefa3a989a9a86362bdd0428e227f527"
+    },
+    {
+      "path": ".github/workflows/v10-oos-alpha-tournament.yml",
+      "git_blob_sha": "ee5d4fb0f2eab79094e512a020bba586bd1c14a7"
+    },
+    {
+      "path": ".github/workflows/v11-robustness-inference.yml",
+      "git_blob_sha": "1fe795c5b8daae38b98d2fe90b1b9133828dbee2"
+    },
+    {
+      "path": ".github/workflows/v12-derivatives-external-holdout.yml",
+      "git_blob_sha": "94e81534ed13ab44c99366e8537de51ee6abb42d"
+    },
+    {
+      "path": ".github/workflows/v13-forward-microstructure.yml",
+      "git_blob_sha": "44bb28e1c1d5212312ccc65db732ac46aeb19e21"
+    },
+    {
+      "path": ".github/workflows/v15-forward-evidence.yml",
+      "git_blob_sha": "9a758d5bcda923d7055d65581e6ed84146b3ce94"
+    },
+    {
+      "path": ".github/workflows/v16-formal-forward-defense.yml",
+      "git_blob_sha": "196d21cda0ac0490cca31082f3817918632aea9e"
+    },
+    {
+      "path": ".github/workflows/v17-strategy-lab.yml",
+      "git_blob_sha": "f4326cb9e7f0f46358cb3be34efd8465d3ddd475"
+    },
+    {
+      "path": ".github/workflows/v17-thesis-evidence-integrity.yml",
+      "git_blob_sha": "38a8d07797889ecc8be63eaab3f6d17cb145d1b8"
+    },
+    {
+      "path": ".github/workflows/v18-cost-aware-regime.yml",
+      "git_blob_sha": "e8aa1d0c04c1ee27671818d51784c18097a20c00"
+    },
+    {
+      "path": ".github/workflows/v19-audit.yml",
+      "git_blob_sha": "b068487bed56b2138239892acba5a22412813ff3"
+    },
+    {
+      "path": ".github/workflows/v19-forward-microstructure.yml",
+      "git_blob_sha": "70f32b8126f7741a74d5330f934a68ee4c993cae"
+    },
+    {
+      "path": ".github/workflows/v19-strategy-tournament.yml",
+      "git_blob_sha": "7b16907c4b0de9bef88d57ead274b140f8f570cb"
+    },
+    {
+      "path": ".github/workflows/v20-phase-q-monitor.yml",
+      "git_blob_sha": "45054eecf0ba33d8abd6a7cab5765327e33259de"
+    },
+    {
+      "path": ".github/workflows/v25-prospective-evidence-ledger.yml",
+      "git_blob_sha": "1b70e8de7d73d74539580a5c009ca1c3f81ce3c2"
+    },
+    {
+      "path": ".github/workflows/v52-execution-integrity.yml",
+      "git_blob_sha": "f0cf7c6b703b270b2aea50a651ca2e25e09620ba"
+    },
+    {
+      "path": ".github/workflows/v52-research-integrity.yml",
+      "git_blob_sha": "eea909495aaed7ce5af8b03bbad7e46d59ed2f0f"
+    },
+    {
+      "path": ".github/workflows/v54-automated-evidence.yml",
+      "git_blob_sha": "c4c0ba2e29ae2fbb4353872fba4d014c88db3140"
+    },
+    {
+      "path": ".gitignore",
+      "git_blob_sha": "a1505e65a6b73cb16d7f3dbd3c0b6acd51757875"
+    },
+    {
+      "path": ".python-version",
+      "git_blob_sha": "2c0733315e415bfb5e5b353f9996ecd964d395b2"
+    },
+    {
+      "path": "AGENTS.md",
+      "git_blob_sha": "250905e8b92a84d27e00510c399aaddd2b630e31"
+    },
+    {
+      "path": "CITATION.cff",
+      "git_blob_sha": "d25fe5b445f0a6b87e8ecdfb42ac1d49e592a5a8"
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "git_blob_sha": "d15b1660a0126b7967b77f33de529bc859592358"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "git_blob_sha": "4bf5865561c6dff92a3aecfaf054b5bca126b7ba"
+    },
+    {
+      "path": "README.md",
+      "git_blob_sha": "3a0ae2491fa62b9387689c05fb1f02eb1a58673d"
+    },
+    {
+      "path": "SECURITY.md",
+      "git_blob_sha": "8ef7290fd0a4e7b39c62c8371084beb6aaa08048"
+    },
+    {
+      "path": "docs/ADR-COMP-008_LOW_LIQUIDITY_EXECUTION.md",
+      "git_blob_sha": "d8fd7ece02279f0c48797e2fa8811dc8d45312fc"
+    },
+    {
+      "path": "docs/ADR-COMP-009_DEMO_COMPATIBILITY.md",
+      "git_blob_sha": "4ce1c5e18034027432a44b60c8473c796347d3cd"
+    },
+    {
+      "path": "docs/ADR-COMP-010_CAUSAL_FOUR_SYSTEMS.md",
+      "git_blob_sha": "93d23b5f6a0aff0b1229040d1f228ba5e1e6faa7"
+    },
+    {
+      "path": "docs/ADR-JAM-001.md",
+      "git_blob_sha": "0e2c21abcc47169bc88b9086b709a2e69a23dfeb"
+    },
+    {
+      "path": "docs/ADR-JAM-002.md",
+      "git_blob_sha": "cb22618af0733b5850229e35e43d081eeac6f8d4"
+    },
+    {
+      "path": "docs/AI_CRYPTO_TRADING_BOT_RESEARCH.md",
+      "git_blob_sha": "87e708084163486ad02ff47c2a9b9bf95fef4076"
+    },
+    {
+      "path": "docs/BASELINE_RESULTS_V0_1.md",
+      "git_blob_sha": "e129c94d94c437035d446b957b3fb9b24a3585ab"
+    },
+    {
+      "path": "docs/BINANCE_1H_DATA_GATE.md",
+      "git_blob_sha": "95836d8337dbf84bdaefc2423ce3b82adb5e6967"
+    },
+    {
+      "path": "docs/BOOK_INTEGRATION_MATRIX.md",
+      "git_blob_sha": "0fa9204d226e5c0c87598990e22243ede3cb41b2"
+    },
+    {
+      "path": "docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md",
+      "git_blob_sha": "ef751ba1ac93363f9fff1b27fd23739c6f453a80"
+    },
+    {
+      "path": "docs/CHAPTER4_RESULTS_MASTER_DRAFT.md",
+      "git_blob_sha": "191431590dbbcd538803efe0fb8bd091c5262768"
+    },
+    {
+      "path": "docs/COLAB_AUDIT_2026-09-06.md",
+      "git_blob_sha": "da8422537d0710eb1e890a33ef6ba3fd0bf15a2f"
+    },
+    {
+      "path": "docs/COMPLETE_DEMO_BOT_AUDIT_AND_MIGRATION.md",
+      "git_blob_sha": "9fc70e7c3a631f96f64a1aa2b56aef65143a48a2"
+    },
+    {
+      "path": "docs/COMPLETION_LAYER_ADRS.md",
+      "git_blob_sha": "754593650951051070f895ce6be5d5da539eea90"
+    },
+    {
+      "path": "docs/COMPLETION_LAYER_AUDIT_AND_MIGRATION.md",
+      "git_blob_sha": "ad85a8d05807ccdae99b969717bf84c2920a5c2e"
+    },
+    {
+      "path": "docs/DATA_SOURCES_V03.md",
+      "git_blob_sha": "83e85adcab669deef24d8d6db8e1c7860e16c316"
+    },
+    {
+      "path": "docs/DEFENSE_EVIDENCE_INDEX.md",
+      "git_blob_sha": "bdd655166fce53c626e8a52c19b4707e23ab0e58"
+    },
+    {
+      "path": "docs/ENGINEERING_WORKSHOP_AUDIT_2026-09-13.md",
+      "git_blob_sha": "c5674a231f9b5a225af0aede38228c76927379d6"
+    },
+    {
+      "path": "docs/EVIDENCE_TO_IMPLEMENTATION.md",
+      "git_blob_sha": "2e0b033c26d0e04337db713021ceec78e482315c"
+    },
+    {
+      "path": "docs/FINAL_SYSTEM_STATUS_V1.md",
+      "git_blob_sha": "75458fbc33417f9dc673bf5f52e47a307cd3ee2d"
+    },
+    {
+      "path": "docs/FOUR_SYSTEMS_LITERATURE_AND_UPGRADE.md",
+      "git_blob_sha": "d7543ef135dc5f46ae737f47fec9b3737e77dedc"
+    },
+    {
+      "path": "docs/FOUR_SYSTEMS_SOURCE_CATALOG.csv",
+      "git_blob_sha": "dc896d36a30ddbf71ae6f58c93d6b4d7d66e90ac"
+    },
+    {
+      "path": "docs/JAMALIAN_INTEGRATION_PROMPT.md",
+      "git_blob_sha": "ff4fb06dd00c83d04401f5e7a91f2626cfff6d86"
+    },
+    {
+      "path": "docs/JAMALIAN_INTEGRATION_REPORT.md",
+      "git_blob_sha": "0263a4d5ae06f6169fa8e41a1dff211f0d7e83cc"
+    },
+    {
+      "path": "docs/JAMALIAN_V3_REVIEW.md",
+      "git_blob_sha": "4673ba9421430f24d4617c39c2cf65514756de1f"
+    },
+    {
+      "path": "docs/LIVE_EXECUTION_INTEGRATION_2026-10-05.md",
+      "git_blob_sha": "9ac0b4cb36e496d2b6e88a0203cfe13cc62021e7"
+    },
+    {
+      "path": "docs/NOBITEX_TESTNET_INTEGRATION_RUNBOOK_2026-10-05.md",
+      "git_blob_sha": "4f9efa57601e79173a2b574ff854e916030d71d6"
+    },
+    {
+      "path": "docs/OKX_DEMO_INTEGRATION_RUNBOOK_2026-10-05.md",
+      "git_blob_sha": "218581c3c3a171da9a938d38520e491f6193dc82"
+    },
+    {
+      "path": "docs/PROJECT_STATUS_2026-09-11.md",
+      "git_blob_sha": "a6f6409bfd5b68140ada718c8f028b34e8037ba1"
+    },
+    {
+      "path": "docs/RESEARCH_CHANGELOG.md",
+      "git_blob_sha": "aca03c621f02be9e27b9ef4769e8fdcb5cd0e052"
+    },
+    {
+      "path": "docs/RESEARCH_STATUS.md",
+      "git_blob_sha": "9dfbe67dd201b077993985652fd24197fef8ea9f"
+    },
+    {
+      "path": "docs/RESEARCH_TRACEABILITY_MATRIX.md",
+      "git_blob_sha": "022a88c5e61baf775666b118a15a909031892901"
+    },
+    {
+      "path": "docs/RESULTS_V02_2026-09-06.md",
+      "git_blob_sha": "16460e145196ac581193c87b73653119d0b64606"
+    },
+    {
+      "path": "docs/RESULTS_V03_DEEP_2026-09-06.md",
+      "git_blob_sha": "86b25e80b76a06758fdd4a8ef6b1e9dd83d7b6bc"
+    },
+    {
+      "path": "docs/SEO_DISCOVERY_GUIDE.md",
+      "git_blob_sha": "1872e91d6535495e81436bf0d05c84ac1f161889"
+    },
+    {
+      "path": "docs/STEP3_ENGINEERING_PROMPT.md",
+      "git_blob_sha": "411f879cce73f98f52179a5b35fa81d6e4eb4203"
+    },
+    {
+      "path": "docs/THINK_TANK_DECISION_2026-10-05.md",
+      "git_blob_sha": "0010b4bc2f1f8e745f760f54f41afd8d37f02835"
+    },
+    {
+      "path": "docs/V04_METHOD.md",
+      "git_blob_sha": "c929a56cfe611982387325b4396076fce7b2e1b3"
+    },
+    {
+      "path": "docs/V05_RESEARCH_BASIS.md",
+      "git_blob_sha": "731e0c1f39a7a7bc8410462c63c2f3c401acf5af"
+    },
+    {
+      "path": "docs/V08_ADVANCED_RESEARCH_INTEGRATION.md",
+      "git_blob_sha": "3d2ecb1508dff19fd57803ff162b201930d1eb8b"
+    },
+    {
+      "path": "docs/V10_OOS_TOURNAMENT_RESULTS_2026-09-08.md",
+      "git_blob_sha": "11a2657168e7645a0b1adae1118c4041ee372158"
+    },
+    {
+      "path": "docs/V11_ROBUSTNESS_PROTOCOL.md",
+      "git_blob_sha": "92b5540c6ea707e8890b99c03096f3f0e3dfaf49"
+    },
+    {
+      "path": "docs/V11_ROBUSTNESS_RESULTS_2026-09-09.md",
+      "git_blob_sha": "d0f91d3d3d4692351110f5606a9afc8e014a562d"
+    },
+    {
+      "path": "docs/V12_DERIVATIVES_EXTERNAL_HOLDOUT_PROTOCOL.md",
+      "git_blob_sha": "c8698a466590c77be685aca8e5acb8066b6ea0be"
+    },
+    {
+      "path": "docs/V12_DERIVATIVES_EXTERNAL_HOLDOUT_RESULTS_2026-09-09.md",
+      "git_blob_sha": "296d6484984e4aeae26df52038b97bf67e561e5e"
+    },
+    {
+      "path": "docs/V13_FORWARD_MICROSTRUCTURE_PROTOCOL.md",
+      "git_blob_sha": "c8fa7f5ca7304cd6e5d9b1b52bf28eee69ce310e"
+    },
+    {
+      "path": "docs/V14_FORWARD_PAPER_PROTOCOL.md",
+      "git_blob_sha": "380aece8013e7d8517908aaba5486756a010d245"
+    },
+    {
+      "path": "docs/V15_FORWARD_EVIDENCE_INITIAL_RESULTS_2026-09-09.md",
+      "git_blob_sha": "f69c684f744fa5e7dd77887fde41f1cc45d00712"
+    },
+    {
+      "path": "docs/V15_FORWARD_EVIDENCE_PROTOCOL.md",
+      "git_blob_sha": "c20103e949443758942c3fb57c349ee8bcb33918"
+    },
+    {
+      "path": "docs/V16_FORMAL_EVALUATION_RESULTS_2026-09-09.md",
+      "git_blob_sha": "41bbcb21e0a4fde4b2e149f611405b0e9619cfbf"
+    },
+    {
+      "path": "docs/V16_FORMAL_FORWARD_DEFENSE_PROTOCOL.md",
+      "git_blob_sha": "a0fbbec6a0e6c3dd162bd2c7d5aa83a73d9a0f13"
+    },
+    {
+      "path": "docs/V16_FORMAL_FORWARD_INITIAL_RESULTS_2026-09-09.md",
+      "git_blob_sha": "eded5fe1747002c89d534df60ab197deb12451b5"
+    },
+    {
+      "path": "docs/V17_ICHIMOKU_STRATEGY_LAB_PROTOCOL.md",
+      "git_blob_sha": "9d33ac16bc8998a82ac11c23769b0fe814ae3e7d"
+    },
+    {
+      "path": "docs/V17_ICHIMOKU_STRATEGY_LAB_RESULTS_2026-09-09.md",
+      "git_blob_sha": "51f51277043e09840f40746c34ecd4f2aeb2f41b"
+    },
+    {
+      "path": "docs/V17_RESEARCH_GAP_AND_HYPOTHESIS_REGISTER.md",
+      "git_blob_sha": "a072988164f9468359cd0f37ab759a880be3c792"
+    },
+    {
+      "path": "docs/V17_SEARCH_AWARE_STATISTICAL_AUDIT.md",
+      "git_blob_sha": "5aa97290c8995360e38bf3309732028044b1e2cd"
+    },
+    {
+      "path": "docs/V17_THESIS_EVIDENCE_SYNTHESIS.md",
+      "git_blob_sha": "0e2c2af6505858a3e01d6af980d424034a53a37d"
+    },
+    {
+      "path": "docs/V18_COST_AWARE_REGIME_PROTOCOL.md",
+      "git_blob_sha": "24e23fdd3afa85690dab6956feb1215b4a1b1d5a"
+    },
+    {
+      "path": "docs/V18_COST_AWARE_REGIME_RESULTS_2026-09-10.md",
+      "git_blob_sha": "c8576b7e8766957ceb6825ad2d21cf9a76a1c0f3"
+    },
+    {
+      "path": "docs/V18_RESULTS_2026-09-10.md",
+      "git_blob_sha": "c4b9f8edaa7608c086329058a91404ea308cabed"
+    },
+    {
+      "path": "docs/V19_AUDIT_AND_FORWARD_PROTOCOL.md",
+      "git_blob_sha": "dc64b99e4c00b22abb89e5695c7d943f9347a0f7"
+    },
+    {
+      "path": "docs/V19_AUDIT_CORRECTED_RESULTS_2026-09-10.md",
+      "git_blob_sha": "c247eff752cfa416afd0136049d41a916b9c48f8"
+    },
+    {
+      "path": "docs/V19_BUG_AUDIT_FINDINGS.md",
+      "git_blob_sha": "0c9d2c073a900ac8e4b546faba7539ded742a7a7"
+    },
+    {
+      "path": "docs/V19_MULTITIMEFRAME_TOURNAMENT_RESULTS_2026-09-10.md",
+      "git_blob_sha": "c8766637d3b9d91b5e204612360356d7b9b9e197"
+    },
+    {
+      "path": "docs/V19_SOURCE_DERIVED_MULTITIMEFRAME_PROTOCOL.md",
+      "git_blob_sha": "cc53a86df5091520ce116ac36f3058267170998c"
+    },
+    {
+      "path": "docs/V19_TO_V20_RESEARCH_PLAN.md",
+      "git_blob_sha": "2326b0be384dc61e48b04757f0b3609be3718ef5"
+    },
+    {
+      "path": "docs/V1_PRODUCTION_SMOKE_RESULTS_2026-09-09.md",
+      "git_blob_sha": "1839b3779618e29163b52d8cd54c5c5b2f0b402a"
+    },
+    {
+      "path": "docs/V20_PHASE_Q_AUTOMATION_MAP.md",
+      "git_blob_sha": "222032ccff9be8665663a20e28614bdeb1f5a1eb"
+    },
+    {
+      "path": "docs/V20_PHASE_Q_FINAL_CHECKLIST.md",
+      "git_blob_sha": "90d54fcf5e77c4c5d7d8b11668923e129036798e"
+    },
+    {
+      "path": "docs/V20_PHASE_Q_FINAL_PROTOCOL.md",
+      "git_blob_sha": "fb1b272b4936a5e5bef235486909f17de174a8ed"
+    },
+    {
+      "path": "docs/V20_PHASE_Q_IMPLEMENTATION_STATUS.md",
+      "git_blob_sha": "b1cad1ef80209dc6295e88cf9e3941802fc4ea70"
+    },
+    {
+      "path": "docs/V20_PHASE_Q_NEXT_STAGE_BOUNDARY.md",
+      "git_blob_sha": "c0c155600693e7e72069128961dfef620e8f7dba"
+    },
+    {
+      "path": "docs/V20_PHASE_Q_RESEARCH_RATIONALE.md",
+      "git_blob_sha": "f1df2516b41f76d8f8ce674809494324387fbb0f"
+    },
+    {
+      "path": "docs/V20_PHASE_Q_SOURCE_NOTES.md",
+      "git_blob_sha": "7d80c62eff3f2ade9a7680be42bd949628964f69"
+    },
+    {
+      "path": "docs/V25_PROSPECTIVE_LEDGER_ACTIVATION_2026-09-11.md",
+      "git_blob_sha": "7582e48bc3ed27b7d7c3be80c7439cb3539f3394"
+    },
+    {
+      "path": "docs/V51_OVERLAP_CONFLICT_ARBITRATION_PREREGISTRATION.md",
+      "git_blob_sha": "06374b8147b832c1d8b800edfcbfd5a9749b4350"
+    },
+    {
+      "path": "docs/V52_EXECUTION_INTEGRITY_AUDIT_2026-09-13.md",
+      "git_blob_sha": "7656775023e0aa19bd9aa1c9d7dde42578c2d17f"
+    },
+    {
+      "path": "docs/V52_NOBITEX_RECONCILIATION_SPEC_2026-09-13.md",
+      "git_blob_sha": "e607c51a23909a3b9e44f67aa05a174596d2e07e"
+    },
+    {
+      "path": "docs/V52_RISK_CALIBRATED_SEQUENCE_RESEARCH_PLAN.md",
+      "git_blob_sha": "30c6b1c49eec3052582a7ad77a9b1ed656793b6a"
+    },
+    {
+      "path": "docs/_config.yml",
+      "git_blob_sha": "3d6b9d248015cdf6bf31a3aa4eb60a878dc29bea"
+    },
+    {
+      "path": "docs/index.md",
+      "git_blob_sha": "314f2cf6d5c307039f1a0715a6858ffda700a12b"
+    },
+    {
+      "path": "docs/r1/FOUR_SYSTEMS_R1_MANIFEST.json",
+      "git_blob_sha": "14443c03293594b7945d43869db8a1fa649d1dd4"
+    },
+    {
+      "path": "docs/r1/FOUR_SYSTEMS_R1_PROTOCOL.json",
+      "git_blob_sha": "9106dca53066bfec2b096251c821665b454bbd41"
+    },
+    {
+      "path": "docs/r1/FOUR_SYSTEMS_R1_REVIEW.md",
+      "git_blob_sha": "911db15da445dc3adbf1b2c2b15b7862cda915df"
+    },
+    {
+      "path": "docs/r1/FOUR_SYSTEMS_R1_SPECIFICATION.md",
+      "git_blob_sha": "e5bb1599d7d83c8428bd775a0c9b6dc040c95c29"
+    },
+    {
+      "path": "examples/complete_demo_bot/README.md",
+      "git_blob_sha": "163d7227178f394b218f315341c00e12860dd7bc"
+    },
+    {
+      "path": "examples/complete_demo_bot/main.py",
+      "git_blob_sha": "73048dc91ea2c5e139d6a2d207cf939450ab4c2a"
+    },
+    {
+      "path": "notebooks/Research_Bot_v0_1_Colab.ipynb",
+      "git_blob_sha": "00921e6973ef2ad7eadad670155ccd358ae66e05"
+    },
+    {
+      "path": "notebooks/Research_Bot_v0_2_Replication_Colab.ipynb",
+      "git_blob_sha": "ab8295dbc0e0a05ccc0cf96462a16e446f3e5edf"
+    },
+    {
+      "path": "notebooks/Research_Bot_v0_3_Data_Alpha_Colab.ipynb",
+      "git_blob_sha": "b80a0e4523017d6cab8f10204af17f60f845fe9b"
+    },
+    {
+      "path": "notebooks/Research_Bot_v0_4_Alpha_Ablation_Colab.ipynb",
+      "git_blob_sha": "9b34e3448ec21cb95558502ae3e1fe4137dbc76b"
+    },
+    {
+      "path": "notebooks/Research_Bot_v0_5_Regime_Robustness_Colab.ipynb",
+      "git_blob_sha": "987fbd2c3505ae1944ce4bebaaef35f7abc7ce66"
+    },
+    {
+      "path": "notebooks/V19_Audit_Forward_Microstructure_Colab.ipynb",
+      "git_blob_sha": "c59cf9224bf826f97c41c7513e1fa40194c08535"
+    },
+    {
+      "path": "pyproject.toml",
+      "git_blob_sha": "9e3fd4aa0d6df6ff6934b3861a8ae66aa37a639d"
+    },
+    {
+      "path": "railway.toml",
+      "git_blob_sha": "260e097ad6662666b5a1e5ffdd3230f3324a30c2"
+    },
+    {
+      "path": "research_bot/__init__.py",
+      "git_blob_sha": "e3b95222bc1f4ecdcd8412a7ef88584c7b952f3f"
+    },
+    {
+      "path": "research_bot/alpha_ablation.py",
+      "git_blob_sha": "588e26976f36fd547d85a71d35f0c91d3c00607a"
+    },
+    {
+      "path": "research_bot/audit_v19.py",
+      "git_blob_sha": "8bddaa398628e2c29ebfc84fa40fe8c63975cbd7"
+    },
+    {
+      "path": "research_bot/backtest.py",
+      "git_blob_sha": "4d392b81d66b98196d66d61a0404b6a4be2677ae"
+    },
+    {
+      "path": "research_bot/binance_recent.py",
+      "git_blob_sha": "55aba9b0e6fc1f6087ebc493a91b858de20d88d6"
+    },
+    {
+      "path": "research_bot/binance_spot_archive.py",
+      "git_blob_sha": "b54dfcc1312063b95618c974d19117baa3384376"
+    },
+    {
+      "path": "research_bot/binance_vision.py",
+      "git_blob_sha": "8cdf94245b1125e20e8efcdce57a66ce42f3dc15"
+    },
+    {
+      "path": "research_bot/bybit_public.py",
+      "git_blob_sha": "2a3b29a75c74a6851600eede091b3063e0d50a2f"
+    },
+    {
+      "path": "research_bot/coinex_depth.py",
+      "git_blob_sha": "fc7cb18bff686b1fb72be96ffee4339b1665cc95"
+    },
+    {
+      "path": "research_bot/coinex_public.py",
+      "git_blob_sha": "59ef3dc3ab8a53b74b23dec20f2fe362d760deab"
+    },
+    {
+      "path": "research_bot/completion/__init__.py",
+      "git_blob_sha": "aac754f12b5cbc9e0ca8d261ae39547164e19d3b"
+    },
+    {
+      "path": "research_bot/completion/adapters/__init__.py",
+      "git_blob_sha": "49915369281824780f1adc1c2c734044eb008091"
+    },
+    {
+      "path": "research_bot/completion/adapters/bitpin_readonly.py",
+      "git_blob_sha": "7e085df27b61add3956f491e7c4dd15487949711"
+    },
+    {
+      "path": "research_bot/completion/backtest/__init__.py",
+      "git_blob_sha": "24d4e3065c3aee970f6b9a1e096ea06ba4ae1933"
+    },
+    {
+      "path": "research_bot/completion/backtest/graduation.py",
+      "git_blob_sha": "2f38761052613517429da1a150792f9eff618c47"
+    },
+    {
+      "path": "research_bot/completion/backtest/metrics.py",
+      "git_blob_sha": "c7c46868b019a7397aec8b3250dd2a085c534e82"
+    },
+    {
+      "path": "research_bot/completion/backtest/runner.py",
+      "git_blob_sha": "0980e75286ac18de0e2ea59d877149f145b10fe9"
+    },
+    {
+      "path": "research_bot/completion/demo_compat.py",
+      "git_blob_sha": "0c08f92b38716f7efc6d17542347c04c1cb4e2f5"
+    },
+    {
+      "path": "research_bot/completion/execution/__init__.py",
+      "git_blob_sha": "9deefa6c9bdda66a0b469974e675686c970ce1b1"
+    },
+    {
+      "path": "research_bot/completion/execution/cost_preflight.py",
+      "git_blob_sha": "a81c40191d75999e21d730273105cd64e1792a67"
+    },
+    {
+      "path": "research_bot/completion/execution/event_driven_simulator.py",
+      "git_blob_sha": "433a8dd6faa490b8b32888afc9f8090f825be329"
+    },
+    {
+      "path": "research_bot/completion/execution/impact_estimator.py",
+      "git_blob_sha": "a862eed2ede5cee894697e78eca8d0ef1b79728c"
+    },
+    {
+      "path": "research_bot/completion/execution/input_validation.py",
+      "git_blob_sha": "421b79c22fc4743482d729d38c04ac69cbb2e983"
+    },
+    {
+      "path": "research_bot/completion/execution/liquidity_gate.py",
+      "git_blob_sha": "94c512aeecc4f098ff05fa0f6be205280f8591a3"
+    },
+    {
+      "path": "research_bot/completion/execution/multileg.py",
+      "git_blob_sha": "a904014c66e405d13fa340bc975f735baac792c3"
+    },
+    {
+      "path": "research_bot/completion/journal.py",
+      "git_blob_sha": "bc25266ea957e80247b31224e97dd386dfb4b516"
+    },
+    {
+      "path": "research_bot/completion/models.py",
+      "git_blob_sha": "807b2b3943599439bdb46d354cd0162a7a434e40"
+    },
+    {
+      "path": "research_bot/completion/portfolio/__init__.py",
+      "git_blob_sha": "bdb05abcb7447118e4f139ddf5efd439313394d6"
+    },
+    {
+      "path": "research_bot/completion/portfolio/conflict_arbiter.py",
+      "git_blob_sha": "64c6a1937a408d7b53c866528373c5a3dbabc3eb"
+    },
+    {
+      "path": "research_bot/completion/strategies/__init__.py",
+      "git_blob_sha": "04ae4ad866fde086b158c4ca5b1afb83ee7b57e7"
+    },
+    {
+      "path": "research_bot/completion/strategies/bundle.py",
+      "git_blob_sha": "c2400109d9d29f3ded3de176420537f132c47e98"
+    },
+    {
+      "path": "research_bot/completion/strategies/grid_hypothesis.py",
+      "git_blob_sha": "d0a9ffac40bec91cb1bde09af38c5d196ce538d5"
+    },
+    {
+      "path": "research_bot/completion/strategies/triangular_arb_hypothesis.py",
+      "git_blob_sha": "d41e31394f023dff1643fb846f734b925e8aa791"
+    },
+    {
+      "path": "research_bot/contracts.py",
+      "git_blob_sha": "56e3d84ff234b4991c390f6c22a1c245819dd37c"
+    },
+    {
+      "path": "research_bot/cost_regime_v18.py",
+      "git_blob_sha": "4ae99f2353e1c72b78ce3a0c5d9946269a9a2280"
+    },
+    {
+      "path": "research_bot/cross_sectional_v06.py",
+      "git_blob_sha": "6e27b8bbcaf1b2a626c78a2b02a3c604f96ea0fa"
+    },
+    {
+      "path": "research_bot/data.py",
+      "git_blob_sha": "69078065c377bb2427971b7cd82e40a141b4c416"
+    },
+    {
+      "path": "research_bot/decision.py",
+      "git_blob_sha": "060e42085a9d39d0b87a0ff70206d751868463c4"
+    },
+    {
+      "path": "research_bot/deep_models_v52.py",
+      "git_blob_sha": "c02796062856ead6a7c07fbbc6669d2aa911c646"
+    },
+    {
+      "path": "research_bot/derivatives_ablation_v12.py",
+      "git_blob_sha": "cf1de6b1e86b841352fad7e9452182908c4b00d2"
+    },
+    {
+      "path": "research_bot/event_driven_simulator.py",
+      "git_blob_sha": "2d140f4999116cbfed9d5ff176b71d310633341b"
+    },
+    {
+      "path": "research_bot/evidence_ledger_v17.py",
+      "git_blob_sha": "5e432d1dfa69cbfc6bb2c2a046bd5d0d7013373b"
+    },
+    {
+      "path": "research_bot/exchanges/__init__.py",
+      "git_blob_sha": "79bd580916866abac1f382705025621f74a53703"
+    },
+    {
+      "path": "research_bot/exchanges/bitpin_adapter.py",
+      "git_blob_sha": "28e34a5af34b6cbaa1c211ca049ac6a097a9e3f1"
+    },
+    {
+      "path": "research_bot/execution.py",
+      "git_blob_sha": "22c66664435ce0351014d069271ac3dbff8ec099"
+    },
+    {
+      "path": "research_bot/execution_hardening_v52.py",
+      "git_blob_sha": "6a402b620331e50e1d69a9fc171a8ccc2ed8cfbb"
+    },
+    {
+      "path": "research_bot/fast_scanner.py",
+      "git_blob_sha": "343c9e732c583931097aa5ffb9e9f58806184816"
+    },
+    {
+      "path": "research_bot/features.py",
+      "git_blob_sha": "d6458fa90c0b00d0566fe1b40009159d091bf259"
+    },
+    {
+      "path": "research_bot/formal_forward_v16.py",
+      "git_blob_sha": "f6e7c3d3fc7e94bb19543b23449ef6f6e672b280"
+    },
+    {
+      "path": "research_bot/forward_candidate_v17.py",
+      "git_blob_sha": "625b841f3a80b77feb312a63e519d1711d7cd265"
+    },
+    {
+      "path": "research_bot/forward_evidence_v15.py",
+      "git_blob_sha": "2afd2edc0308a285a61eb293251aae1db6b1a849"
+    },
+    {
+      "path": "research_bot/forward_microstructure_v19.py",
+      "git_blob_sha": "16de89605c962ee1a4f58b2745eee0c5ccb61ac4"
+    },
+    {
+      "path": "research_bot/forward_paper_v14.py",
+      "git_blob_sha": "3f73c17f32fc5dcb9a80fa3610a5550fa6860fcb"
+    },
+    {
+      "path": "research_bot/four_systems/__init__.py",
+      "git_blob_sha": "5e7e545f7a9d9d90f5df606467d0755385d9a5cd"
+    },
+    {
+      "path": "research_bot/four_systems/binance_history.py",
+      "git_blob_sha": "853ffc374672e11f9e7ae7f43976919cfcbf1d13"
+    },
+    {
+      "path": "research_bot/four_systems/experiment.py",
+      "git_blob_sha": "3d074450d372c67362d80de9c97313fa871b7fd4"
+    },
+    {
+      "path": "research_bot/four_systems/features.py",
+      "git_blob_sha": "236c742606c8a9571c9cab0e0820b254c9994fea"
+    },
+    {
+      "path": "research_bot/four_systems/hypotheses.py",
+      "git_blob_sha": "41d5b4a96e8a4d97451441761c31ac2c47354248"
+    },
+    {
+      "path": "research_bot/four_systems/risk.py",
+      "git_blob_sha": "e79519f78c45aafb189b4a673d7cfd944a34d114"
+    },
+    {
+      "path": "research_bot/hpt_data.py",
+      "git_blob_sha": "5f505a78466b09e57c0fd7bc0fb7689c8893f60c"
+    },
+    {
+      "path": "research_bot/hypothesis.py",
+      "git_blob_sha": "8121fd4f539b7b7d887756a2d04e96ad36052240"
+    },
+    {
+      "path": "research_bot/hypothesis_adapter.py",
+      "git_blob_sha": "4d7b3e28b5fd74842fc186a1d5ccb44722e2a633"
+    },
+    {
+      "path": "research_bot/ichimoku_advanced.py",
+      "git_blob_sha": "f1534f509e3c836e1deab14caef4ff7755ad1830"
+    },
+    {
+      "path": "research_bot/integrity_v19.py",
+      "git_blob_sha": "bbd01fb18e6161d0c383007379d1e00e9e85fcc8"
+    },
+    {
+      "path": "research_bot/jamalian_data.py",
+      "git_blob_sha": "3610c1007d6b812a6834f276d1cdc6de9f35d082"
+    },
+    {
+      "path": "research_bot/jamalian_integration.py",
+      "git_blob_sha": "ea4f05deb2ad94d793bf4204e32b33578cf73a63"
+    },
+    {
+      "path": "research_bot/jamalian_phase_one.py",
+      "git_blob_sha": "bc21f48257361be55c4e156af39b4b39b7d423e9"
+    },
+    {
+      "path": "research_bot/jamalian_validation.py",
+      "git_blob_sha": "39445fc65ece85ad584807340db79643b3ab31f8"
+    },
+    {
+      "path": "research_bot/live_eligibility.py",
+      "git_blob_sha": "7a8a0e07beca04f903a4f5b8092bad0d11298ebc"
+    },
+    {
+      "path": "research_bot/live_readiness.py",
+      "git_blob_sha": "b61b6bdfe54b2100662f16c0925072a51ec55149"
+    },
+    {
+      "path": "research_bot/market_discovery.py",
+      "git_blob_sha": "1e651ec58d77e9b476c5808007e588f3486b0bba"
+    },
+    {
+      "path": "research_bot/microstructure_quality_v19.py",
+      "git_blob_sha": "6fa75fe4a4e328c04e61c537af46082fa27277b7"
+    },
+    {
+      "path": "research_bot/microstructure_v13.py",
+      "git_blob_sha": "b9b52a04eebf9fe91e2d05a20ae0aaffa00d5e68"
+    },
+    {
+      "path": "research_bot/model.py",
+      "git_blob_sha": "7fb2da3bf9c030d317c06310d30f155def7e25a5"
+    },
+    {
+      "path": "research_bot/multitimeframe_strategies_v19.py",
+      "git_blob_sha": "5890428aa1ff8294eb106a9a51d3dc5664ce0c74"
+    },
+    {
+      "path": "research_bot/nobitex_testnet_transport.py",
+      "git_blob_sha": "a8573e42e3a06204cbd5eaf70418cf250e0efbf0"
+    },
+    {
+      "path": "research_bot/okx_demo_transport.py",
+      "git_blob_sha": "62ff08be136ae800ecbb9f583a8639228d406908"
+    },
+    {
+      "path": "research_bot/oos_tournament_v10.py",
+      "git_blob_sha": "6d5a25c98f18de069cdf10f9f023a70d727063e9"
+    },
+    {
+      "path": "research_bot/operational_event_ledger.py",
+      "git_blob_sha": "09f4c9afe5b03759d19a86c0f97bf7b91cc37304"
+    },
+    {
+      "path": "research_bot/orchestrator.py",
+      "git_blob_sha": "cf79e17c627c355e2c991deb752e49cd1c3e4b3a"
+    },
+    {
+      "path": "research_bot/order_reconciliation_v52.py",
+      "git_blob_sha": "12681e9e8123f734da80cccb9fa5cbcc1b6df100"
+    },
+    {
+      "path": "research_bot/orderflow.py",
+      "git_blob_sha": "781c6e76cf92a5a652f17443c080a6ea00b4bbd2"
+    },
+    {
+      "path": "research_bot/overlap_arbitration_v51.py",
+      "git_blob_sha": "8986ab8c6c20af6d4f5c17661d9194674db15262"
+    },
+    {
+      "path": "research_bot/persistence.py",
+      "git_blob_sha": "eb5ce5b6bc0549218e36a78288af3281edb5a289"
+    },
+    {
+      "path": "research_bot/phase_q_v20.py",
+      "git_blob_sha": "ce940ae2b35f6d8ae470bb68e792a18fef07e1ef"
+    },
+    {
+      "path": "research_bot/point_in_time.py",
+      "git_blob_sha": "1b8281c76f3457a3616660a1e952f951442fcbef"
+    },
+    {
+      "path": "research_bot/portfolio_conflict.py",
+      "git_blob_sha": "5bfd55ce39404417419b2ca3bbd9a6c4f869b8de"
+    },
+    {
+      "path": "research_bot/regime.py",
+      "git_blob_sha": "4ab78723b329f3d0c0605525d1d1e3c073c80f02"
+    },
+    {
+      "path": "research_bot/regime_robustness.py",
+      "git_blob_sha": "5d62d3e527bbe47310c0cae3233cd76aba54d63b"
+    },
+    {
+      "path": "research_bot/replication.py",
+      "git_blob_sha": "0f81792a26a6a2d8652220fe311a0f69dca74d8d"
+    },
+    {
+      "path": "research_bot/reproducibility.py",
+      "git_blob_sha": "43b05bf63ab31b56db1baaa9211d76b9bd5deb7d"
+    },
+    {
+      "path": "research_bot/risk.py",
+      "git_blob_sha": "8953675425e53b56189890d55a2df5020d24786c"
+    },
+    {
+      "path": "research_bot/risk_calibration_v52.py",
+      "git_blob_sha": "7cb220922b6093222a66b61d60ffb2f8ccbb7c35"
+    },
+    {
+      "path": "research_bot/robustness_v11.py",
+      "git_blob_sha": "d1782c3454dbb09527db7b6fdc957f272765e517"
+    },
+    {
+      "path": "research_bot/sequence_benchmark_v52.py",
+      "git_blob_sha": "2445b23b38ef3e71be90f7983fd4a50993175bea"
+    },
+    {
+      "path": "research_bot/service.py",
+      "git_blob_sha": "ab788cafae72b21ea82e64eb25e2d262b66c818b"
+    },
+    {
+      "path": "research_bot/strategies/__init__.py",
+      "git_blob_sha": "361cd6d88b4a5df5e5d9e329372bc921599466b4"
+    },
+    {
+      "path": "research_bot/strategies/baselines.py",
+      "git_blob_sha": "92160c2350f527adba300841fb6bf1a476b8564a"
+    },
+    {
+      "path": "research_bot/strategies/jamalian_hypotheses.py",
+      "git_blob_sha": "96e2fb06cd3b37561e00ff85a3a5b1d34c29e53b"
+    },
+    {
+      "path": "research_bot/strategy_lab.py",
+      "git_blob_sha": "bd9c069d0d7b3ee0a67200de7cf134ea3bf131ce"
+    },
+    {
+      "path": "research_bot/testnet_execution.py",
+      "git_blob_sha": "737d9267a1782509d23a9966bdbaf63d362d6c1d"
+    },
+    {
+      "path": "research_bot/training_v52.py",
+      "git_blob_sha": "2f2092eb1e7232d3403f846d93db88330a272d3b"
+    },
+    {
+      "path": "research_bot/trial_registry_v17.py",
+      "git_blob_sha": "4e62a2cf5a06baef164caf0d5cf56876c2cde522"
+    },
+    {
+      "path": "research_bot/universe.py",
+      "git_blob_sha": "d00382d24c9010299fd921d81e92c759614a0e35"
+    },
+    {
+      "path": "research_bot/venue_adapter_v19.py",
+      "git_blob_sha": "79f3980adcf991529ae60e5c21f95f88ebf58079"
+    },
+    {
+      "path": "results/V04_RESULTS_2026-09-06.md",
+      "git_blob_sha": "710f91a451731673ca6b23baf0129de78f769e4d"
+    },
+    {
+      "path": "results/V05_RESULTS_2026-09-06.md",
+      "git_blob_sha": "28bea41978c51bbdd2cb4ed52954d41b4757074e"
+    },
+    {
+      "path": "results/v17/cost_sensitivity.csv",
+      "git_blob_sha": "3ac799a2d7b18fdc9483cdaea9adca7eebd49381"
+    },
+    {
+      "path": "results/v17/irgc_s_events.csv",
+      "git_blob_sha": "98a1b6f087415da747624020abe47f727c0ff21b"
+    },
+    {
+      "path": "results/v17/irgc_s_oos_predictions.csv",
+      "git_blob_sha": "565332f69cb2cfba55d762ab7008de8f746bfbe0"
+    },
+    {
+      "path": "results/v17/latest_paper_candidate.json",
+      "git_blob_sha": "580e9bf194da8c8c713ecb6196384ae63ab411fe"
+    },
+    {
+      "path": "results/v17/rule_strategy_period_summary.csv",
+      "git_blob_sha": "c9aeddc8c93d8c23e18306e2b08dcdbcefd688fd"
+    },
+    {
+      "path": "results/v17/rule_strategy_summary.csv",
+      "git_blob_sha": "4b89b7fa44daa27fec97471e309f458d179c2a1d"
+    },
+    {
+      "path": "results/v17/summary.json",
+      "git_blob_sha": "d1e95ad720357ed80b96051b9ecb8cd23c8c3b88"
+    },
+    {
+      "path": "scripts/__init__.py",
+      "git_blob_sha": "36c9bbd8713bfa3507f85d3a4bae1bdcd01a379e"
+    },
+    {
+      "path": "scripts/build_defense_package_v16.py",
+      "git_blob_sha": "94cada3e2702b372c0e844ea1a2bedfc0653a94b"
+    },
+    {
+      "path": "scripts/build_release_manifest_v1.py",
+      "git_blob_sha": "7872b392491855cf92fca5de947bd825ee507bdc"
+    },
+    {
+      "path": "scripts/build_strategy_lab_report_v17.py",
+      "git_blob_sha": "8d69e92663c8e398efc2132ed0a8a9103ee43366"
+    },
+    {
+      "path": "scripts/collect_binance_archive_2022_2023.py",
+      "git_blob_sha": "5830d5ee18f61352edc2dc0d809f3daaccf844cd"
+    },
+    {
+      "path": "scripts/collect_coinex_history.py",
+      "git_blob_sha": "6b12eeed1e1abbdd9273f65467449cd5d25c7229"
+    },
+    {
+      "path": "scripts/collect_v19_forward_microstructure.py",
+      "git_blob_sha": "637b11f49baaa56a8030ed4297c1d154c35a1519"
+    },
+    {
+      "path": "scripts/download_v15_artifacts.py",
+      "git_blob_sha": "0930c6fdf221d8ede1160f6485e34ade044549b5"
+    },
+    {
+      "path": "scripts/download_v19_forward_artifacts.py",
+      "git_blob_sha": "7b8a0642fd29ae775432d4bb8b70e5bec0b4b619"
+    },
+    {
+      "path": "scripts/evaluate_v19_quality_gate.py",
+      "git_blob_sha": "c30bfac9ddf406f76355f91f80f05d8eb185faf0"
+    },
+    {
+      "path": "scripts/export_production_evidence_v15.py",
+      "git_blob_sha": "215db9cb868114013b15b50feb2c4801e65b0619"
+    },
+    {
+      "path": "scripts/freeze_v52_dataset.py",
+      "git_blob_sha": "77049c81899c3a851f06cda5de862a5048661336"
+    },
+    {
+      "path": "scripts/nobitex_testnet_preflight.py",
+      "git_blob_sha": "8214580051ec8d231cd0a5691b47cdeb237ec56f"
+    },
+    {
+      "path": "scripts/okx_demo_preflight.py",
+      "git_blob_sha": "cb78c8ff26f3619f95052f6656a4f6ddb51826ad"
+    },
+    {
+      "path": "scripts/prepare_binance_1h.py",
+      "git_blob_sha": "675aa45c7b021b76418fb5e437ccc8eaf7b3daf0"
+    },
+    {
+      "path": "scripts/render_v18_results.py",
+      "git_blob_sha": "e757d66d3f044f14da3af8308cea8398aceeb0a5"
+    },
+    {
+      "path": "scripts/run_ablation_v04.py",
+      "git_blob_sha": "acc8d4d2f227e807989bb25ef52d1c9bd7c6d011"
+    },
+    {
+      "path": "scripts/run_alpha_data_v03.py",
+      "git_blob_sha": "7380d935ca2c3cc9c8386b3ac8b796e8c2d2fb90"
+    },
+    {
+      "path": "scripts/run_baseline.py",
+      "git_blob_sha": "f3f44d9466e068fd03eec1a4e9ec0c7f0b1e6919"
+    },
+    {
+      "path": "scripts/run_completion_paper.py",
+      "git_blob_sha": "e9d1fbb8d473b051c98a22a538925f2b865ea904"
+    },
+    {
+      "path": "scripts/run_cross_sectional_v06.py",
+      "git_blob_sha": "d3fb6b6dc5a10573ab5e25d7ba5cf208f0a57707"
+    },
+    {
+      "path": "scripts/run_demo_migration.py",
+      "git_blob_sha": "797aa5856f7ad2607b2e11f91e0f42af956c74e9"
+    },
+    {
+      "path": "scripts/run_derivatives_holdout_v12.py",
+      "git_blob_sha": "d131352e6b77b97250a897826a4befe41524e222"
+    },
+    {
+      "path": "scripts/run_dynamic_universe_v08.py",
+      "git_blob_sha": "d5da0bcff6070d920e1b5833c7b769d1e00a13b2"
+    },
+    {
+      "path": "scripts/run_forward_candidate_v17.py",
+      "git_blob_sha": "0c002350f20f991d3150fb89566a2b09a6f52c92"
+    },
+    {
+      "path": "scripts/run_four_systems_research.py",
+      "git_blob_sha": "e31c1d2baa2bb653b3be72483f8540d8d6fa3b34"
+    },
+    {
+      "path": "scripts/run_jamalian_research.py",
+      "git_blob_sha": "8ddeb6a4619f28525017690db6bc92f878023572"
+    },
+    {
+      "path": "scripts/run_live_eligibility_v09.py",
+      "git_blob_sha": "b7088de6aaa14793ca8a33153e0b1620659a3a1c"
+    },
+    {
+      "path": "scripts/run_microstructure_forward_v13.py",
+      "git_blob_sha": "f652dca4b04459f8b7213b5c1dfa61a1cc514a99"
+    },
+    {
+      "path": "scripts/run_oos_tournament_v10.py",
+      "git_blob_sha": "b4aac0a10937e65bb11ec0a14e29456b0b36bd31"
+    },
+    {
+      "path": "scripts/run_phase_q_v20.py",
+      "git_blob_sha": "6fcd10631c4a9f1c254399746c62747ea1aa72eb"
+    },
+    {
+      "path": "scripts/run_regime_v05.py",
+      "git_blob_sha": "2b0c520692c05b4fb0ab49e06e6c68459f80a635"
+    },
+    {
+      "path": "scripts/run_replication_v02.py",
+      "git_blob_sha": "993065149d83aa58d9ae899d453bd6f5e7a5a6ef"
+    },
+    {
+      "path": "scripts/run_research_core_v08.py",
+      "git_blob_sha": "9b8d270510a139ece72e7c784fa8c13876e55726"
+    },
+    {
+      "path": "scripts/run_robustness_v11.py",
+      "git_blob_sha": "8bf62c0b4259f3f24effe0520c912d298a741db4"
+    },
+    {
+      "path": "scripts/run_strategy_lab_v17.py",
+      "git_blob_sha": "087ace7dbe6e704030ffc12e25305e5bbb499eda"
+    },
+    {
+      "path": "scripts/run_v18_cost_regime.py",
+      "git_blob_sha": "ddca7b1ecd62a94778bdc1518ecc1716f80d99fd"
+    },
+    {
+      "path": "scripts/run_v19_audit.py",
+      "git_blob_sha": "ac17c9e934ec38fcbc12f80aef0feed46c8f7487"
+    },
+    {
+      "path": "scripts/run_v19_multitimeframe_tournament.py",
+      "git_blob_sha": "edde28eada263624772d9839b0448712dd326c3f"
+    },
+    {
+      "path": "scripts/run_v52_benchmark.py",
+      "git_blob_sha": "f65a44137b4d8b4c91a2af3c42e3d60543de2f77"
+    },
+    {
+      "path": "scripts/run_v52_deep_benchmark.py",
+      "git_blob_sha": "acef5010f1c1bdfb371579d6b83ea65aa40b2272"
+    },
+    {
+      "path": "scripts/verify_completion_coverage.py",
+      "git_blob_sha": "74a1dea99004d89cf945dc3dea5d8bfdf951eeed"
+    },
+    {
+      "path": "scripts/verify_four_systems_coverage.py",
+      "git_blob_sha": "009f252ee48730ffa9d052abe8101016579e55de"
+    },
+    {
+      "path": "tests/fixtures/complete_demo_bot/original_contracts.py",
+      "git_blob_sha": "30d5fabfd3fef8e4a5fc24d5756fea551e614cbb"
+    },
+    {
+      "path": "tests/fixtures/complete_demo_bot/original_trade_journal.py",
+      "git_blob_sha": "0b582e7945f720f1fadc7620743b7f10ae529821"
+    },
+    {
+      "path": "tests/test_alpha_ablation.py",
+      "git_blob_sha": "0ed3729942e27371849d5866666684dc4b41dcc8"
+    },
+    {
+      "path": "tests/test_alpha_data_v03.py",
+      "git_blob_sha": "4f11a954bde541664bb15c7cc9be5e43a3774cc3"
+    },
+    {
+      "path": "tests/test_audit_v19.py",
+      "git_blob_sha": "dd3959e82ae7ebf075c6acc9317817265dc1512e"
+    },
+    {
+      "path": "tests/test_binance_spot_archive_v17.py",
+      "git_blob_sha": "1efd597d80cd396a8589ec72b720730c70a0cbdf"
+    },
+    {
+      "path": "tests/test_binance_vision.py",
+      "git_blob_sha": "765b579e7589e7372af88320bf2bfe7492230dd4"
+    },
+    {
+      "path": "tests/test_collect_binance_archive.py",
+      "git_blob_sha": "714785baa9566f6a0cc19c635c53c6a79a76c317"
+    },
+    {
+      "path": "tests/test_collect_coinex_history.py",
+      "git_blob_sha": "38106c38bcd0f65dd24dbbaa046ec16b81bc9da3"
+    },
+    {
+      "path": "tests/test_completion_demo_compat.py",
+      "git_blob_sha": "ad79ea2b65e793692f978fa6ded79b645f27f63f"
+    },
+    {
+      "path": "tests/test_completion_execution.py",
+      "git_blob_sha": "022712443d507d26c3c6eed8459fdbb1bb807283"
+    },
+    {
+      "path": "tests/test_completion_microstructure.py",
+      "git_blob_sha": "d9b99174f2406be1e77c1b54b2746b1b66baa8c0"
+    },
+    {
+      "path": "tests/test_completion_orchestrator.py",
+      "git_blob_sha": "ece79599b21e1bd1c3587339166b25925a2e3b86"
+    },
+    {
+      "path": "tests/test_completion_pipeline.py",
+      "git_blob_sha": "2d9d3b94f8ac0ea4231c3937a8be469508a6a0a8"
+    },
+    {
+      "path": "tests/test_completion_strategies.py",
+      "git_blob_sha": "e6ef0a5f4ae3baeffa099404a43d048535585252"
+    },
+    {
+      "path": "tests/test_cost_regime_v18.py",
+      "git_blob_sha": "4bb77d6c37d850abd215b6a889ac3e97317a13bc"
+    },
+    {
+      "path": "tests/test_cross_sectional_v06.py",
+      "git_blob_sha": "6e9af99a620e080b3f147089a69f1c6ccf56e04f"
+    },
+    {
+      "path": "tests/test_derivatives_ablation_v12.py",
+      "git_blob_sha": "745cab7ab9c5f768a2dc0130355a2ff81fa3913d"
+    },
+    {
+      "path": "tests/test_evidence_ledger_v17.py",
+      "git_blob_sha": "e977c5d2496504d5f0ad50505eceebef3ee70bc2"
+    },
+    {
+      "path": "tests/test_execution_hardening_postgres_v52.py",
+      "git_blob_sha": "f5395acbc82477b188ce96487a25a9ebcab183ec"
+    },
+    {
+      "path": "tests/test_execution_hardening_v52.py",
+      "git_blob_sha": "93c2d565e8fc1ed475dd02836c9e6d5a4bcc9514"
+    },
+    {
+      "path": "tests/test_fast_scanner_v08.py",
+      "git_blob_sha": "0a70c2b2439a86783506fd2b2e1ca062eee12de5"
+    },
+    {
+      "path": "tests/test_formal_forward_v16.py",
+      "git_blob_sha": "5290060dd435e708c4006e76bd7354409f3f266d"
+    },
+    {
+      "path": "tests/test_forward_candidate_v17.py",
+      "git_blob_sha": "0978b03de2a59b633b717965db808d90353d9fb1"
+    },
+    {
+      "path": "tests/test_forward_evidence_v15.py",
+      "git_blob_sha": "92dc2c00cd68c52b70a3abadbefc19f416f43015"
+    },
+    {
+      "path": "tests/test_forward_microstructure_v19.py",
+      "git_blob_sha": "81e30624936989865e9c74a9452799a4c6fca1fa"
+    },
+    {
+      "path": "tests/test_forward_paper_v14.py",
+      "git_blob_sha": "98b755b9e75bc95505a1d8b7add3a46feff7bdee"
+    },
+    {
+      "path": "tests/test_four_systems.py",
+      "git_blob_sha": "2cedf6f075bee9fd5752b0e9786a0725fb7876d7"
+    },
+    {
+      "path": "tests/test_four_systems_binance.py",
+      "git_blob_sha": "b5821a826930790b9eadc90c677cd1e1d3864989"
+    },
+    {
+      "path": "tests/test_hpt_data.py",
+      "git_blob_sha": "baa891da01fa6c43ccafcc696d178eba51453f24"
+    },
+    {
+      "path": "tests/test_jamalian_integration.py",
+      "git_blob_sha": "1579f1a98b1b5addb389d08e33814d8e8bd2c8a7"
+    },
+    {
+      "path": "tests/test_jamalian_phase_one.py",
+      "git_blob_sha": "e98af9db33f0b7c1702911450a963dff70a92d4f"
+    },
+    {
+      "path": "tests/test_jamalian_validation.py",
+      "git_blob_sha": "bdd68679b2def1332692fe8a36db97d9ad2bd229"
+    },
+    {
+      "path": "tests/test_live_eligibility_v09.py",
+      "git_blob_sha": "36416fc55ae967d3e4d330b3ac0b11a17e5491ab"
+    },
+    {
+      "path": "tests/test_live_readiness.py",
+      "git_blob_sha": "339aae01a946dba4f9be5862808f524c766ffcc4"
+    },
+    {
+      "path": "tests/test_market_discovery_v08.py",
+      "git_blob_sha": "00f26f3f1cc65bc08c0d6ad63bcb202f3c7100bd"
+    },
+    {
+      "path": "tests/test_microstructure_quality_v19.py",
+      "git_blob_sha": "2a7d83bad6fb9f0666267dbe4c5107c3631dcba7"
+    },
+    {
+      "path": "tests/test_microstructure_v13.py",
+      "git_blob_sha": "bb9fee3614fb7d861ec281697a5204bc05d9bcb8"
+    },
+    {
+      "path": "tests/test_multitimeframe_strategies_v19.py",
+      "git_blob_sha": "f9f7409954f0d78eea1a6aa83ba15bf4ed6269dc"
+    },
+    {
+      "path": "tests/test_nobitex_testnet_transport.py",
+      "git_blob_sha": "f6352308f04f0aa460a9373dd48d77fc76e4e497"
+    },
+    {
+      "path": "tests/test_okx_demo_transport.py",
+      "git_blob_sha": "7a039e0ea08ccf0ad7fa018684fccc3dee2a7836"
+    },
+    {
+      "path": "tests/test_oos_tournament_v10.py",
+      "git_blob_sha": "31f5e9d6e73f44ac315f41266cc67f6685c0e159"
+    },
+    {
+      "path": "tests/test_order_reconciliation_v52.py",
+      "git_blob_sha": "457e9f960e920fee51dc8654cdadd873a395a2b5"
+    },
+    {
+      "path": "tests/test_overlap_arbitration_v51.py",
+      "git_blob_sha": "a2f04aa7d678d9d57eb1160ff7b9b1d334dbe1d1"
+    },
+    {
+      "path": "tests/test_phase_q_v20.py",
+      "git_blob_sha": "894a476b96caedcce09d2df0c69d5873cc1af460"
+    },
+    {
+      "path": "tests/test_pipeline.py",
+      "git_blob_sha": "d016031224ad751212f358ec3103d92fd6298b88"
+    },
+    {
+      "path": "tests/test_regime_v05.py",
+      "git_blob_sha": "99b036a3644e9d52365f56107a5feec953d155e5"
+    },
+    {
+      "path": "tests/test_replication_v02.py",
+      "git_blob_sha": "8c9844c2fa4735dc8afee22331946a298c9e0e72"
+    },
+    {
+      "path": "tests/test_risk_calibration_v52.py",
+      "git_blob_sha": "851137fcfe411cb05d0c8dc0657128bcb0c7c7aa"
+    },
+    {
+      "path": "tests/test_robustness_v11.py",
+      "git_blob_sha": "f4ea7658b2be50d768c3597aa6ce5fa4b421233a"
+    },
+    {
+      "path": "tests/test_sequence_benchmark_v52.py",
+      "git_blob_sha": "575690d1ed5593faa6088ea27189b8f9cacc1278"
+    },
+    {
+      "path": "tests/test_service_v1.py",
+      "git_blob_sha": "b13e9224f69fb9de422e611c8e9d7ba548a64ce6"
+    },
+    {
+      "path": "tests/test_strategy_lab_v17.py",
+      "git_blob_sha": "15cb72b69af066d35119a40dcb4ab188cdb65fac"
+    },
+    {
+      "path": "tests/test_testnet_execution.py",
+      "git_blob_sha": "2654cfb5c210b40ae7600ceb644056550e4b97ac"
+    },
+    {
+      "path": "tests/test_trade_timestamp_v19.py",
+      "git_blob_sha": "56abe139f21af06d6c9746c9f356a0a14f257987"
+    },
+    {
+      "path": "tests/test_trial_registry_v17.py",
+      "git_blob_sha": "b530c0ba7dbfe5e6b18cd2c8b85ef92d818fb98c"
+    },
+    {
+      "path": "tests/test_v08_orchestrator.py",
+      "git_blob_sha": "ee8c593893c08b02791b83f6ec733caa94d46e81"
+    },
+    {
+      "path": "tests/test_v08_research_core.py",
+      "git_blob_sha": "d0d4e6453e931c9889b9552851d914fb53d57381"
+    },
+    {
+      "path": "tests/test_v08_service.py",
+      "git_blob_sha": "afb04beb0299430d2eb20e58a15ca455f0b98cba"
+    },
+    {
+      "path": "tests/test_v19_collector_helpers.py",
+      "git_blob_sha": "2bef7115ccc2c7c9c65c43f09338edf7acc658e0"
+    }
+  ],
+  "local_python_modules_parsed": 104,
+  "local_python_lines": 17224
+}
