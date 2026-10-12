@@ -121,6 +121,18 @@ python -m pip install -e '.[deep]'
 python -m pip install -e '.[rl]'
 ```
 
+An independent offline PPO + LSTM challenger combines causal Ichimoku,
+SMC/Brooks-inspired proxies and explicitly named signed candle volume. It has
+next-open accounting, historical CVaR sizing, train-only scaling and expanding
+walk-forward comparisons against cash and buy-and-hold. See the
+[Persian execution guide and research limits](docs/ENSEMBLE_RL_CHALLENGER_FA.md).
+This addition is an unvalidated challenger and does not change promotion or
+execution permissions.
+
+```bash
+python -m research_bot.ensemble_rl --synthetic-bars 800 --initial-train-bars 300 --test-bars 100 --folds 3 --timesteps 128 --seeds 42 --output artifacts/ensemble-smoke
+```
+
 ## Reproducibility rule
 
 Every promotable experiment preserves source SHA, frozen hypothesis/config, data provenance, dependency environment, dataset/artifact fingerprints, validation-only selection logic, fresh evaluation evidence, cost/risk assumptions, machine-readable decision output and explicit PAPER/LIVE authorization flags.
