@@ -12,6 +12,7 @@ dependencies = [
   "ccxt==4.5.77",
   "numpy>=1.26,<3",
   "pandas>=2.2,<4",
+  "pydantic>=2.7,<3",
   "scikit-learn>=1.5,<2",
   "fastapi>=0.115,<1",
   "uvicorn[standard]>=0.30,<1",

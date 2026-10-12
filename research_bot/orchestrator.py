@@ -2,11 +2,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
+from typing import Mapping, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .completion.backtest.runner import BacktestRunner
+    from .completion.journal import TradeJournal
+    from .completion.models import CompletionPolicy
+    from .completion.strategies.bundle import StrategyBundle
 
 from .contracts import Decision, EvidenceStamp, SignalEvidence
 from .decision import DecisionEngine
 from .execution import ExecutionFill, ExecutionRequest, OrderSide, PaperExecutionEngine
 from .risk import RiskDecision, RiskEngine, RiskSnapshot
+from .jamalian_data import available
+from .hypothesis import HypothesisCandidate
+from .hypothesis_adapter import evaluate_hypothesis
 
 
 @dataclass(frozen=True)
@@ -35,6 +46,51 @@ class ResearchTradingOrchestrator:
         self.decision_engine = decision_engine or DecisionEngine()
         self.risk_engine = risk_engine or RiskEngine()
         self.execution_engine = execution_engine or PaperExecutionEngine()
+
+    def process_candidate(
+        self, candidate: HypothesisCandidate, *, risk_snapshot: RiskSnapshot | None = None,
+    ) -> PipelineOutcome:
+        """Phase-one hypothesis -> existing decision engine -> research abstention."""
+        signal = evaluate_hypothesis(candidate, self.decision_engine)
+        return self.process_hypothesis(signal, risk_snapshot=risk_snapshot)
+
+    def create_completion_runner(
+        self, *, journal: TradeJournal, strategies: StrategyBundle,
+        balances: Mapping[str, Decimal], policy: CompletionPolicy,
+        quote_currency: str = "USDT", periods_per_year: int = 365 * 86400,
+    ) -> BacktestRunner:
+        """Compose the explicitly authorized independent offline PAPER layer.
+
+        This runner owns its own canonical DecisionEngine/risk constraints and
+        journal namespace. Existing forecast/hypothesis paths retain their gates.
+        No scenario forecast is promoted into the original execution engine.
+        """
+        from .completion.backtest.runner import BacktestRunner
+        return BacktestRunner(journal, strategies, balances, policy, quote_currency, periods_per_year)
+
+    def process_hypothesis(
+        self, signal: SignalEvidence, *, risk_snapshot: RiskSnapshot | None = None,
+    ) -> PipelineOutcome:
+        """Inspect an unvalidated research hypothesis without invoking execution.
+
+        Forecast promotion is a separate experiment. Candidate direction and
+        scenario profits must never be passed to ``process_forecast`` as a
+        calibrated expected return.
+        """
+        if (signal.decision is not Decision.NO_TRADE or signal.confidence != 0.0
+                or any(value != 0.0 for value in (signal.expected_return, signal.expected_cost,
+                    signal.risk_penalty, signal.uncertainty_penalty))
+                or signal.metadata.get("research_status") != "HYPOTHESIS"
+                or signal.metadata.get("execution_authorized") is not False
+                or signal.metadata.get("eligible_for_v51") is not False
+                or signal.metadata.get("forecast_available") is not False
+                or not signal.evidence):
+            raise ValueError("unvalidated hypothesis must remain non-actionable")
+        for stamp in signal.evidence:
+            available(stamp, signal.timestamp)
+        risk = self.risk_engine.evaluate(risk_snapshot) if risk_snapshot is not None else None
+        return PipelineOutcome(signal=signal, risk=risk, fill=None,
+            status="RESEARCH_ONLY_UNVALIDATED_HYPOTHESIS")
 
     def process_forecast(
         self,

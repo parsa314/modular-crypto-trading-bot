@@ -13,6 +13,31 @@
 
 ## Canonical current state
 
+The uploaded complete_demo_bot now has a verified offline PAPER migration:
+`python -m scripts.run_demo_migration --journal /tmp/demo-migration.sqlite --cycles 80`.
+See [actual-source audit and migration](docs/COMPLETE_DEMO_BOT_AUDIT_AND_MIGRATION.md).
+HPT remains disabled; existing REAL journal tables are a compatibility view of
+the exact namespaced event ledger. No live execution is added.
+
+The owner's 2026-10-11 **Section 2 completion layer** authorizes an independent
+offline PAPER simulator under `research_bot/completion/`. Its four-generator
+synthetic example uses SQLite and has no exchange-order transport. The original
+service and v0.51 execution gates above retain their existing state. Research
+PAPER requires a separate recorded graduation decision; synthetic results cannot
+graduate. See [audit, usage and migration](docs/COMPLETION_LAYER_AUDIT_AND_MIGRATION.md)
+and [architecture decisions](docs/COMPLETION_LAYER_ADRS.md).
+Step 3 now uses a shared 10% displayed-depth budget and 100ms simulated submission
+spacing. These are uncalibrated stress assumptions; corrected Decimal impact and
+spot liquidity preflight are described in
+[ADR-COMP-008](docs/ADR-COMP-008_LOW_LIQUIDITY_EXECUTION.md).
+Use a new journal file when upgrading the execution policy.
+
+```bash
+python -m scripts.run_completion_paper --journal /tmp/completion.sqlite --cycles 80
+python -m scripts.run_completion_paper --journal /tmp/completion.sqlite --cycles 90
+python -m scripts.verify_completion_coverage --output /tmp/completion-coverage.json
+```
+
 Use [`docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md`](docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md) as the current navigation record. It distinguishes:
 
 - the moving default branch and deployment surface;
@@ -96,6 +121,18 @@ Source-derived trading concepts are treated as **hypothesis generators**, never 
 
 ## Research / defense navigation
 
+Jamalian course integration is an independent **HYPOTHESIS / ENGINEERING-ONLY**
+research path. See the [source audit and integration report](docs/JAMALIAN_INTEGRATION_REPORT.md)
+and [revised integration specification](docs/JAMALIAN_INTEGRATION_PROMPT.md).
+The active interface is now the [V3 phase-one correction](docs/JAMALIAN_V3_REVIEW.md):
+immutable hypotheses from MA Cross / RSI / RSI+MA, an abstention adapter, a separate
+operational event ledger and offline capital feasibility arbitration. Advanced
+prototypes are excluded from this interface pending a separate baseline protocol.
+The three phase-one generators emit `HypothesisCandidate`; decision evidence is
+created by the abstention adapter. Earlier engineering prototypes and the offline
+event simulator remain available for regression coverage. The frozen v0.51
+experiment is unchanged; no economic validation or PAPER/LIVE authorization is implied.
+
 - [`AGENTS.md`](AGENTS.md) — repository and execution-governance contract
 - [`docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md`](docs/CANONICAL_RESEARCH_STATUS_2026-09-13.md) — canonical current scientific state
 - [`docs/PROJECT_STATUS_2026-09-11.md`](docs/PROJECT_STATUS_2026-09-11.md) — historical integrated snapshot
@@ -121,7 +158,24 @@ python -m pip install -e '.[deep]'
 python -m pip install -e '.[rl]'
 ```
 
+## Narrow Binance data gate
+
+The [BTC_USDT 1h preparation script and gate](docs/BINANCE_1H_DATA_GATE.md) validates exact closed-bar boundaries, complete pagination and a SHA256 sidecar before research. Historical availability is explicitly modeled, not prospective evidence. Run `python -m scripts.prepare_binance_1h --years 3`, then pass its CSV to `scripts.run_four_systems_research`. Orders remain disabled; DSR/PBO remain NOT_RUN.
+
 ## Reproducibility rule
+
+The independent [four-system causal/calibration challenger](docs/FOUR_SYSTEMS_LITERATURE_AND_UPGRADE.md)
+adds closed 1h/4h Ichimoku, ICT/SMC and Brooks-inspired features, purged chronological
+train/calibration/test ablations, optional training-only PCA and Decimal ES size
+ceilings. It emits hypotheses into the existing research abstention pipeline and
+SQLite journal; this new experiment remains **RESEARCH_ONLY / PAPER_OFF / LIVE_OFF**.
+The [ADR](docs/ADR-COMP-010_CAUSAL_FOUR_SYSTEMS.md) and
+[source audit catalog](docs/FOUR_SYSTEMS_SOURCE_CATALOG.csv) distinguish checked
+methodology from unverified performance claims. Run its offline synthetic example:
+
+```bash
+python -m scripts.run_four_systems_research --journal /tmp/four-system.sqlite --output /tmp/four-system-report.json
+```
 
 Every promotable experiment preserves source SHA, frozen hypothesis/config, data provenance, dependency environment, dataset/artifact fingerprints, validation-only selection logic, fresh evaluation evidence, cost/risk assumptions, machine-readable decision output and explicit PAPER/LIVE authorization flags.
 

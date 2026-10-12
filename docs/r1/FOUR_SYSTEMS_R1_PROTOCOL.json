@@ -1,0 +1,170 @@
+{
+  "schema_version": "FOUR_SYSTEMS_R1_DESIGN_2.0.0",
+  "created_on": "2026-10-12",
+  "status": "DESIGN_SNAPSHOT_PREREGISTRATION_INCOMPLETE",
+  "evidence_state": "ENGINEERING_ONLY",
+  "preregistered": false,
+  "implemented": false,
+  "baseline_source_sha": "a54c94795d29663b043f126920dbb7d6627c1007",
+  "governance": {
+    "RESEARCH_ONLY": true,
+    "PAPER_EXECUTION": false,
+    "LIVE_EXECUTION": false,
+    "FAIL_CLOSED": true,
+    "EVIDENCE_BEFORE_OPINION": true,
+    "frozen_v51_changed": false,
+    "automatic_promotion": false
+  },
+  "scope": {
+    "phase": "R1_DOCUMENTATION_ONLY",
+    "symbol": "BTC_USDT",
+    "base_timeframe": "1h",
+    "higher_context": "DERIVED_COMPLETE_UTC_4h",
+    "detector_version": "2.0.0",
+    "institutional_intent_claim": false
+  },
+  "time_contract": {
+    "timestamp_semantics": "CANONICAL_BAR_CLOSE_UTC",
+    "availability_required": true,
+    "maximum_lag_exclusive_seconds": 3600,
+    "higher_available_at": "MAX_COMPONENT_AVAILABLE_AT",
+    "historical_backfill_prospective": false
+  },
+  "feature_parameters": {
+    "ichimoku": [
+      9,
+      26,
+      52
+    ],
+    "cloud_displacement": 26,
+    "atr_wilder": 14,
+    "swing_radius": 2,
+    "pivot_ties": "REJECT",
+    "ob_lookback": 12,
+    "impulse_prior_body_window": 10,
+    "impulse_strict_multiplier": "2",
+    "zone_age_max_bars": 50,
+    "brooks_ema": 20,
+    "trend_abs_body_min": "0.7",
+    "bull_close_location_min": "0.8",
+    "bear_close_location_max": "0.2",
+    "reversal_abs_body_min": "0.5"
+  },
+  "r3_design": {
+    "task": "BINARY_HORIZON_OUTCOME_NOT_EXECUTABLE_TRADE",
+    "horizon_bars": 4,
+    "embargo_bars": 1,
+    "label_formula": "1 if C[t+4]/C[t]-1 > label_hurdle else 0",
+    "label_hurdle_decimal": "0.0024",
+    "label_hurdle_is_execution_cost": false,
+    "label_available_at": "A[t+4]",
+    "incomplete_horizon": "CENSORED_NOT_NEUTRAL",
+    "same_eligible_cohort_all_variants": true,
+    "split": "EXPANDING_TRAIN_THEN_INDEPENDENT_CALIBRATION_THEN_TEST",
+    "purge": "MAX_TRAIN_LABEL_AVAILABLE_AT < FIRST_CAL_AVAILABLE_AT - 1h; MAX_CAL_LABEL_AVAILABLE_AT < FIRST_TEST_AVAILABLE_AT - 1h",
+    "min_train_events": 300,
+    "min_calibration_events": 1000,
+    "test_events_per_fold": 200,
+    "min_each_train_cal_class": 30,
+    "insufficient_support": "FAIL_NO_FALLBACK",
+    "baseline": {
+      "scaler": "StandardScaler_FIT_TRAIN_ONLY",
+      "classifier": "LogisticRegression",
+      "C": "1",
+      "max_iter": 500,
+      "seed": 2026,
+      "calibration": "Isotonic_FIT_CAL_BLOCK_ONLY",
+      "primary_pca": false
+    },
+    "variants": [
+      "ICHIMOKU",
+      "SMC",
+      "ICT",
+      "BROOKS_OPERATIONAL",
+      "ALL_FOUR",
+      "ALL_FOUR_PCA_95_TRAIN_VARIANCE"
+    ],
+    "primary_variant": "ALL_FOUR",
+    "probability_views": [
+      "RAW",
+      "ISOTONIC"
+    ],
+    "baseline_comparator": "TRAIN_BASE_RATE",
+    "reported_metrics": [
+      "BRIER",
+      "ECE_10_FIXED_BINS",
+      "LOG_LOSS",
+      "RELIABILITY_WITH_COUNTS",
+      "CLASS_COUNTS",
+      "OUT_OF_CALIBRATION_SUPPORT"
+    ],
+    "holdout_retuning": false,
+    "select_winner_from_test": false
+  },
+  "r4_prerequisites": {
+    "status": "NOT_REGISTERED_NOT_IMPLEMENTED",
+    "execution_protocol": null,
+    "declared_fee_model": null,
+    "declared_slippage_model": null,
+    "measured_cost_evidence": null,
+    "entry_rule": "FIRST_OBSERVABLE_EXECUTABLE_PRICE_STRICTLY_AFTER_DECISION_AVAILABILITY_NOT_SAME_CLOSE",
+    "return_matrix": "ALIGNED_NET_EQUITY_RETURNS_WITH_IDLE_PERIODS_ALL_REGISTERED_VARIANTS",
+    "DSR": {
+      "status": "NOT_RUN",
+      "requires": [
+        "NET_EQUITY_RETURN_PATH",
+        "MOMENTS_SAMPLE_SUPPORT",
+        "FULL_PRIOR_SEARCH_ACCOUNTING",
+        "DEPENDENT_TRIAL_POLICY",
+        "TEMPORAL_DEPENDENCE_POLICY",
+        "FROZEN_ACCEPTANCE_THRESHOLDS"
+      ],
+      "proxy_allowed": false
+    },
+    "PBO": {
+      "status": "NOT_RUN",
+      "single_genuinely_unselected_configuration": "NOT_APPLICABLE_ONLY_IF_SEARCH_HISTORY_PROVES_THIS",
+      "requires": [
+        "ALIGNED_MULTI_CONFIGURATION_NET_RETURN_MATRIX",
+        "REGISTERED_BLOCKING_RANKING_TIE_AND_BOUNDARY_POLICIES",
+        "SUFFICIENT_NONDEGENERATE_BLOCKS"
+      ],
+      "accuracy_matrix_allowed": false
+    },
+    "PAPER_graduation": false
+  },
+  "risk": {
+    "max_position_fraction_existing_ceiling_decimal": "0.10",
+    "max_ES_fraction_existing_ceiling_decimal": "0.035",
+    "new_Kelly_allocation": false,
+    "drawdown_limits_changed": false,
+    "portfolio_CVaR_claim": false
+  },
+  "binding": {
+    "experiment_id": null,
+    "data_sha256": null,
+    "dataset_manifest_sha256": null,
+    "inspected_windows_inventory": null,
+    "uninspected_holdout_or_future_first_seen_plan": null,
+    "prospective_start_utc": null,
+    "R2_implementation_sha": null,
+    "execution_protocol_sha256": null,
+    "prior_search_ledger_sha256": null,
+    "registration_evidence": null
+  },
+  "reason_codes": [
+    "PREREGISTRATION_INCOMPLETE",
+    "UNBOUND_DATA_IDENTITY",
+    "UNVERIFIED_AVAILABILITY",
+    "UNKNOWN_INSPECTED_WINDOWS",
+    "UNKNOWN_PRIOR_SEARCH_HISTORY",
+    "UNIMPLEMENTED_DETECTOR_V2",
+    "UNREGISTERED_EXECUTION_PROTOCOL",
+    "INSUFFICIENT_CLASS_SUPPORT",
+    "CENSORED_LABEL",
+    "AMBIGUOUS_OHLC_PATH",
+    "DSR_NOT_RUN_NO_RETURN_MATRIX",
+    "PBO_NOT_RUN_NO_REGISTERED_MATRIX"
+  ],
+  "completion_rule": "R1 design can be reviewed; no preregistered result, R2 acceptance, R4 statistic or execution promotion until bindings and prerequisites pass"
+}
