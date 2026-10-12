@@ -61,7 +61,7 @@ Before changing Railway source routing, verify the current Railway service confi
 
 ## 5. Intentional Fail-Closed Behavior
 
-The current deployment is intentionally research-only and fail-closed.
+The owner explicitly authorizes future live trading as of 2026-10-12, subject to the independent scientific and operational promotion gates below. This is an owner permission record, not activation of the current deployment. The current deployment remains research-only and fail-closed.
 
 The following state is intentional unless a later scientific gate explicitly changes it:
 
@@ -70,6 +70,10 @@ The following state is intentional unless a later scientific gate explicitly cha
 - forward-paper execution disabled
 - no exchange-order endpoint enabled
 - Kraken holdout sealed
+
+**OWNER LIVE-TRADING PERMISSION: GRANTED (2026-10-12). اجازه مالک برای معامله زنده صادر شده است.** This permission replaces the previous assumption that no owner consent exists. It does NOT establish scientific promotion, deployed execution readiness, or permission to bypass safety checks.
+
+**RUNTIME ORDER PERMISSION: STILL BLOCKED.** Keep `LIVE_EXECUTION=false` and `PAPER_EXECUTION=false` until a separate reviewed change confirms validated real data, model promotion, unified risk constitution, kill-switch, idempotent OMS, reconciliation, exchange-specific preflight and narrowly scoped deployment authorization.
 
 A missing or locked execution endpoint is **not automatically a bug**. Inspect the actual source and scientific gate before attempting to change such behavior.
 
