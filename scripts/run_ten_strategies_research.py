@@ -15,8 +15,11 @@ from scripts.run_four_systems_research import synthetic_bars
 
 def run(csv: Path | None,output: Path,journal_path: Path,synthetic: bool=False) -> dict:
     if (csv is None)==(not synthetic):raise ValueError("choose explicit synthetic or an existing CSV")
-    if not synthetic and (csv is None or not csv.is_file()):
-        raise ValueError(f"HISTORICAL_INPUT_NOT_FOUND: {csv}")
+    if not synthetic:
+        if csv is None or not csv.is_file():
+            raise ValueError(f"HISTORICAL_INPUT_NOT_FOUND: {csv}")
+        if csv.stat().st_size == 0:
+            raise ValueError(f"HISTORICAL_INPUT_EMPTY: {csv}")
     config=TenConfig();frame=synthetic_bars() if synthetic else read_research_csv(csv)
     source=Path(__file__).resolve().parents[1]/"research_bot"/"ten_strategies"
     identities={p.name:sha256(p.read_bytes()).hexdigest() for p in sorted(source.glob("*.py"))}
