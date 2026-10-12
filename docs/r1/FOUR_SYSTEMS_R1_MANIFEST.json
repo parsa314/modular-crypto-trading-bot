@@ -6,9 +6,9 @@
   "attachment_sha256": "12501858a2354e37992742465ef11d9d6e3fb4ded42464fdccbb95c288ada74d",
   "hash_semantics": "SHA256 exact UTF-8 file bytes; content identity only, not proof of preregistration time, observed availability or scientific acceptance",
   "files_sha256": {
-    "docs/r1/FOUR_SYSTEMS_R1_SPECIFICATION.md": "511ef9a2208107aff9baebd6aa8ac96be87e37e4b0bb25895d335961bec72778",
-    "docs/r1/FOUR_SYSTEMS_R1_REVIEW.md": "0255f225f93af2045acedef0bf8a2ae5237e800d15a0c2f3b4e45073a431b657",
-    "docs/r1/FOUR_SYSTEMS_R1_PROTOCOL.json": "f7cdee4946501ddc15b230e7e8112bca5414e6df08f77f3cc3201a04aa8b6af6"
+    "docs/r1/FOUR_SYSTEMS_R1_SPECIFICATION.md": "4dcb0ae4bcdeb14baee1961bbd479e3e01c97070d83aa174ddbf5c1559bb58ea",
+    "docs/r1/FOUR_SYSTEMS_R1_REVIEW.md": "283c7507bcb7d32c4b4aa0293a0e40b6df38a48fb35c32b07a9f5c7c90bac1ea",
+    "docs/r1/FOUR_SYSTEMS_R1_PROTOCOL.json": "3245a6c9894306f555665821ec1c5a7e74f57cd1a832b36551d03d1e226abf18"
   },
   "read_only_reproduction": {
     "negative_shift_prefix_before": false,
@@ -29,5 +29,6 @@
     "production_code_changed": false,
     "new_R2_acceptance_tests_run": false,
     "economic_statistics_run": false
-  }
+  },
+  "prepared_on": "2026-10-12"
 }

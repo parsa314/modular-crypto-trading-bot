@@ -1,6 +1,6 @@
 # Four-systems R1: operational specification snapshot 2.0.0
 
-Date: 2026-10-11. Evidence state: ENGINEERING_ONLY. Status: DESIGN_SNAPSHOT / PREREGISTRATION_INCOMPLETE.
+Date: 2026-10-12. Reference baseline: 2026-10-11. Evidence state: ENGINEERING_ONLY. Status: DESIGN_SNAPSHOT / PREREGISTRATION_INCOMPLETE.
 Baseline inspected: a54c94795d29663b043f126920dbb7d6627c1007.
 This document specifies a future R2 implementation; it does not describe new implemented code or certify thesis evidence. Existing v1 code, models, evidence, contracts, risk ceilings and execution flags remain unchanged. The four definitions below are project operational definitions, not universal ICT/SMC/Brooks standards.
 

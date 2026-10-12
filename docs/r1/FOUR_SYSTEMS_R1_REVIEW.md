@@ -1,6 +1,6 @@
 # R1 audit of the supplied attachment and engineering prompt
 
-Date 2026-10-11; ENGINEERING_ONLY; engineering prompt verdict: FAIL_AS_EXECUTABLE_SPECIFICATION.
+Audit date 2026-10-12; attachment reference date 2026-10-11; ENGINEERING_ONLY; engineering prompt verdict: FAIL_AS_EXECUTABLE_SPECIFICATION.
 The attachment SHA256 is 12501858a2354e37992742465ef11d9d6e3fb4ded42464fdccbb95c288ada74d. Its contents reproduce the existing literature audit, not the newly described 2000-2026 comprehensive review. Existing current source is a54c94795d29663b043f126920dbb7d6627c1007. No new historical CSV/report/source package accompanied the claims of 26,280 bars, 5,871 hypotheses or negative mean_net. Those numbers are not independently verified.
 
 ## Confirmed defects and consequences
