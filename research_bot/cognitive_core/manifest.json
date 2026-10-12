@@ -1,0 +1,255 @@
+{
+  "adr_sha256": "2f3cfd341341a05f416eb92d9748df3cd0e51018c6d3dc8d687d4a731a305f27",
+  "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+  "blockers": [
+    "RAW_BYTES_NOT_RECOVERED",
+    "GLOBAL_SEARCH_HISTORY_INCOMPLETE",
+    "FUTURE_COLLECTOR_NOT_DEPLOYED",
+    "POWER_NOT_ESTABLISHED"
+  ],
+  "canonical_file_sha256": {
+    "AGENTS.md": "6460535aef2ffd7b517a6ecb45e8103c4415a9e2405dd111f75e1491123fc498",
+    "research_bot/contracts.py": "a44710bde7240689cd5b7275160b20bf0d138d25007da9d4f4ca5e68df16c968",
+    "research_bot/decision.py": "0e0e4c4d2fe5cf4e50c87ddf7e181daec94e661776eeb856a7b408a8ffd360b1",
+    "research_bot/trial_registry_v17.py": "aec2620d3a3dc5a157a155d8274848df4423f57163a6b092fc82f37dbdb3c549"
+  },
+  "cost_model": {
+    "id": "CC_COST_RT_BPS_v1",
+    "measured": false,
+    "primary_bps": 24,
+    "round_trip_bps": [
+      0,
+      24,
+      36,
+      50
+    ],
+    "stress_bps": 36
+  },
+  "data": {
+    "historical": {
+      "artifact_digest": "sha256:ce9e1863fb830885ff97e4b0cbd77de29610dd4227534dddc161ff4d31b93803",
+      "collected_at": "2026-09-24T18:35:06.424900+00:00",
+      "collector_head_sha": "244ec36aa3bb3c916bf5c79fed4760a51f6dffce",
+      "datasets": [
+        {
+          "compressed_sha256": "4a9efad22062115006ef14104bdb5e9f0ace3a1d4fdcca4d9f671c9c6a85b23c",
+          "file": "BTC_USDT_4h.csv.gz",
+          "first_bar": "2023-09-25T08:00:00+00:00",
+          "frame_sha256": "a69065a3c4af147638e772873ec89c76fc91b7b8c7f06513c017c4a04d66ac20",
+          "gap_count": 0,
+          "last_bar": "2026-09-24T12:00:00+00:00",
+          "market_type": "spot",
+          "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
+          "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY",
+          "research_spent": true,
+          "rows": 6572,
+          "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
+          "symbol": "BTC/USDT",
+          "timeframe": "4h",
+          "venue": "CoinEx"
+        },
+        {
+          "compressed_sha256": "a5239aea670a3f6c477711ec0f612512ec1307ab7419c2ca89702b32dbe494a1",
+          "file": "ETH_USDT_4h.csv.gz",
+          "first_bar": "2023-09-25T08:00:00+00:00",
+          "frame_sha256": "6490cb384b3177b134da440c1480f97b8570a83306162fc02c63a0ec7934eaec",
+          "gap_count": 0,
+          "last_bar": "2026-09-24T12:00:00+00:00",
+          "market_type": "spot",
+          "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
+          "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY",
+          "research_spent": true,
+          "rows": 6572,
+          "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
+          "symbol": "ETH/USDT",
+          "timeframe": "4h",
+          "venue": "CoinEx"
+        },
+        {
+          "compressed_sha256": "3565afdb54fe9a106d8eafac0d3cb5629b5f0d50807d1d9b797967adf8c4f97c",
+          "file": "SOL_USDT_4h.csv.gz",
+          "first_bar": "2023-09-25T08:00:00+00:00",
+          "frame_sha256": "92cb5928a42964d337a4b727b8eb4644a43ca119d722f162dab3442cb37d3c2e",
+          "gap_count": 0,
+          "last_bar": "2026-09-24T12:00:00+00:00",
+          "market_type": "spot",
+          "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
+          "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY",
+          "research_spent": true,
+          "rows": 6572,
+          "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
+          "symbol": "SOL/USDT",
+          "timeframe": "4h",
+          "venue": "CoinEx"
+        },
+        {
+          "compressed_sha256": "ba889e2510dc77400c93fe9a3dbb00f9a567b1444d36b9df1025880e6509fe7a",
+          "file": "XRP_USDT_4h.csv.gz",
+          "first_bar": "2023-09-25T08:00:00+00:00",
+          "frame_sha256": "70088786cd9f355187a2c393c75e11f457f538993bc99239b8af3d2c4fb7d33e",
+          "gap_count": 0,
+          "last_bar": "2026-09-24T12:00:00+00:00",
+          "market_type": "spot",
+          "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
+          "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY",
+          "research_spent": true,
+          "rows": 6572,
+          "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
+          "symbol": "XRP/USDT",
+          "timeframe": "4h",
+          "venue": "CoinEx"
+        },
+        {
+          "compressed_sha256": "f6443903f3dc3c64c263f633d35062dbc06fc09933a3b20bd48c62af66afcef8",
+          "file": "DOGE_USDT_4h.csv.gz",
+          "first_bar": "2023-09-25T08:00:00+00:00",
+          "frame_sha256": "c53b12b6d12540df83a193be2cab50bb57aa95a82c4f23497d233046052a2a35",
+          "gap_count": 0,
+          "last_bar": "2026-09-24T12:00:00+00:00",
+          "market_type": "spot",
+          "pit_status": "CLOSED_OHLCV_TIMESTAMPED",
+          "promotion_role": "HISTORICAL_DEVELOPMENT_VALIDATION_INTERNAL_DIAGNOSTIC_ONLY",
+          "research_spent": true,
+          "rows": 6572,
+          "schema_sha256": "7c8ff83bf7c3c4db3073fcb775822882e7847f6f4f7fb31dde0285fe98815c5a",
+          "symbol": "DOGE/USDT",
+          "timeframe": "4h",
+          "venue": "CoinEx"
+        }
+      ],
+      "pristine_holdout": false,
+      "reason_not_pristine": "The same market tail overlaps prior V54 research evidence; it may be used for V58 development/validation/internal diagnostics but not claimed as untouched promotion evidence.",
+      "research_spent": true,
+      "source": "CoinEx public spot kline API",
+      "source_url": "https://docs.coinex.com/api/v2/spot/market/http/list-market-kline",
+      "split_contract": {
+        "development": {
+          "end": "2025-07-13T08:00:00+00:00",
+          "rows": 3943,
+          "start": "2023-09-25T08:00:00+00:00"
+        },
+        "internal_test_spent": {
+          "end": "2026-09-24T12:00:00+00:00",
+          "promotion_authorized": false,
+          "rows": 1315,
+          "start": "2026-02-17T12:00:00+00:00"
+        },
+        "method": "FROZEN_60_20_20_BY_ROW_ORDER",
+        "source_protocol": "v0.19 TournamentConfig",
+        "validation": {
+          "end": "2026-02-17T08:00:00+00:00",
+          "rows": 1314,
+          "start": "2025-07-13T12:00:00+00:00"
+        }
+      },
+      "workflow_artifact_id": 10826344695,
+      "workflow_artifact_name": "coinex-spot-4h-real-36042192410",
+      "workflow_run_id": 36042192410
+    },
+    "local_raw_verification": "NOT_RUN_BYTES_NOT_RECOVERED",
+    "prohibited_holdouts": [
+      {
+        "bars": 540,
+        "bytes_available": false,
+        "calibration_selection_forbidden": true,
+        "expected_last_bar_close": "2026-12-24T16:00:00+00:00",
+        "feature_selection_forbidden": true,
+        "last_bar_open": "2026-12-24T12:00:00+00:00",
+        "market_type": "spot",
+        "promotion_role": "PRIMARY_PROSPECTIVE_FINAL_TEMPORAL_HOLDOUT",
+        "start_bar_open": "2026-09-25T16:00:00+00:00",
+        "status": "SEALED_FUTURE_NOT_AVAILABLE",
+        "symbols": [
+          "BTC/USDT",
+          "ETH/USDT",
+          "SOL/USDT",
+          "XRP/USDT",
+          "DOGE/USDT"
+        ],
+        "threshold_selection_forbidden": true,
+        "timeframe": "4h",
+        "tuning_forbidden": true,
+        "venue": "CoinEx"
+      },
+      {
+        "policy": "Do not access for tuning. Exact market-symbol mapping and collection manifest require a separate pre-access amendment.",
+        "promotion_role": "SECONDARY_EXTERNAL_VENUE_CHALLENGE",
+        "status": "SEALED_NOT_COLLECTED",
+        "venue": "Kraken"
+      }
+    ],
+    "source_manifest_commit": "3d34adb731e60f001c1fe02cc21957bab0fabcba",
+    "source_manifest_path": "V58_DATA_MANIFEST.json"
+  },
+  "design_status": "FROZEN_BEFORE_BRIDGE",
+  "economic_execution_allowed": false,
+  "evidence_state": "ENGINEERING",
+  "future_window": {
+    "access_policy": "NO_OUTCOME_READ_BEFORE_MATURITY_AND_AUDIT",
+    "assets": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "XRP",
+      "DOGE"
+    ],
+    "bars_per_asset": 900,
+    "collector_active": false,
+    "end_exclusive": "2027-07-29T00:00:00+00:00",
+    "first_seen_max_delay_seconds": 3600,
+    "start_open": "2027-03-01T00:00:00+00:00",
+    "status": "RESERVED_FUTURE_NOT_COLLECTED",
+    "untouchedness": "FUTURE_AT_FREEZE_GLOBAL_ACCESS_AUDIT_REQUIRED",
+    "venue": "CoinEx"
+  },
+  "lineage": {
+    "reviewed_branch_heads": {
+      "research/v51-overlap-arbitration-empirical": "cd897d9ac367e1f3cbead94e720efcaf949093c1",
+      "research/v58-10-confluence-strategies-20261002": "035b826a1c5200cd4310c45b5d6a821e7d0edc37",
+      "research/v58-phase2-event-data-freeze": "3d34adb731e60f001c1fe02cc21957bab0fabcba",
+      "research/v58-phase2a-barrier-freeze": "3a5faf59836e00c1ad26978dd9123839f7ccc682",
+      "research/v59-native-strategies-20261005": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "research/v59-stage6-model-strategy-tournament-20261002": "0cb048deca3abe2a665f51a7005c8ff0e6dc1855"
+    },
+    "v50_prereg": "9b3f8d1bda650cc93af7b6cc69f162ae30d64cac",
+    "v50_scientific": "1dd0b1fe506fc51ceec4ff8934b77090f86b6cc2",
+    "v51_identity": "4838c0d98c408d358929b0767676a5ac024bd8dd",
+    "v51_integrity": "da5dcf5cd3568a92c75871016f000917c9380955",
+    "v51_prereg": "d8ee4576aaf55750dd5910cc0d3b2efcbba3f5b2"
+  },
+  "metrics": {
+    "DSR": "NOT_RUN",
+    "PBO": "NOT_RUN",
+    "mean_net": null,
+    "n_evaluated": 0
+  },
+  "promotion_allowed": false,
+  "schema": "CC_DETECTOR_STUDY_01",
+  "search_history": {
+    "complete_global_history": false,
+    "current_study_economic_trials": 0,
+    "dsr_status": "NOT_RUN_SEARCH_HISTORY_INCOMPLETE",
+    "no_same_test_rescue": true,
+    "planned_primary_variants": 10,
+    "prior_consumed_reports": [
+      "V50 negative mechanism diagnosis",
+      "PR109 development results read during design",
+      "PR89 negative development report read during design"
+    ],
+    "reason": "Stacked prior research contains consumed outcomes; no auditable global total established"
+  },
+  "source_attachment_sha256": "665c0d4d6bdd8d7c54b1db50da97c88c31c063722c9d480111ce36da561a8deb",
+  "strategy_ids": [
+    "CC01_S1",
+    "CC01_S2",
+    "CC01_S3",
+    "CC01_S4",
+    "CC01_S5",
+    "CC01_S6",
+    "CC01_S7",
+    "CC01_S8",
+    "CC01_S9",
+    "CC01_S10"
+  ],
+  "version": "1.0.0"
+}
