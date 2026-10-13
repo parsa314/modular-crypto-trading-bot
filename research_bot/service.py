@@ -47,6 +47,22 @@ app = FastAPI(
     ),
 )
 
+# Optional equity research is authenticated and has no exchange execution path.
+if _truthy_env("IRAN_FUNDAMENTAL_ENABLED"):
+    from .iran_fundamental.api import APISettings, build_router
+    from .iran_fundamental.delivery import GmailAPITransport
+
+    _iran_settings = APISettings(
+        database_path=os.getenv("IRAN_RESEARCH_DB", ""),
+        api_token=os.getenv("IRAN_RESEARCH_API_TOKEN", ""),
+        recipient=os.getenv("IRAN_RESEARCH_RECIPIENT") or None,
+    )
+    _iran_mail_token = os.getenv("IRAN_GMAIL_ACCESS_TOKEN", "")
+    app.include_router(build_router(
+        _iran_settings,
+        GmailAPITransport(_iran_mail_token) if _iran_mail_token else None,
+    ))
+
 
 def _git_commit() -> str:
     return os.getenv("RAILWAY_GIT_COMMIT_SHA", os.getenv("GITHUB_SHA", "UNKNOWN"))

@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_state": "ENGINEERING_FIXTURE",
+  "issuer": {
+    "issuer_id": "fixture-issuer",
+    "symbol": "آزمون",
+    "name": "شرکت مصنوعی",
+    "industry": "INDUSTRIAL",
+    "share_class": "ORDINARY"
+  },
+  "documents": [
+    {
+      "document_id": "annual-1",
+      "source_url": "https://www.codal.ir/Reports/fixture",
+      "publication_at": "2026-03-01T00:00:00+00:00",
+      "period_start": "2025-01-01",
+      "period_end": "2025-12-31",
+      "scope": "SEPARATE",
+      "report_type": "ANNUAL",
+      "unit": "MILLION_IRR",
+      "raw_text": "دارایی=1000\nبدهی=400\nحقوق=600\nسود=200\nنقد=150\nسهام=100000000\n"
+    }
+  ],
+  "facts": [
+    {
+      "variable": "total_assets",
+      "value": "1000",
+      "document_id": "annual-1",
+      "source_quote": "دارایی=1000",
+      "unit": "MILLION_IRR"
+    },
+    {
+      "variable": "total_liabilities",
+      "value": "400",
+      "document_id": "annual-1",
+      "source_quote": "بدهی=400",
+      "unit": "MILLION_IRR"
+    },
+    {
+      "variable": "total_equity",
+      "value": "600",
+      "document_id": "annual-1",
+      "source_quote": "حقوق=600",
+      "unit": "MILLION_IRR"
+    },
+    {
+      "variable": "attributable_net_income",
+      "value": "200",
+      "document_id": "annual-1",
+      "source_quote": "سود=200",
+      "unit": "MILLION_IRR"
+    },
+    {
+      "variable": "cfo",
+      "value": "150",
+      "document_id": "annual-1",
+      "source_quote": "نقد=150",
+      "unit": "MILLION_IRR"
+    },
+    {
+      "variable": "weighted_average_shares",
+      "value": "100000000",
+      "document_id": "annual-1",
+      "source_quote": "سهام=100000000",
+      "unit": "SHARES"
+    }
+  ]
+}
