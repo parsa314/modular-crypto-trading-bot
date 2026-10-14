@@ -51,10 +51,15 @@ def fetch(month):
     first=int(a.timestamp()*1000)
     last=int(finish.timestamp()*1000)-900000
     count=int((finish-a).total_seconds()/900)
-    if len(frame)!=count or int(t.iloc[0])!=first or int(t.iloc[-1])!=last:
-        raise ValueError(f"MONTH_TIME_BOUNDS_OR_ROWS_INVALID {name}")
-    if not (t.diff().iloc[1:]==900000).all() or not ((frame.close_time-t)==899999).all():
-        raise ValueError(f"MONTH_GAPS_OR_CLOSE_TIME {name}")
+    if len(frame)>count or int(t.iloc[0])<first or int(t.iloc[-1])>last:
+        raise ValueError(f"MONTH_OUT_OF_BOUNDS {name}")
+    if not (t.diff().iloc[1:]>0).all() or not (t.diff().iloc[1:]%900000==0).all():
+        raise ValueError(f"NONMONOTONIC_OR_OFF_GRID_CANDLES {name}")
+    if not (((t-first)%900000)==0).all() or not ((frame.close_time-t)==899999).all():
+        raise ValueError(f"BAD_CLOSE_TIMESTAMP_OR_GRID {name}")
+    missing=int(count-len(frame))
+    if missing:
+        print(f"VERIFIED_ARCHIVE_HAS_GAPS {name} expected={count} observed={len(frame)} missing={missing}",flush=True)
     p=frame[["open","high","low","close","volume"]].astype(float)
     if not np.isfinite(p.to_numpy()).all() or (p[["open","high","low","close"]]<=0).any().any() or (p.volume<0).any():
         raise ValueError(f"NONFINITE_OR_NONPOSITIVE_DATA {name}")
@@ -62,7 +67,7 @@ def fetch(month):
         raise ValueError(f"OHLC_INVARIANT {name}")
     p.insert(0,"timestamp",pd.to_datetime(t,unit="ms",utc=True))
     p.insert(1,"available_at",p.timestamp+pd.Timedelta(minutes=15))
-    proof={"month":month,"url":url,"checksum_url":url+".CHECKSUM","zip_sha256":actual,"rows":count}
+    proof={"month":month,"url":url,"checksum_url":url+".CHECKSUM","zip_sha256":actual,"rows":len(frame),"expected_rows":count,"missing_bars":missing}
     print("VERIFIED_MONTH",month,count,actual,flush=True)
     return p,proof
 
@@ -77,16 +82,20 @@ def main():
             f,record=fetch(f"{year}-{month:02d}")
             parts.append(f);proof.append(record)
     frame=pd.concat(parts,ignore_index=True)
-    if len(frame)!=105216 or frame.timestamp.iloc[0]!=START or frame.available_at.iloc[-1]!=END:
-        raise ValueError("EXPECTED_105216_COMPLETE_BARS_2022_2024")
-    if not frame.timestamp.is_unique or not (frame.timestamp.diff().iloc[1:]==pd.Timedelta(minutes=15)).all():
-        raise ValueError("GAP_OR_DUPLICATE_IN_36_MONTH_SERIES")
+    expected=105216
+    missing=sum(row["missing_bars"] for row in proof)
+    if len(frame)!=expected-missing:
+        raise ValueError("COMPLETE_36_ARCHIVES_NOT_ACCOUNTED_FOR")
+    if not frame.timestamp.is_unique or not (frame.timestamp.diff().iloc[1:]>pd.Timedelta(0)).all():
+        raise ValueError("NONMONOTONIC_OR_DUPLICATE_ALL_MONTHS")
+    if (frame.timestamp.diff().iloc[1:]%pd.Timedelta(minutes=15)!=pd.Timedelta(0)).any():
+        raise ValueError("NON_M15_ALIGNED_INTERVAL")
     args.output.parent.mkdir(parents=True,exist_ok=True)
     frame.to_parquet(args.output,index=False,compression="zstd")
     h=hashlib.sha256(args.output.read_bytes()).hexdigest()
-    manifest={"source":ROOT,"venue":"Binance Spot","symbol":"BTCUSDT","timeframe":"15m","period":"2022-01-01/2024-12-31 UTC","rows":len(frame),"missing_bars":0,"duplicate_bars":0,"output_sha256":h,
+    manifest={"source":ROOT,"venue":"Binance Spot","symbol":"BTCUSDT","timeframe":"15m","period":"2022-01-01/2024-12-31 UTC","rows":len(frame),"expected_rows":expected,"missing_bars":missing,"duplicate_bars":0,"output_sha256":h,
     "publisher_zip_checksums":proof,"license":"Binance Vision CC BY-NC-SA 4.0 (noncommercial research ONLY)","license_url":"https://github.com/binance/binance-public-data/blob/master/TERMS_AND_CONDITIONS.md","candle_available_at":"open + 15min (additional distribution latency unknown)","production_or_live_authorization":False}
     args.manifest.write_text(json.dumps(manifest,indent=2)+"\n")
-    print("VERIFIED_DATASET",json.dumps({"rows":len(frame),"sha256":h,"path":str(args.output)}),flush=True)
+    print("VERIFIED_DATASET",json.dumps({"rows":len(frame),"missing_bars":missing,"sha256":h,"path":str(args.output)}),flush=True)
 
 if __name__=="__main__":main()
