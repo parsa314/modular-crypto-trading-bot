@@ -1,6 +1,6 @@
 """Persistent same-host DEMO order admission circuit breaker.
 
-The SQLite WAL DB *must* be on a single locally lockable shared path for all
+The SQLite transaction DB *must* be on a single locally lockable shared path for all
 workers of one MT5 account. An EXCLUSIVE write transaction is held across one
 broker order submission; this serializes admission between cooperating local
 processes. This is NOT a distributed or cross-machine governor and it cannot
@@ -109,13 +109,21 @@ class PersistentMT5DemoKillSwitch:
         try:
             cx = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
             cx.execute("PRAGMA busy_timeout=10000")
-            cx.execute("PRAGMA journal_mode=WAL")
-            cx.execute(
-                "CREATE TABLE IF NOT EXISTS demo_kill_state ("
-                "account_key TEXT PRIMARY KEY, day_utc TEXT NOT NULL, "
-                "anchor TEXT NOT NULL, consecutive_errors INTEGER NOT NULL DEFAULT 0,"
-                "halted INTEGER NOT NULL DEFAULT 0, reason TEXT NOT NULL DEFAULT '')"
-            )
+            # Initialization itself MUST be serialized. Switching journal
+            # modes from concurrent workers at each connect is unsafe and
+            # fails intermittently with `database is locked`.
+            cx.execute("BEGIN IMMEDIATE")
+            try:
+                cx.execute(
+                    "CREATE TABLE IF NOT EXISTS demo_kill_state ("
+                    "account_key TEXT PRIMARY KEY, day_utc TEXT NOT NULL, "
+                    "anchor TEXT NOT NULL, consecutive_errors INTEGER NOT NULL DEFAULT 0,"
+                    "halted INTEGER NOT NULL DEFAULT 0, reason TEXT NOT NULL DEFAULT '')"
+                )
+                cx.execute("COMMIT")
+            except BaseException:
+                cx.execute("ROLLBACK")
+                raise
             return cx
         except sqlite3.Error as exc:
             raise GlobalDemoHalt("DURABLE_RISK_STORE_UNAVAILABLE") from exc
