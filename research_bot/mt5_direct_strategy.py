@@ -38,6 +38,7 @@ from .multitimeframe_strategies_v19 import (
 )
 from .risk import RiskEngine
 from .mt5_ai_gate import MT5AIGateConfig, evaluate_ai_confirmation
+from .mt5_demo_risk_gate import check_demo_pretrade
 
 
 class MT5DirectStrategyError(RuntimeError):
@@ -55,6 +56,10 @@ class MT5DirectStrategyConfig:
     strategy_name: str
     bars: int = 600
     risk_fraction: float = 0.0025
+    # A verified UTC day-start equity anchor is mandatory for DEMO submission.
+    # Without it, signal inspection stays available but orders fail closed.
+    day_start_equity: float | None = None
+    day_start_date_utc: str | None = None
     min_stop_fraction: float = 0.0005
     journal_path: str = "results/mt5_direct_strategy_journal.jsonl"
     one_bot_position_per_symbol: bool = True
@@ -77,6 +82,11 @@ class MT5DirectStrategyConfig:
             raise ValueError("risk_fraction must be finite")
         if not 0.0 < float(self.risk_fraction) <= 0.01:
             raise ValueError("risk_fraction must be in (0, 0.01]")
+        if self.day_start_equity is not None and (
+            not math.isfinite(float(self.day_start_equity))
+            or float(self.day_start_equity) <= 0
+        ):
+            raise ValueError("day_start_equity must be positive and finite")
         if (
             not math.isfinite(float(self.min_stop_fraction))
             or float(self.min_stop_fraction) <= 0.0
@@ -697,6 +707,40 @@ class DirectMT5StrategyRunner:
             return MT5DirectStrategyOutcome(
                 status="READY_DRY_RUN",
                 reason="valid direct strategy signal; DEMO submission is disabled",
+                strategy_name=self.strategy.name,
+                canonical_symbol=self.config.canonical_symbol,
+                venue_symbol=self.config.venue_symbol,
+                signal_id=sid,
+                signal_time=signal_time,
+                direction=direction,
+                side=side.value,
+                reference_price=reference_price,
+                stop_loss=stop_loss,
+                take_profit=take_profit,
+                requested_quantity=quantity,
+                requested_notional=requested_notional,
+                risk_fraction=self.config.risk_fraction,
+                spread_bps=spread_bps,
+                **ai_fields,
+            )
+
+        # LAST INDEPENDENT VETO before journaling or network submission.
+        # Only a verified same-UTC-day broker equity anchor is admissible.
+        verdict = check_demo_pretrade(
+            equity=equity,
+            day_start_equity=self.config.day_start_equity,
+            day_start_date_utc=self.config.day_start_date_utc,
+            now=datetime.now(timezone.utc),
+            side=side.value,
+            entry_price=reference_price,
+            stop_price=stop_loss,
+            requested_notional=requested_notional,
+            declared_risk_fraction=self.config.risk_fraction,
+        )
+        if not verdict.approved:
+            return MT5DirectStrategyOutcome(
+                status="RISK_REJECTED",
+                reason=";".join(verdict.reasons),
                 strategy_name=self.strategy.name,
                 canonical_symbol=self.config.canonical_symbol,
                 venue_symbol=self.config.venue_symbol,
