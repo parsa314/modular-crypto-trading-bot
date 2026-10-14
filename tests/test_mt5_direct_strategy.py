@@ -397,3 +397,51 @@ def test_direct_strategy_demo_submission_kills_stale_day_anchor(monkeypatch, tmp
     assert outcome.status == "RISK_REJECTED"
     assert outcome.reason == "MISSING_OR_STALE_DAY_START_EQUITY"
     assert executor.executions == []
+
+
+def test_direct_strategy_submission_requires_global_kill_database(monkeypatch, tmp_path):
+    from dataclasses import replace
+
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.generate_direction", fake_signal(1)
+    )
+    executor = FakeExecutor(submission_enabled=True)
+    cfg = replace(config(tmp_path), global_kill_switch_path=None)
+    result = DirectMT5StrategyRunner(executor, cfg).evaluate_once()
+    assert result.status == "RISK_REJECTED"
+    assert "SHARED_DEMO_KILL_DB" in result.reason
+    assert executor.executions == []
+
+
+def test_three_broker_execution_errors_globally_block_other_runners(monkeypatch, tmp_path):
+    """Each signal has a separate idempotency journal; shared kill DB is constant."""
+    from dataclasses import replace
+    from research_bot.mt5_global_demo_kill_switch import PersistentMT5DemoKillSwitch
+
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.generate_direction", fake_signal(1)
+    )
+
+    for i in range(3):
+        executor = FakeExecutor(submission_enabled=True)
+
+        def always_fail(*args, **kwargs):
+            raise RuntimeError("simulated DEMO broker submission error")
+
+        monkeypatch.setattr(executor, "execute", always_fail)
+        cfg = replace(config(tmp_path), journal_path=str(tmp_path / f"error{i}.jsonl"))
+        with pytest.raises(RuntimeError, match="simulated DEMO broker"):
+            DirectMT5StrategyRunner(executor, cfg).evaluate_once()
+
+    snap = PersistentMT5DemoKillSwitch(
+        config(tmp_path).global_kill_switch_path
+    ).snapshot(account_key="UnitTest-Demo:1")
+    assert snap.halted
+    assert snap.consecutive_execution_errors == 3
+
+    subsequent = FakeExecutor(submission_enabled=True)
+    cfg = replace(config(tmp_path), journal_path=str(tmp_path / "after_stop.jsonl"))
+    result = DirectMT5StrategyRunner(subsequent, cfg).evaluate_once()
+    assert result.status == "RISK_REJECTED"
+    assert "THREE_CONSECUTIVE_EXECUTION_ERRORS" in result.reason
+    assert subsequent.executions == []
