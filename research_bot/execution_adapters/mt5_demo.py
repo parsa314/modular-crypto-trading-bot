@@ -371,6 +371,45 @@ class MT5DemoExecutor:
         return out
 
 
+    def bot_open_orders(self) -> list[dict[str, Any]]:
+        """Read ALL current DEMO pending orders owned by this bot magic.
+
+        `orders_get` returning None is a broker-query ERROR and MUST NOT be
+        interpreted as an empty book after a disconnect.
+        """
+        if not self._connected:
+            raise MT5DemoSafetyError("MT5_DEMO_NOT_CONNECTED")
+        self._assert_demo_account()
+        mt5 = self._module()
+        rows = mt5.orders_get()
+        if rows is None:
+            raise MT5DemoExecutionError(
+                f"orders_get unavailable: {self._last_error()}"
+            )
+        allowed = set(str(s) for s in self.config.symbol_map.values())
+        result: list[dict[str, Any]] = []
+        for item in rows:
+            symbol = str(getattr(item, "symbol", "") or "")
+            magic = int(getattr(item, "magic", 0) or 0)
+            if magic == int(self.config.magic):
+                if symbol not in allowed:
+                    raise MT5DemoSafetyError(
+                        "BOT_OWNED_PENDING_ORDER_OUTSIDE_SYMBOL_ALLOWLIST"
+                    )
+                ticket = int(getattr(item, "ticket", 0) or 0)
+                if ticket <= 0:
+                    raise MT5DemoExecutionError("BROKER_ORDER_HAS_INVALID_TICKET")
+                result.append({
+                    "ticket": ticket,
+                    "symbol": symbol,
+                    "magic": magic,
+                    "volume_current": float(
+                        getattr(item, "volume_current", 0.0) or 0.0
+                    ),
+                    "type": int(getattr(item, "type", -1)),
+                })
+        return result
+
     def market_snapshot(self, venue_symbol: str) -> dict[str, float]:
         """Return the current executable quote and spread in basis points."""
 
