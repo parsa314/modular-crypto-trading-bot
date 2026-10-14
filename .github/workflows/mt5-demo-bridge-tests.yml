@@ -83,3 +83,24 @@ jobs:
             tests/test_demo_experience.py \
             tests/test_metaapi_demo_readonly.py \
             tests/test_mt5_transport_gateway.py
+
+      - name: Install explicit coverage instrumentation
+        run: python -m pip install 'pytest-cov>=6,<8'
+
+      - name: Measure new shared-risk module coverage
+        run: |
+          pytest -q -rs \
+            --cov=research_bot.mt5_global_demo_kill_switch \
+            --cov=research_bot.mt5_demo_risk_gate \
+            --cov-report=term-missing \
+            tests/test_mt5_global_demo_kill_switch.py \
+            tests/test_mt5_demo_risk_gate.py \
+            tests/test_mt5_direct_strategy.py
+
+      - name: Full repository suite and skipped-test rationale
+        env:
+          LIVE_EXECUTION: 'false'
+          PAPER_EXECUTION: 'false'
+          BOT_FORWARD_PAPER_ENABLED: 'false'
+          BOT_PAPER_EXECUTION_ENABLED: 'false'
+        run: pytest -q -rs
