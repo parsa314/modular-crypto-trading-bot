@@ -195,13 +195,23 @@ class PersistentMT5DemoKillSwitch:
             if begun:
                 cx.execute("ROLLBACK")
             raise
-        except (sqlite3.Error, Exception) as exc:
+        except Exception as exc:
             if begun:
                 try:
-                    cx.execute("ROLLBACK")
+                    # Any unexpected exception while broker submission is
+                    # in-flight is an unreconciled outcome, NOT permission to
+                    # roll the account back into an unblocked trading state.
+                    cx.execute(
+                        "UPDATE demo_kill_state SET halted=1,reason=? WHERE account_key=?",
+                        ("UNRECONCILED_SUBMISSION_EXCEPTION", account_key),
+                    )
+                    cx.execute("COMMIT")
+                    begun = False
                 except sqlite3.Error:
-                    pass
-            # Unknown DB error always rejects future new entries at caller.
+                    try:
+                        cx.execute("ROLLBACK")
+                    except sqlite3.Error:
+                        pass
             if isinstance(exc, sqlite3.Error):
                 raise GlobalDemoHalt("DURABLE_RISK_STORE_FAILURE") from exc
             raise
