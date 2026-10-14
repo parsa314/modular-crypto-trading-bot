@@ -18,6 +18,7 @@ on:
       - "research_bot/mt5_demo_risk_gate.py"
       - "research_bot/mt5_global_demo_kill_switch.py"
       - "research_bot/mt5_demo_reconciliation.py"
+      - "research_bot/mt5_demo_emergency.py"
       - "research_bot/multitimeframe_strategies_v19.py"
       - "research_bot/demo_experience.py"
       - "scripts/run_tv_mt5_bridge.py"
@@ -30,6 +31,7 @@ on:
       - "tests/test_mt5_demo_risk_gate.py"
       - "tests/test_mt5_global_demo_kill_switch.py"
       - "tests/test_mt5_demo_reconciliation.py"
+      - "tests/test_mt5_demo_emergency.py"
       - "tests/test_mt5_ai_gate.py"
       - "tests/test_multitimeframe_strategies_v19.py"
       - "tests/test_tradingview_mt5_bridge.py"
@@ -66,6 +68,7 @@ jobs:
           python -m compileall -q research_bot/mt5_demo_risk_gate.py
           python -m compileall -q research_bot/mt5_global_demo_kill_switch.py
           python -m compileall -q research_bot/mt5_demo_reconciliation.py
+          python -m compileall -q research_bot/mt5_demo_emergency.py
           python -m compileall -q research_bot/multitimeframe_strategies_v19.py
           python -m compileall -q research_bot/demo_experience.py
           python -m compileall -q scripts/start_mt5_tradingview_ui.py
@@ -80,6 +83,7 @@ jobs:
             tests/test_mt5_demo_risk_gate.py \
             tests/test_mt5_global_demo_kill_switch.py \
             tests/test_mt5_demo_reconciliation.py \
+            tests/test_mt5_demo_emergency.py \
             tests/test_mt5_ai_gate.py \
             tests/test_multitimeframe_strategies_v19.py \
             tests/test_tradingview_mt5_bridge.py \
