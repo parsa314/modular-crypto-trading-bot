@@ -33,10 +33,15 @@ jobs:
           import pandas as pd
           p=Path("data/btc_usdt_m15_2022_2024.parquet")
           m=json.loads(Path("data/btc_usdt_m15_2022_2024.manifest.json").read_text())
-          assert p.is_file() and len(pd.read_parquet(p))==105216
+          assert p.is_file()
+          df=pd.read_parquet(p)
+          assert m["expected_rows"]==105216
+          assert len(df)==m["rows"]==105216-m["missing_bars"]
           assert hashlib.sha256(p.read_bytes()).hexdigest()==m["output_sha256"]
           assert len(m["publisher_zip_checksums"])==36
-          print("PROVENANCE_VERIFIED",m["output_sha256"])
+          assert sum(z["missing_bars"] for z in m["publisher_zip_checksums"])==m["missing_bars"]
+          assert df.timestamp.is_unique and df.timestamp.is_monotonic_increasing
+          print("PROVENANCE_VERIFIED",m["output_sha256"],"actual_bars",len(df),"gaps",m["missing_bars"])
           PY
       - name: Reproducible no-orders historical backtest (if committed)
         run: |
