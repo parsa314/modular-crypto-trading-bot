@@ -55,6 +55,9 @@ class FakeExecutor:
             )
         return rows
 
+    def bot_open_orders(self):
+        return []
+
     def bot_positions(self, venue_symbol):
         assert venue_symbol == "BTCUSD"
         return list(self._positions)
