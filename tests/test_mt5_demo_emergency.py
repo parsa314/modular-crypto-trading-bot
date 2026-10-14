@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from research_bot.mt5_demo_emergency import attempt_latched_demo_flatten
+from research_bot.execution_adapters.mt5_demo import MT5DemoCloseResult
 from research_bot.mt5_direct_strategy import DirectStrategyJournal
 from research_bot.mt5_global_demo_kill_switch import (
     PersistentMT5DemoKillSwitch, GlobalDemoHalt,
@@ -32,7 +33,7 @@ class SimDemo:
         if self.fail:
             raise ConnectionError("disconnect after close request: outcome unknown")
         self.positions = [x for x in self.positions if x["ticket"]!=ticket]
-        return SimpleNamespace(
+        return MT5DemoCloseResult(
             ticket=ticket,venue_symbol=venue_symbol,closed_side="SELL",
             status="CLOSED_DEMO",retcode=10009,order_ticket=30,deal_ticket=31,
             requested_lots=.1,filled_lots=.1,executable_price=100.0,
