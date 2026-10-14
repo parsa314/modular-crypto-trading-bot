@@ -138,7 +138,7 @@ def summarize_download_errors(errors: list[dict]) -> dict[str, int]:
         raw = str(error.get("reason") or "")
         kind = raw.split(":", 1)[0] or "UNKNOWN"
         if kind == "HTTPError":
-            match = re.search(r"HTTP Error (\\d{3})", raw)
+            match = re.search(r"HTTP Error ([0-9]{3})", raw)
             kind = f"HTTP_{match.group(1)}" if match else "HTTP_UNKNOWN"
         counts[kind] = counts.get(kind, 0) + 1
     return dict(sorted(counts.items()))
