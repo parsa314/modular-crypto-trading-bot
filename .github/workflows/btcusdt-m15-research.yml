@@ -23,6 +23,8 @@ jobs:
           python-version: "3.11"
       - name: Install research data dependencies
         run: python -m pip install 'pandas>=2,<3' 'numpy>=1.26,<3' 'pyarrow>=18,<25' 'pytest>=8,<10'
+      - name: Run synthetic-only software invariants before real data evaluation
+        run: python -m pytest -q tests/test_btcusdt_real_backtest.py
       - name: Download and verify all 36 actual publisher archives
         run: python scripts/fetch_btcusdt_m15_2022_2024.py
       - name: Verify actual dataset structure and provenance
