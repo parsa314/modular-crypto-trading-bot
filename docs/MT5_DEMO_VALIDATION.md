@@ -81,6 +81,20 @@ research_bot/execution_adapters/mt5_demo.py enforces:
 Persistent restart reconciliation remains a separate engineering gate before
 this adapter can be considered production-grade.
 
+## Independent DEMO account-risk preflight (2026-10-14)
+
+The direct DEMO strategy runner now applies a fail-closed pre-submit gate for
+per-position stop risk including declared round-trip cost stress (hard cap 2%)
+and session drawdown (10%). The declared bot sizing default remains 0.25%.
+A same-UTC-day verified day-start equity observation must be supplied using
+\`MT5_DEMO_DAY_START_EQUITY\` and \`MT5_DEMO_DAY_START_DATE_UTC\`.
+Without that anchor, new DEMO submissions are rejected without writing order
+intent or making a network order call; signal-only/dry-run evaluation is still
+available. See [the complete risk contract](MT5_DEMO_RISK_POLICY_2026-10-14.md)
+for calculation, limitations, and tests. This is **not** a persistent
+cross-process account-wide kill switch and does not guarantee losses stay
+below 2% during price gaps or rejected stops.
+
 ## Installation/runtime
 
 Run MT5 execution on a Windows machine or Windows VPS with the MetaTrader 5
