@@ -1,0 +1,108 @@
+{
+  "verdict": "LOSER_DO_NOT_PROMOTE",
+  "data": {
+    "venue": "Binance Spot",
+    "symbol": "BTCUSDT",
+    "interval": "15m",
+    "actual_bars": 105211,
+    "expected_bars": 105216,
+    "missing_bars": 5,
+    "first": "2022-01-01T00:00:00+00:00",
+    "last": "2024-12-31T23:45:00+00:00",
+    "parquet_sha256": "f7bf84ccaff343dbb627c17e6245ae6f2488f940a3ed6867efd262115ea9d401"
+  },
+  "protocol": {
+    "fee_bps_per_side": 10,
+    "slippage_bps_per_side": 5,
+    "wait_complete_candles": 1,
+    "fill_next_open_after_wait": true,
+    "short_enabled": false,
+    "leverage": 1,
+    "OOS_or_walk_forward_verified": false,
+    "signal_cutoff": "3 agreeing styles and score >= 7/12, uncalibrated ordinal"
+  },
+  "primary_confluence": {
+    "net_return": 0.2755371300658225,
+    "sharpe": 0.4050896159431263,
+    "sortino": 0.5783655715787941,
+    "max_drawdown": 0.5082106754748351,
+    "profit_factor": 1.1332661223306966,
+    "win_rate": 0.38127090301003347,
+    "trade_count": 299,
+    "exposure_fraction": 0.5345784621233723
+  },
+  "buy_and_hold": {
+    "net_return": 1.0099138244879282,
+    "sharpe": 0.7020894964442631,
+    "sortino": 0.9900331789563642,
+    "max_drawdown": 0.674797847894995,
+    "profit_factor": null,
+    "win_rate": 1.0,
+    "trade_count": 1,
+    "exposure_fraction": 0.9999809904001521
+  },
+  "random_20_seeds_median": {
+    "net_return": -0.4523620182342181,
+    "sharpe": -0.30346998577150064,
+    "sortino": -0.4252108698009076,
+    "max_drawdown": 0.7027019263579336,
+    "profit_factor": 0.9183278647500656,
+    "win_rate": 0.4319368178428581,
+    "trade_count": 298.0,
+    "exposure_fraction": 0.5345689573234483
+  },
+  "random_seeds": [
+    20261014,
+    20261015,
+    20261016,
+    20261017,
+    20261018,
+    20261019,
+    20261020,
+    20261021,
+    20261022,
+    20261023,
+    20261024,
+    20261025,
+    20261026,
+    20261027,
+    20261028,
+    20261029,
+    20261030,
+    20261031,
+    20261032,
+    20261033
+  ],
+  "sma20_50": {
+    "net_return": -0.949570513129108,
+    "sharpe": -2.4087519787525067,
+    "sortino": -3.440806696077128,
+    "max_drawdown": 0.9525833119060199,
+    "profit_factor": 0.700453398421457,
+    "win_rate": 0.25757575757575757,
+    "trade_count": 1320,
+    "exposure_fraction": 0.5116623895067008
+  },
+  "diagnostics": {
+    "eligible_candidate_bars": 3754,
+    "actual_votes": {
+      "BUY": 623,
+      "SELL": 565
+    },
+    "excluded_bar_audit_sample": 100,
+    "execution_delay_bars": 2
+  },
+  "comparison": {
+    "vs_buy_hold_net": -0.7343766944221057,
+    "vs_random_median_net": 0.7278991483000405,
+    "vs_sma20_50_net": 1.2251076431949306
+  },
+  "limitations": [
+    "Exploratory fixed window; NOT an untouched out-of-sample performance claim",
+    "Publisher missing candles are not interpolated",
+    "Skip candidate signals spanning one of 90 previous irregular bars",
+    "Open-to-open price proxy, not order-book microstructure or real fills",
+    "If no closed trades, profit factor and win rate must be null",
+    "No intrabar stop or target; ordinal styles are not calibrated probabilities"
+  ]
+}
