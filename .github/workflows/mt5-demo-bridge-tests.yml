@@ -2,6 +2,10 @@ name: MT5 Demo Bridge Tests
 
 on:
   workflow_dispatch:
+  # A draft PR with a merge-conflicting legacy lineage does not receive
+  # pull_request merge-check CI. Validate the exact pushed development SHA.
+  push:
+    branches: ["engineering/mt5-demo-validation"]
   pull_request:
     paths:
       - "research_bot/execution_adapters/**"
