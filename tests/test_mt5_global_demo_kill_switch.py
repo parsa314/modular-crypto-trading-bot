@@ -118,3 +118,36 @@ def test_daily_anchor_refresh_does_not_reset_failure_count(tmp_path):
     submit(g,outcome="error")
     submit(g,at=NOW+timedelta(days=1),equity="99000",anchor="99000",outcome="error")
     assert g.snapshot(account_key=KEY).consecutive_execution_errors == 2
+
+
+def test_independent_python_processes_share_the_same_latched_account(tmp_path):
+    """Cross-process regression: one common sqlite file and account id."""
+    import subprocess
+    import sys
+
+    db = str(tmp_path / "interprocess.sqlite3")
+    child_code = """
+import sys
+from datetime import datetime, timezone
+from research_bot.mt5_global_demo_kill_switch import PersistentMT5DemoKillSwitch
+gate = PersistentMT5DemoKillSwitch(sys.argv[1])
+with gate.admission(
+    account_key="SharedDemo:123",
+    equity="100000", day_start_equity="100000",
+    day_start_date_utc="2026-10-14",
+    now=datetime(2026, 10, 14, tzinfo=timezone.utc)
+) as lease:
+    lease.execution_error()
+"""
+    for _ in range(3):
+        subprocess.run([sys.executable, "-c", child_code, db],
+                       check=True, capture_output=True, text=True, timeout=15)
+
+    state = PersistentMT5DemoKillSwitch(db).snapshot(
+        account_key="SharedDemo:123"
+    )
+    assert state.consecutive_execution_errors == 3
+    assert state.halted
+    with pytest.raises(GlobalDemoHalt, match="GLOBAL_DEMO_KILL_LATCHED"):
+        submit(PersistentMT5DemoKillSwitch(db),
+               account_key="SharedDemo:123")
