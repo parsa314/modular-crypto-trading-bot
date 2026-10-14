@@ -1,0 +1,77 @@
+name: BTCUSDT M15 verified historical fetch and research backtest
+on:
+  push:
+    branches: ["research/btcusdt-m15-real-backtest-20261014"]
+    paths:
+      - ".github/workflows/btcusdt-m15-research.yml"
+      - "scripts/fetch_btcusdt_m15_2022_2024.py"
+      - "scripts/backtest_btcusdt_2022_2024.py"
+      - "tests/test_btcusdt_real_backtest.py"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  historical-evaluation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install research data dependencies
+        run: python -m pip install 'pandas>=2,<3' 'numpy>=1.26,<3' 'pyarrow>=18,<25' 'pytest>=8,<10'
+      - name: Download and verify all 36 actual publisher archives
+        run: python scripts/fetch_btcusdt_m15_2022_2024.py
+      - name: Verify actual dataset structure and provenance
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          import pandas as pd
+          p=Path("data/btc_usdt_m15_2022_2024.parquet")
+          m=json.loads(Path("data/btc_usdt_m15_2022_2024.manifest.json").read_text())
+          assert p.is_file() and len(pd.read_parquet(p))==105216
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==m["output_sha256"]
+          assert len(m["publisher_zip_checksums"])==36
+          print("PROVENANCE_VERIFIED",m["output_sha256"])
+          PY
+      - name: Reproducible no-orders historical backtest (if committed)
+        run: |
+          if [ -f scripts/backtest_btcusdt_2022_2024.py ]; then
+            python scripts/backtest_btcusdt_2022_2024.py \
+              --data data/btc_usdt_m15_2022_2024.parquet \
+              --manifest data/btc_usdt_m15_2022_2024.manifest.json \
+              --output results/btcusdt_m15_2022_2024_backtest.json
+          else
+            echo 'BACKTEST_CODE_NOT_YET_IN_THIS_COMMIT'
+          fi
+      - name: Upload verifiable dataset and results as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btcusdt-m15-2022-2024-historical-research
+          path: |
+            data/btc_usdt_m15_2022_2024.parquet
+            data/btc_usdt_m15_2022_2024.manifest.json
+            results/btcusdt_m15_2022_2024_backtest.json
+          if-no-files-found: warn
+      - name: Commit verified dataset and outputs to THIS RESEARCH BRANCH ONLY
+        if: success()
+        env:
+          GH_REPOSITORY: ${{ github.repository }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/btc_usdt_m15_2022_2024.parquet data/btc_usdt_m15_2022_2024.manifest.json
+          if [ -f results/btcusdt_m15_2022_2024_backtest.json ]; then
+            git add results/btcusdt_m15_2022_2024_backtest.json
+          fi
+          if git diff --cached --quiet; then
+            echo "No dataset content change"
+          else
+            git commit -m "data(research): verified BTCUSDT M15 2022-24 with publisher checksums and measured metrics"
+            git push origin "HEAD:research/btcusdt-m15-real-backtest-20261014"
+          fi
