@@ -108,16 +108,14 @@ def reconcile_demo_before_new_order(
     if unresolved:
         reasons.append("UNRESOLVED_LOCAL_ORDER_OR_CLOSE_INTENTS")
 
-    # A known old fill is NOT proof that the position still exists or is closed.
-    # Without broker DEAL/history replay one must not certify historic flatness.
-    for sid, kind in intents.items():
-        if sid != current_unsubmitted_intent and terminal.get(sid) == "EXECUTION_RESULT":
-            # CLOSE_RESULT records are only local evidence, not broker history
-            # for an unrelated SL/TP closure; block until separate reconciliation.
-            if not any(x == "CLOSE_INTENT" and k == "CLOSE_RESULT"
-                       for s,x in intents.items() for t,k in terminal.items() if s==t):
-                reasons.append("BROKER_DEAL_HISTORY_NOT_RECONCILED")
-                break
+    # A prior local fill is not proof of current flatness. A locally
+    # journalled CLOSE_RESULT is likewise not a substitute for broker deal
+    # history (including SL/TP/partial fills); require independent replay.
+    if any(
+        sid != current_unsubmitted_intent and terminal.get(sid) == "EXECUTION_RESULT"
+        for sid in intents
+    ):
+        reasons.append("BROKER_DEAL_HISTORY_NOT_RECONCILED")
 
     payload = {
         "account_key": broker.account_key,
