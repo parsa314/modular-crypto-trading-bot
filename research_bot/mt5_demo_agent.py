@@ -34,6 +34,7 @@ class MT5AgentConfig:
     risk_percent: float = 0.25
     day_start_equity: float | None = None
     day_start_date_utc: str | None = None
+    global_kill_switch_path: str = "results/mt5_demo_global_kill.sqlite3"
     poll_seconds: float = 15.0
     reconnect_seconds: float = 10.0
     max_order_notional: float = 5_000.0
@@ -118,6 +119,7 @@ class MT5DemoAgent:
             risk_fraction=self.config.risk_percent / 100.0,
             day_start_equity=self.config.day_start_equity,
             day_start_date_utc=self.config.day_start_date_utc,
+            global_kill_switch_path=self.config.global_kill_switch_path,
             ai_gate_enabled=self.config.ai_gate_enabled,
             ai_hurdle_bps=self.config.ai_hurdle_bps,
             ai_long_threshold=self.config.ai_long_threshold,
@@ -207,6 +209,9 @@ def main() -> int:
         day_start_equity=(float(os.environ["MT5_DEMO_DAY_START_EQUITY"])
                           if os.getenv("MT5_DEMO_DAY_START_EQUITY") else None),
         day_start_date_utc=os.getenv("MT5_DEMO_DAY_START_DATE_UTC") or None,
+        global_kill_switch_path=os.getenv(
+            "MT5_DEMO_GLOBAL_KILL_DB", "results/mt5_demo_global_kill.sqlite3"
+        ),
         poll_seconds=float(os.getenv("MT5_POLL_SECONDS", "15")),
         reconnect_seconds=float(os.getenv("MT5_RECONNECT_SECONDS", "10")),
         max_order_notional=float(
