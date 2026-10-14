@@ -39,6 +39,7 @@ from .multitimeframe_strategies_v19 import (
 from .risk import RiskEngine
 from .mt5_ai_gate import MT5AIGateConfig, evaluate_ai_confirmation
 from .mt5_demo_risk_gate import check_demo_pretrade
+from .mt5_global_demo_kill_switch import GlobalDemoHalt, PersistentMT5DemoKillSwitch
 
 
 class MT5DirectStrategyError(RuntimeError):
@@ -62,6 +63,8 @@ class MT5DirectStrategyConfig:
     day_start_date_utc: str | None = None
     min_stop_fraction: float = 0.0005
     journal_path: str = "results/mt5_direct_strategy_journal.jsonl"
+    # Mandatory on submission; direct runners without a shared durable DB remain dry-run.
+    global_kill_switch_path: str | None = None
     one_bot_position_per_symbol: bool = True
     ai_gate_enabled: bool = False
     ai_hurdle_bps: float = 24.0
@@ -737,10 +740,17 @@ class DirectMT5StrategyRunner:
             requested_notional=requested_notional,
             declared_risk_fraction=self.config.risk_fraction,
         )
-        if not verdict.approved:
+        shared_db_ready = bool(
+            self.config.global_kill_switch_path
+            and int(account.get("login", 0) or 0) > 0
+            and str(account.get("server", "") or "").strip()
+            and account.get("trade_mode") == 0
+        )
+        if not verdict.approved or not shared_db_ready:
             return MT5DirectStrategyOutcome(
                 status="RISK_REJECTED",
-                reason=";".join(verdict.reasons),
+                reason=(";".join(verdict.reasons) if not verdict.approved
+                        else "SHARED_DEMO_KILL_DB_OR_VERIFIED_ACCOUNT_REQUIRED"),
                 strategy_name=self.strategy.name,
                 canonical_symbol=self.config.canonical_symbol,
                 venue_symbol=self.config.venue_symbol,
@@ -811,18 +821,67 @@ class DirectMT5StrategyRunner:
             created_at=datetime.now(timezone.utc),
         )
 
+        # SQLite BEGIN IMMEDIATE serializes admission and broker submission
+        # across cooperating processes on the same locally lockable filesystem.
+        # Never reset the latch automatically after a broker error/reconnect.
+        global_gate = PersistentMT5DemoKillSwitch(self.config.global_kill_switch_path)
+        broker_account_key = f'{account["server"]}:{account["login"]}'
+        attempted = False
+        execution_error: Exception | None = None
         try:
-            result = self.executor.execute(
-                request,
+            with global_gate.admission(
+                account_key=broker_account_key,
+                equity=equity,
+                day_start_equity=self.config.day_start_equity,
+                day_start_date_utc=self.config.day_start_date_utc,
+                now=datetime.now(timezone.utc),
+            ) as lease:
+                attempted = True
+                try:
+                    result = self.executor.execute(
+                        request,
+                        stop_loss=stop_loss,
+                        take_profit=take_profit,
+                        now=datetime.now(timezone.utc),
+                    )
+                except Exception as exc:
+                    execution_error = exc
+                    lease.execution_error()
+                else:
+                    self.journal.record_result(sid, result)
+                    if result.status == "FILLED_DEMO":
+                        lease.execution_success()
+                    else:
+                        # Ambiguous order acknowledgement or partial fills
+                        # freeze additional entries pending reconciliation.
+                        lease.execution_uncertain()
+        except GlobalDemoHalt as exc:
+            if attempted:
+                raise MT5DirectStrategyError(
+                    "MT5_DEMO_ORDER_ATTEMPTED_BUT_LEDGER_UNCERTAIN_RECONCILE_BROKER"
+                ) from exc
+            return MT5DirectStrategyOutcome(
+                status="RISK_REJECTED",
+                reason=f"GLOBAL_KILL_SWITCH:{exc}",
+                strategy_name=self.strategy.name,
+                canonical_symbol=self.config.canonical_symbol,
+                venue_symbol=self.config.venue_symbol,
+                signal_id=sid,
+                signal_time=signal_time,
+                direction=direction,
+                side=side.value,
+                reference_price=reference_price,
                 stop_loss=stop_loss,
                 take_profit=take_profit,
-                now=datetime.now(timezone.utc),
+                requested_quantity=quantity,
+                requested_notional=requested_notional,
+                risk_fraction=self.config.risk_fraction,
+                spread_bps=spread_bps,
+                **ai_fields,
             )
-        except Exception as exc:
-            self.journal.record_error(sid, exc)
-            raise
-
-        self.journal.record_result(sid, result)
+        if execution_error is not None:
+            self.journal.record_error(sid, execution_error)
+            raise execution_error
         return MT5DirectStrategyOutcome(
             status="EXECUTED_MT5_DEMO",
             reason="registered strategy signal passed direct DEMO execution gates",
