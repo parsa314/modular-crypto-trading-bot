@@ -40,6 +40,7 @@ from .risk import RiskEngine
 from .mt5_ai_gate import MT5AIGateConfig, evaluate_ai_confirmation
 from .mt5_demo_risk_gate import check_demo_pretrade
 from .mt5_global_demo_kill_switch import GlobalDemoHalt, PersistentMT5DemoKillSwitch
+from .mt5_demo_reconciliation import BrokerDemoSnapshot, reconcile_demo_before_new_order
 
 
 class MT5DirectStrategyError(RuntimeError):
@@ -273,6 +274,24 @@ class DirectStrategyJournal:
                     "error": f"{type(error).__name__}: {error}"[:1000],
                 }
             )
+
+    def all_events(self) -> list[dict[str, Any]]:
+        """Read complete journal; reconciliation must never use a truncated tail."""
+        with self._lock:
+            return self._rows_unlocked()
+
+    def record_reconciliation(self, verdict: Any) -> None:
+        """Append immutable, hashed snapshot verdict; no secrets or full orders."""
+        with self._lock:
+            self._append_unlocked({
+                "record_type": "BROKER_RECONCILIATION",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "approved": bool(verdict.approved),
+                "reasons": list(verdict.reasons),
+                "snapshot_sha256": verdict.snapshot_sha256,
+                "positions_count": verdict.positions_count,
+                "open_orders_count": verdict.open_orders_count,
+            })
 
     def recent(self, limit: int = 50) -> list[dict[str, Any]]:
         with self._lock:
@@ -836,6 +855,39 @@ class DirectMT5StrategyRunner:
                 day_start_date_utc=self.config.day_start_date_utc,
                 now=datetime.now(timezone.utc),
             ) as lease:
+                # Broker-query failures, older unresolved intents and active
+                # pending orders are hard vetoes. The just-reserved intent
+                # must be excluded from the prior-intent reconciliation.
+                try:
+                    observed_positions = self.executor.bot_positions(
+                        self.config.venue_symbol
+                    )
+                    pending_orders = self.executor.bot_open_orders()
+                    broker = BrokerDemoSnapshot(
+                        account_key=broker_account_key,
+                        captured_at=datetime.now(timezone.utc),
+                        positions=tuple(observed_positions),
+                        open_orders=tuple(pending_orders),
+                        observation_complete=True,
+                        account_is_demo=True,
+                    )
+                    reconciled = reconcile_demo_before_new_order(
+                        broker=broker,
+                        journal_rows=self.journal.all_events(),
+                        now=datetime.now(timezone.utc),
+                        current_unsubmitted_intent=sid,
+                    )
+                    self.journal.record_reconciliation(reconciled)
+                except Exception as exc:
+                    lease.execution_uncertain()
+                    raise GlobalDemoHalt(
+                        "BROKER_SNAPSHOT_QUERY_OR_RECONCILIATION_FAILED"
+                    ) from exc
+                if not reconciled.approved:
+                    lease.execution_uncertain()
+                    raise GlobalDemoHalt(
+                        "BROKER_RECONCILIATION_VETO:" + ",".join(reconciled.reasons)
+                    )
                 attempted = True
                 try:
                     result = self.executor.execute(
