@@ -74,6 +74,9 @@ class FakeExecutor:
             "equity": 100_000.0,
             "balance": 100_000.0,
             "currency": "USD",
+            "login": 1,
+            "server": "UnitTest-Demo",
+            "trade_mode": 0,
         }
 
     def execute(self, request, *, stop_loss, take_profit=None, now=None):
@@ -147,6 +150,7 @@ def config(tmp_path):
         day_start_equity=100_000.0,
         day_start_date_utc=datetime.now(timezone.utc).date().isoformat(),
         journal_path=str(tmp_path / "direct.jsonl"),
+        global_kill_switch_path=str(tmp_path / "demo_shared_risk.sqlite3"),
     )
 
 
@@ -301,6 +305,7 @@ def test_ai_gate_confirmation_allows_demo_execution(monkeypatch, tmp_path):
         bars=400,
         risk_fraction=0.0025,
         journal_path=str(tmp_path / "ai-confirm.jsonl"),
+        global_kill_switch_path=str(tmp_path / "demo_ai_risk.sqlite3"),
         day_start_equity=100_000.0,
         day_start_date_utc=datetime.now(timezone.utc).date().isoformat(),
         ai_gate_enabled=True,
