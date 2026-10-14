@@ -147,19 +147,33 @@ def simulate(px:np.ndarray,pos:np.ndarray):
     },trades
 
 def random_baseline(n,durations,seed):
-    """Preserves completed trade count and hold lengths; randomizes idle gaps."""
+    """Match EXACTLY each completed trade duration and total trade count.
+
+    No-overlap random non-trading gaps include a mandatory flat M15 bar
+    between trades, so two adjacent trades are never accidentally merged.
+    """
     out=np.zeros(n,dtype=np.int8)
     if not durations:return out
     g=np.random.default_rng(seed)
-    length=np.array(durations,dtype=int)
-    g.shuffle(length)
-    free=int(n-2-length.sum())
+    lengths=np.array(durations,dtype=int)
+    if (lengths<=0).any():raise ValueError("INVALID_TRADE_DURATIONS")
+    g.shuffle(lengths)
+    k=len(lengths)
+    # First fill can occur at index 2. All trades must finish <= n-1.
+    # A mandatory 1 flat bar separates each of k independent trades.
+    free=int(n-3-lengths.sum()-(k-1))
     if free<0:raise ValueError("MATCHED_RANDOM_NOT_FEASIBLE")
-    cut=np.sort(g.integers(0,free+1,size=len(length)-1))
-    idle=np.diff(np.concatenate(([0],cut,[free])))
-    k=2
-    for d,pause in zip(length,idle):
-        k+=int(pause);out[k:k+int(d)]=1;k+=int(d)
+    cuts=np.sort(g.integers(0,free+1,size=k))
+    idle=np.diff(np.concatenate(([0],cuts,[free])))
+    at=2+int(idle[0])
+    for j,d in enumerate(lengths):
+        d=int(d)
+        out[at:at+d]=1
+        at+=d
+        if j<k-1:
+            at+=1+int(idle[j+1])
+    if int((np.diff(np.r_[0,out,0])==1).sum())!=k:
+        raise RuntimeError("RANDOM_TRADE_COUNT_INVARIANT_FAILED")
     return out
 
 def main():
@@ -183,6 +197,8 @@ def main():
     rand=[]
     for seed in range(20261014,20261034):
         z,_=simulate(prices,random_baseline(len(frame),durations,seed))
+        if z["trade_count"] != model["trade_count"]:
+            raise RuntimeError("RANDOM_BENCHMARK_TRADE_COUNT_IS_NOT_MATCHED")
         rand.append(z)
     random_median={k:(float(np.median([run[k] for run in rand if run[k] is not None]))
                       if any(run[k] is not None for run in rand) else None) for k in model}
