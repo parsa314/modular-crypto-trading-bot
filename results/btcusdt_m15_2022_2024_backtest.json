@@ -42,14 +42,14 @@
     "exposure_fraction": 0.9999809904001521
   },
   "random_20_seeds_median": {
-    "net_return": -0.4523620182342181,
-    "sharpe": -0.30346998577150064,
-    "sortino": -0.4252108698009076,
-    "max_drawdown": 0.7027019263579336,
-    "profit_factor": 0.9183278647500656,
-    "win_rate": 0.4319368178428581,
-    "trade_count": 298.0,
-    "exposure_fraction": 0.5345689573234483
+    "net_return": -0.4241170632159635,
+    "sharpe": -0.2534946227590085,
+    "sortino": -0.3570846993909263,
+    "max_drawdown": 0.689913963390038,
+    "profit_factor": 0.9286444452582462,
+    "win_rate": 0.4230769230769231,
+    "trade_count": 299.0,
+    "exposure_fraction": 0.5345784621233723
   },
   "random_seeds": [
     20261014,
@@ -94,7 +94,7 @@
   },
   "comparison": {
     "vs_buy_hold_net": -0.7343766944221057,
-    "vs_random_median_net": 0.7278991483000405,
+    "vs_random_median_net": 0.6996541932817859,
     "vs_sma20_50_net": 1.2251076431949306
   },
   "limitations": [
