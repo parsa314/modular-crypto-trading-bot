@@ -95,6 +95,7 @@ jobs:
           print({'decision':gate['decision'],'countable_snapshot_count':gate['countable_snapshot_count'],'unique_slots':gate['core_gate']['unique_measurement_slots'],'expected':gate['core_gate']['expected_measurement_opportunities'],'ledger_sha256':gate['evidence_ledger_sha256']})
           PY
       - name: Upload Phase-Q report and ledger manifest
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v20-phase-q-${{ github.run_id }}
@@ -102,4 +103,5 @@ jobs:
             artifacts/v20/phase_q_quality_gate.json
             artifacts/v20/PHASE_Q_QUALITY_REPORT.md
             artifacts/v20/artifact_harvest_manifest.json
+          if-no-files-found: warn
           retention-days: 90
