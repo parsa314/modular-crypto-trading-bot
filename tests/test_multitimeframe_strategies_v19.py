@@ -40,7 +40,14 @@ def test_features_are_prefix_invariant():
     full = build_features(df)
     cut = 800
     prefix = build_features(df.iloc[:cut].copy())
-    cols = ["atr", "ema200", "last_swing_high", "last_swing_low", "bos_up", "sweep_down", "bull_fvg"]
+    cols = [
+        "atr", "ema200", "last_swing_high", "last_swing_low",
+        "bos_up", "sweep_down", "bull_fvg",
+        "brooks_body_ratio", "brooks_overlap_ratio",
+        "brooks_trend_strength", "brooks_breakout_up_atr",
+        "brooks_bull_signal_bar", "brooks_bull_follow_through",
+        "brooks_microchannel_up",
+    ]
     for c in cols:
         a = full.loc[:cut - 1, c].reset_index(drop=True)
         b = prefix[c].reset_index(drop=True)
@@ -85,3 +92,36 @@ def test_selection_does_not_promote_without_gates():
     }])
     decision = choose_provisional_winner(s)
     assert decision["decision"] == "NO_STRATEGY_PROMOTED"
+
+
+def test_v59_confluence_is_prefix_invariant():
+    df = synthetic(1400, seed=19)
+    spec = next(s for s in STRATEGY_REGISTRY if s.name == "H4_V59_CONFLUENCE_DEMO")
+
+    d_full, f_full = generate_direction(spec, df)
+    cut = 1000
+    d_prefix, f_prefix = generate_direction(spec, df.iloc[:cut].copy())
+
+    assert d_full.iloc[:cut].reset_index(drop=True).equals(
+        d_prefix.reset_index(drop=True)
+    )
+    for col in (
+        "v59_long_score",
+        "v59_short_score",
+        "v59_ichi_long",
+        "v59_ict_smc_long",
+        "v59_brooks_long",
+        "v59_regime_long",
+        "v59_breakout_long",
+    ):
+        a = f_full[col].iloc[:cut].reset_index(drop=True)
+        b = f_prefix[col].reset_index(drop=True)
+        assert np.allclose(a.to_numpy(float), b.to_numpy(float), equal_nan=True)
+
+
+def test_v59_confluence_registry_contract():
+    spec = next(s for s in STRATEGY_REGISTRY if s.name == "H4_V59_CONFLUENCE_DEMO")
+    assert spec.timeframe == "4h"
+    assert spec.family == "v59_confluence"
+    assert spec.rr == 2.5
+    assert spec.stop_atr == 1.5

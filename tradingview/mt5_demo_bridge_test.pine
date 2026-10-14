@@ -1,0 +1,91 @@
+//@version=6
+indicator("TradingView -> MT5 DEMO Bridge Transport Test", overlay = true)
+
+// This script is ONLY for testing the webhook transport.
+// It is not the thesis trading strategy and does not claim trading edge.
+// Keep the webhook URL in the TradingView Alert dialog, not in this script.
+
+canonicalSymbol = input.string("BTC/USDT", "Canonical symbol")
+quantity = input.float(0.01, "Base quantity", minval = 0.000001)
+stopPct = input.float(1.0, "Stop %", minval = 0.01) / 100.0
+takeProfitPct = input.float(2.0, "Take-profit %", minval = 0.01) / 100.0
+sendLongTest = input.bool(false, "Send one LONG transport test")
+sendShortTest = input.bool(false, "Send one SHORT transport test")
+strategyVersion = input.string("TV_TRANSPORT_TEST_V1", "Strategy version")
+modelVersion = input.string("TRANSPORT_ONLY", "Model version")
+
+f_iso_time(int ts) =>
+    str.format_time(ts, "yyyy-MM-dd'T'HH:mm:ss'Z'", "UTC")
+
+f_event_id(string action) =>
+    syminfo.tickerid + "-" + str.tostring(time) + "-" + action
+
+f_payload(
+    string action,
+    float qty,
+    float refPrice,
+    float stopLoss,
+    float takeProfit
+) =>
+    "{" +
+      "\"event_id\":\"" + f_event_id(action) + "\"," +
+      "\"symbol\":\"" + canonicalSymbol + "\"," +
+      "\"action\":\"" + action + "\"," +
+      "\"quantity\":" + str.tostring(qty) + "," +
+      "\"reference_price\":" + str.tostring(refPrice, format.mintick) + "," +
+      "\"stop_loss\":" + str.tostring(stopLoss, format.mintick) + "," +
+      "\"take_profit\":" + str.tostring(takeProfit, format.mintick) + "," +
+      "\"event_time\":\"" + f_iso_time(time) + "\"," +
+      "\"strategy_version\":\"" + strategyVersion + "\"," +
+      "\"model_version\":\"" + modelVersion + "\"," +
+      "\"metadata\":{" +
+        "\"ticker\":\"" + syminfo.tickerid + "\"," +
+        "\"timeframe\":\"" + timeframe.period + "\"" +
+      "}" +
+    "}"
+
+var bool longSent = false
+var bool shortSent = false
+
+if not sendLongTest
+    longSent := false
+
+if not sendShortTest
+    shortSent := false
+
+if barstate.isrealtime and barstate.isconfirmed and sendLongTest and not longSent
+    refPrice = close
+    stopLoss = refPrice * (1.0 - stopPct)
+    takeProfit = refPrice * (1.0 + takeProfitPct)
+    alert(
+      f_payload("BUY", quantity, refPrice, stopLoss, takeProfit),
+      alert.freq_once_per_bar_close
+    )
+    longSent := true
+
+if barstate.isrealtime and barstate.isconfirmed and sendShortTest and not shortSent
+    refPrice = close
+    stopLoss = refPrice * (1.0 + stopPct)
+    takeProfit = refPrice * (1.0 - takeProfitPct)
+    alert(
+      f_payload("SELL", quantity, refPrice, stopLoss, takeProfit),
+      alert.freq_once_per_bar_close
+    )
+    shortSent := true
+
+plot(close, "Price", display = display.none)
+
+// INTEGRATION INTO AN EXISTING PINE STRATEGY
+// -----------------------------------------
+// Copy f_iso_time(), f_event_id() and f_payload() into the strategy.
+// Then call:
+//   alert(f_payload("BUY", qty, close, longSL, longTP), alert.freq_once_per_bar_close)
+// when the strategy's actual long condition is confirmed, and similarly use
+// "SELL" for an actual short-entry condition.
+//
+// In TradingView Create Alert:
+//   Condition -> this script -> Any alert() function call
+//   Webhook URL -> https://YOUR_HOST/webhooks/tradingview/YOUR_ROUTE_TOKEN
+//
+// The Python bridge still enforces DEMO-only MT5, symbol allowlists, spread,
+// max notional, fresh tick, broker lot rules, server-side SL and order_check().
