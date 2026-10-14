@@ -3,7 +3,8 @@
 **Evidence-driven MSc research platform for an AI cryptocurrency trading bot using financial machine learning, deep learning, portfolio risk management and reproducible out-of-sample validation.**
 
 > **Scientific contract:** Evidence Before Opinion  
-> **Execution status:** `RESEARCH_ONLY / PAPER_OFF / LIVE_OFF`  
+> **Owner live-trading permission:** `GRANTED` (effective 2026-10-12; see `AGENTS.md`).  
+> **Verified `main` service state:** `PAPER_OFF / LIVE_OFF`; permission alone does **not** enable real orders or certify readiness.  
 > **Latest completed scientific result:** `v0.50 — V50_NONOVERLAP_FAILURE_SUPPORTED`  
 > **Active prospective hypothesis:** `v0.51 — overlap-conflict arbitration`  
 > **Current v0.51 state:** `BLOCKED / SCIENTIFIC_DECISION_DEFERRED` — canonical prospective evidence has not yet been collected.  
@@ -51,7 +52,7 @@ Core principles:
 - mark-to-market portfolio risk, correlation and CVaR constraints;
 - immutable manifests, artifact digests and dependency provenance;
 - no same-test rescue tuning;
-- PAPER/LIVE execution remains fail-closed until a separate promotion path is satisfied.
+- The `main` service currently rejects PAPER/LIVE requests. The owner's permission for future live routing is recorded separately; scientific promotion and independent risk/execution safeguards are not bypassed.
 
 ## v0.50 — latest completed scientific result
 
