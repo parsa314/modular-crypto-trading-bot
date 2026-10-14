@@ -129,6 +129,21 @@ def harvest(repo: str, output_dir: Path, *, token: str | None, created_after: st
     }
 
 
+def summarize_download_errors(errors: list[dict]) -> dict[str, int]:
+    """Classify artifact failures without exposing signed URLs or credentials."""
+    import re
+
+    counts: dict[str, int] = {}
+    for error in errors:
+        raw = str(error.get("reason") or "")
+        kind = raw.split(":", 1)[0] or "UNKNOWN"
+        if kind == "HTTPError":
+            match = re.search(r"HTTP Error (\\d{3})", raw)
+            kind = f"HTTP_{match.group(1)}" if match else "HTTP_UNKNOWN"
+        counts[kind] = counts.get(kind, 0) + 1
+    return dict(sorted(counts.items()))
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--repo", default=os.getenv("GITHUB_REPOSITORY"))
@@ -147,6 +162,7 @@ def main() -> None:
         created_after=args.created_after,
     )
     result["generated_at"] = datetime.now(timezone.utc).isoformat()
+    result["error_classes"] = summarize_download_errors(result["errors"])
     manifest = Path(args.manifest)
     manifest.parent.mkdir(parents=True, exist_ok=True)
     manifest.write_text(json.dumps(result, indent=2), encoding="utf-8")
@@ -155,6 +171,7 @@ def main() -> None:
         "downloaded_artifact_count": result["downloaded_artifact_count"],
         "json_file_count": result["json_file_count"],
         "errors": len(result["errors"]),
+        "error_classes": result["error_classes"],
         "manifest": str(manifest),
     }, indent=2))
 
