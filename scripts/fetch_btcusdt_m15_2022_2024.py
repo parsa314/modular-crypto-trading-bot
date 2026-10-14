@@ -27,7 +27,7 @@ def fetch(month):
     url=f"{ROOT}/{name}"
     raw=download(url)
     checksum=download(url+".CHECKSUM").decode().strip()
-    m=re.fullmatch(r"([a-fA-F0-9]{64})\\s+\\*?([^\\s]+)",checksum)
+    m=re.fullmatch(r"([a-fA-F0-9]{64})\s+\*?([^\s]+)",checksum)
     if not m or m.group(2)!=name:
         raise ValueError(f"INVALID_PUBLISHER_CHECKSUM {name}")
     actual=hashlib.sha256(raw).hexdigest()
