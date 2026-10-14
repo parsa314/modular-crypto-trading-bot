@@ -120,3 +120,55 @@ def test_80_percent_coverage_boundary_is_enforced_per_symbol():
     assert out["core_gate"]["symbols"]["BTC/USDT"]["authorized_coverage_ratio"] < 0.80
     assert out["feature_freeze_authorized"] is False
     assert any("AUTHORIZED_COVERAGE_BELOW_TARGET" in reason for reason in out["core_gate"]["reasons"])
+
+
+def test_phase_q_future_snapshots_cannot_inflate_as_of_coverage():
+    # 267/336 valid opportunities is below the frozen 80% threshold.
+    historical = [
+        _snapshot(i, START + pd.Timedelta(minutes=17 + 30 * i))
+        for i in range(267)
+    ]
+    post_cutoff = [
+        _snapshot(i, MATURITY + pd.Timedelta(minutes=17 + 30 * (i - 267)))
+        for i in range(267, 336)
+    ]
+    result = evaluate_phase_q(historical + post_cutoff, as_of=MATURITY.isoformat())
+    assert result["countable_snapshot_count"] == 267
+    assert result["excluded_snapshot_count"] == 69
+    assert all("AFTER_AS_OF" in row["reasons"] for row in result["excluded_snapshots"])
+    assert result["core_gate"]["unique_measurement_slots"] == 267
+    assert result["core_gate"]["symbols"]["BTC/USDT"]["authorized_coverage_ratio"] < 0.80
+    assert result["feature_freeze_authorized"] is False
+    assert result["predictive_modeling_authorized"] is False
+
+
+def test_v19_quality_gate_does_not_count_future_samples_at_as_of():
+    from research_bot.microstructure_quality_v19 import evaluate_quality_gate
+
+    future = [
+        _snapshot(i, MATURITY + pd.Timedelta(minutes=17 + 30 * i))
+        for i in range(336)
+    ]
+    result = evaluate_quality_gate(
+        future,
+        pilot_start_at=PHASE_Q_PILOT_START_AT,
+        as_of=MATURITY.isoformat(),
+    )
+    assert result["unique_snapshot_hashes"] == 0
+    assert result["unique_measurement_slots"] == 0
+    assert result["symbols"]["BTC/USDT"]["authorized_slots"] == 0
+    assert result["decision"] == "GATE_Q_NOT_MATURE"
+
+
+def test_phase_q_download_error_summary_is_safe_and_actionable():
+    from scripts.download_v19_forward_artifacts import summarize_download_errors
+
+    failures = [
+        {"artifact_id": 1, "reason": "HTTPError:HTTP Error 403: Forbidden"},
+        {"artifact_id": 2, "reason": "HTTPError:HTTP Error 410: Gone"},
+        {"artifact_id": 3, "reason": "HTTPError:HTTP Error 403: Forbidden"},
+        {"artifact_id": 4, "reason": "BadZipFile:invalid archive"},
+    ]
+    assert summarize_download_errors(failures) == {
+        "BadZipFile": 1, "HTTP_403": 2, "HTTP_410": 1,
+    }

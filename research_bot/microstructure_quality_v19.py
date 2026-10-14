@@ -75,6 +75,11 @@ def evaluate_quality_gate(
     if end < start:
         raise ValueError("as_of precedes pilot_start_at")
 
+    # As-of evaluations must never count observations recorded after that cutoff.
+    # Keep the reported unique-hash count consistent with admitted observations.
+    rows = [(ts, snap) for ts, snap in rows if ts <= end]
+    seen_hashes = {str(snap["snapshot_sha256"]) for _, snap in rows}
+
     elapsed_hours = float((end - start).total_seconds() / 3600.0)
     expected = int(np.floor(elapsed_hours * 60.0 / cfg.cadence_minutes))
     expected = max(0, expected)

@@ -44,6 +44,8 @@ jobs:
             tests/test_forward_microstructure_v19.py \
             tests/test_trade_timestamp_v19.py
       - name: Harvest immutable v0.19 scheduled artifacts
+        # PRs validate deterministic code; external evidence is audited only on scheduled/manual runs.
+        if: github.event_name != 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -55,6 +57,7 @@ jobs:
             --output-dir artifacts/v20/source_snapshots \
             --manifest artifacts/v20/artifact_harvest_manifest.json
       - name: Evaluate frozen seven-day data-quality gate
+        if: github.event_name != 'pull_request'
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
             asof="$PHASE_Q_START_AT"
@@ -67,6 +70,7 @@ jobs:
             --output artifacts/v20/phase_q_quality_gate.json \
             --markdown artifacts/v20/PHASE_Q_QUALITY_REPORT.md
       - name: Validate fail-closed Phase-Q contract
+        if: github.event_name != 'pull_request'
         run: |
           python - <<'PY'
           import json
@@ -95,6 +99,7 @@ jobs:
           print({'decision':gate['decision'],'countable_snapshot_count':gate['countable_snapshot_count'],'unique_slots':gate['core_gate']['unique_measurement_slots'],'expected':gate['core_gate']['expected_measurement_opportunities'],'ledger_sha256':gate['evidence_ledger_sha256']})
           PY
       - name: Upload Phase-Q report and ledger manifest
+        if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: v20-phase-q-${{ github.run_id }}
@@ -102,4 +107,5 @@ jobs:
             artifacts/v20/phase_q_quality_gate.json
             artifacts/v20/PHASE_Q_QUALITY_REPORT.md
             artifacts/v20/artifact_harvest_manifest.json
+          if-no-files-found: warn
           retention-days: 90

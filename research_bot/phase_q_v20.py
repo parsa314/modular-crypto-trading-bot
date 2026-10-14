@@ -140,11 +140,20 @@ def evaluate_phase_q(
     can never increase maturity or coverage.
     """
     cfg = config or V20PhaseQConfig()
+    as_of_ts = _utc(as_of)
+    if as_of_ts < _utc(PHASE_Q_PILOT_START_AT):
+        raise ValueError("as_of precedes pilot_start_at")
     all_snapshots = list(snapshots)
     countable: list[dict] = []
     excluded: list[dict] = []
     for snap in all_snapshots:
         reasons = validate_phase_q_snapshot(snap)
+        try:
+            if _utc(snap.get("generated_at")) > as_of_ts:
+                reasons.append("AFTER_AS_OF")
+        except Exception:
+            # validate_phase_q_snapshot already records invalid event timestamps.
+            pass
         if reasons:
             excluded.append({
                 "snapshot_sha256": snap.get("snapshot_sha256"),
