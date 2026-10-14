@@ -46,7 +46,7 @@ jobs:
       - name: Reproducible no-orders historical backtest (if committed)
         run: |
           if [ -f scripts/backtest_btcusdt_2022_2024.py ]; then
-            python scripts/backtest_btcusdt_2022_2024.py \
+            python -m scripts.backtest_btcusdt_2022_2024 \
               --data data/btc_usdt_m15_2022_2024.parquet \
               --manifest data/btc_usdt_m15_2022_2024.manifest.json \
               --output results/btcusdt_m15_2022_2024_backtest.json
