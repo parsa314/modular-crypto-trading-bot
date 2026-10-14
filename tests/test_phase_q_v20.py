@@ -158,3 +158,17 @@ def test_v19_quality_gate_does_not_count_future_samples_at_as_of():
     assert result["unique_measurement_slots"] == 0
     assert result["symbols"]["BTC/USDT"]["authorized_slots"] == 0
     assert result["decision"] == "GATE_Q_NOT_MATURE"
+
+
+def test_phase_q_download_error_summary_is_safe_and_actionable():
+    from scripts.download_v19_forward_artifacts import summarize_download_errors
+
+    failures = [
+        {"artifact_id": 1, "reason": "HTTPError:HTTP Error 403: Forbidden"},
+        {"artifact_id": 2, "reason": "HTTPError:HTTP Error 410: Gone"},
+        {"artifact_id": 3, "reason": "HTTPError:HTTP Error 403: Forbidden"},
+        {"artifact_id": 4, "reason": "BadZipFile:invalid archive"},
+    ]
+    assert summarize_download_errors(failures) == {
+        "BadZipFile": 1, "HTTP_403": 2, "HTTP_410": 1,
+    }
