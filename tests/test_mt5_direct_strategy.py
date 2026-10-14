@@ -448,3 +448,38 @@ def test_three_broker_execution_errors_globally_block_other_runners(monkeypatch,
     assert result.status == "RISK_REJECTED"
     assert "THREE_CONSECUTIVE_EXECUTION_ERRORS" in result.reason
     assert subsequent.executions == []
+
+
+def test_broker_pending_order_prevents_new_demo_order(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.generate_direction", fake_signal(1)
+    )
+    executor = FakeExecutor(submission_enabled=True)
+    executor.bot_open_orders = lambda: [
+        {"ticket": 212, "symbol": "BTCUSD", "magic": 314590}
+    ]
+    outcome = DirectMT5StrategyRunner(executor, config(tmp_path)).evaluate_once()
+    assert outcome.status == "RISK_REJECTED"
+    assert "BROKER_RECONCILIATION_VETO" in outcome.reason
+    assert executor.executions == []
+    journal = DirectStrategyJournal(config(tmp_path).journal_path)
+    assert any(
+        row.get("record_type") == "BROKER_RECONCILIATION" and not row["approved"]
+        for row in journal.all_events()
+    )
+
+
+def test_unavailable_broker_order_snapshot_is_never_assumed_empty(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "research_bot.mt5_direct_strategy.generate_direction", fake_signal(1)
+    )
+    executor = FakeExecutor(submission_enabled=True)
+
+    def unavailable():
+        raise ConnectionError("orders_get failed during disconnect")
+
+    executor.bot_open_orders = unavailable
+    outcome = DirectMT5StrategyRunner(executor, config(tmp_path)).evaluate_once()
+    assert outcome.status == "RISK_REJECTED"
+    assert "BROKER_SNAPSHOT_QUERY_OR_RECONCILIATION_FAILED" in outcome.reason
+    assert executor.executions == []
