@@ -1,0 +1,120 @@
+name: v21-common-anchor-proxy
+
+on:
+  push:
+    branches: ["v21-common-anchor-microstructure-proxy"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  research-and-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run v0.21 adversarial regression tests
+        run: |
+          pytest -q \
+            tests/test_common_anchor_v21.py \
+            tests/test_historical_proxy_v21.py \
+            tests/test_phase_q_v20.py \
+            tests/test_forward_microstructure_v19.py \
+            tests/test_v19_collector_helpers.py \
+            tests/test_trade_timestamp_v19.py \
+            tests/test_microstructure_quality_v19.py \
+            tests/test_cost_regime_v18.py \
+            tests/test_evidence_ledger_v17.py \
+            tests/test_trial_registry_v17.py
+
+      - name: Run checksum-verified historical flow-proxy stress test
+        run: |
+          python scripts/run_v21_historical_proxy.py \
+            --output artifacts/v21/historical_proxy.json \
+            --markdown artifacts/v21/V21_HISTORICAL_PROXY_RESULTS.md
+
+      - name: Validate historical non-promotion contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from research_bot.integrity_v19 import payload_sha256
+
+          z=json.loads(Path('artifacts/v21/historical_proxy.json').read_text())
+          assert z['version']=='v0.21-H'
+          assert z['research_status']=='HISTORICAL_SINGLE_VENUE_FLOW_PROXY_STRESS_TEST_NOT_PROSPECTIVE'
+          assert z['planned_comparison_count']==8
+          assert z['realized_comparison_count']==8
+          assert z['archive_file_count']==24
+          assert len(z['dataset_sha256'])==64
+          assert z['signal_authorized'] is False
+          assert z['paper_strategy_replacement_authorized'] is False
+          assert z['testnet_promotion_authorized'] is False
+          assert z['live_execution_authorized'] is False
+          assert z['artifact_sha256']==payload_sha256(z, exclude_keys=('artifact_sha256',))
+          for comp in z['comparisons'].values():
+              assert 0 <= comp['inference']['one_sided_p'] <= 1
+              assert 0 <= comp['fdr_q'] <= 1
+              assert 0 <= comp['max_t_fwer_p'] <= 1
+          print({'interpretation':z['interpretation'],'panel_rows':z['panel_rows'],'dataset_sha256':z['dataset_sha256']})
+          PY
+
+      - name: Smoke real public common-anchor collector
+        run: |
+          python scripts/collect_v21_common_anchor_microstructure.py \
+            --output artifacts/v21/common_anchor_smoke.json
+
+      - name: Validate common-anchor fail-closed contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from research_bot.integrity_v19 import payload_sha256
+
+          z=json.loads(Path('artifacts/v21/common_anchor_smoke.json').read_text())
+          assert z['version']=='v0.21'
+          assert z['measurement_contract']['trade_window_anchor_mode']=='single_common_anchor_per_symbol_cycle'
+          assert z['measurement_contract']['reported_trade_window_seconds']==60
+          assert z['measurement_contract']['primary_trading_horizon']=='4h'
+          assert z['phase_q_protocol']['protocol_version']=='v0.21-phase-q-common-anchor-1'
+          assert z['signal_authorized'] is False
+          assert z['paper_strategy_replacement_authorized'] is False
+          assert z['testnet_promotion_authorized'] is False
+          assert z['live_execution_authorized'] is False
+          assert z['snapshot_sha256']==payload_sha256(z, exclude_keys=('snapshot_sha256',))
+          assert z['raw_observation_count'] >= 4, z['provider_failures']
+          assert z['authorized_symbol_count'] >= 1, z['symbols']
+          for row in z['symbols']:
+              if row.get('feature_authorized'):
+                  assert row['trade_window_end']==row['common_anchor_at']
+                  from pandas import Timestamp, Timedelta
+                  assert Timestamp(row['trade_window_start']) == Timestamp(row['common_anchor_at'])-Timedelta(seconds=60)
+                  assert len(row['accepted_venue_names']) == len(set(row['accepted_venue_names']))
+          print({'authorized_symbol_count':z['authorized_symbol_count'],'observations':z['raw_observation_count'],'failures':len(z['provider_failures'])})
+          PY
+
+      - name: Upload v0.21 research evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: v21-common-anchor-proxy-${{ github.run_id }}
+          path: |
+            artifacts/v21/historical_proxy.json
+            artifacts/v21/V21_HISTORICAL_PROXY_RESULTS.md
+            artifacts/v21/common_anchor_smoke.json
+          retention-days: 90

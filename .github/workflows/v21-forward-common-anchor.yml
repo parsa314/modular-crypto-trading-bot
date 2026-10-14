@@ -1,0 +1,76 @@
+name: v21-forward-common-anchor
+
+on:
+  schedule:
+    - cron: "17,47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+concurrency:
+  group: v21-forward-common-anchor
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Collect common-anchor public REST microstructure
+        run: |
+          mkdir -p artifacts/v21/forward
+          stamp=$(date -u +%Y%m%dT%H%M%SZ)
+          python scripts/collect_v21_common_anchor_microstructure.py \
+            --output "artifacts/v21/forward/common-anchor-${stamp}.json"
+      - name: Validate immutable measurement contract
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from research_bot.integrity_v19 import payload_sha256
+
+          paths=sorted(Path('artifacts/v21/forward').glob('common-anchor-*.json'))
+          assert len(paths)==1
+          z=json.loads(paths[0].read_text())
+          assert z['version']=='v0.21'
+          assert z['research_status']=='PROSPECTIVE_COMMON_ANCHOR_MICROSTRUCTURE_COLLECTION_ONLY'
+          assert z['collection_rule']=='prospective_only_common_anchor_no_backfill_no_signal'
+          assert z['measurement_contract']['trade_window_anchor_mode']=='single_common_anchor_per_symbol_cycle'
+          assert z['measurement_contract']['reported_trade_window_seconds']==60
+          assert z['phase_q_protocol']['protocol_version']=='v0.21-phase-q-common-anchor-1'
+          assert z['phase_q_protocol']['pilot_start_at']=='2026-09-10T18:00:00+00:00'
+          assert z['phase_q_protocol']['maturity_not_before']=='2026-09-17T18:00:00+00:00'
+          assert z['ci_provenance']['event_name']==os.environ['GITHUB_EVENT_NAME']
+          assert z['ci_provenance']['ref']==os.environ['GITHUB_REF']
+          assert z['ci_provenance']['sha']==os.environ['GITHUB_SHA']
+          assert z['signal_authorized'] is False
+          assert z['paper_strategy_replacement_authorized'] is False
+          assert z['testnet_promotion_authorized'] is False
+          assert z['live_execution_authorized'] is False
+          assert z['snapshot_sha256']==payload_sha256(z, exclude_keys=('snapshot_sha256',))
+          for row in z['symbols']:
+              if row.get('feature_authorized'):
+                  assert row['trade_window_end']==row['common_anchor_at']
+                  assert row['max_book_age_seconds'] <= z['config']['max_book_age_seconds']
+                  assert row['max_trade_staleness_seconds'] <= z['config']['max_trade_staleness_seconds']
+                  assert len(row['accepted_venue_names']) >= z['config']['min_venues_per_symbol']
+          print({'event':z['ci_provenance']['event_name'],'authorized':z['authorized_symbol_count'],'observations':z['raw_observation_count'],'hash':z['snapshot_sha256']})
+          PY
+      - name: Upload immutable v0.21 forward snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: v21-forward-common-anchor-${{ github.run_id }}
+          path: artifacts/v21/forward/*.json
+          retention-days: 90

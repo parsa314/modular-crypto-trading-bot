@@ -20,6 +20,7 @@ class DepthSnapshot:
     imbalance: float
     bid_depth_notional: float = 0.0
     ask_depth_notional: float = 0.0
+    timestamp_source: str = "provider"
 
 
 def fetch_coinex_depth(symbol: str, limit: int = 5, interval: str = "0.01") -> DepthSnapshot:
@@ -50,12 +51,13 @@ def fetch_coinex_depth(symbol: str, limit: int = 5, interval: str = "0.01") -> D
     ask_depth_notional = float(sum(float(x[0]) * float(x[1]) for x in asks))
     denom = bid_depth + ask_depth
     imbalance = (bid_depth - ask_depth) / denom if denom > 0 else 0.0
-    ts_ms = (depth.get("updated_at") or data.get("updated_at"))
-    ts = (
-        datetime.fromtimestamp(float(ts_ms) / 1000.0, tz=timezone.utc)
-        if ts_ms is not None
-        else datetime.now(timezone.utc)
-    )
+    ts_ms = depth.get("updated_at") or data.get("updated_at")
+    if ts_ms is not None:
+        ts = datetime.fromtimestamp(float(ts_ms) / 1000.0, tz=timezone.utc)
+        timestamp_source = "provider"
+    else:
+        ts = datetime.now(timezone.utc)
+        timestamp_source = "local_fallback"
     return DepthSnapshot(
         symbol=symbol,
         timestamp=ts,
@@ -68,4 +70,5 @@ def fetch_coinex_depth(symbol: str, limit: int = 5, interval: str = "0.01") -> D
         imbalance=float(np.clip(imbalance, -1.0, 1.0)),
         bid_depth_notional=bid_depth_notional,
         ask_depth_notional=ask_depth_notional,
+        timestamp_source=timestamp_source,
     )
