@@ -144,6 +144,8 @@ def config(tmp_path):
         strategy_name="H4_S6_BREAKOUT",
         bars=300,
         risk_fraction=0.0025,
+        day_start_equity=100_000.0,
+        day_start_date_utc=datetime.now(timezone.utc).date().isoformat(),
         journal_path=str(tmp_path / "direct.jsonl"),
     )
 
@@ -299,6 +301,8 @@ def test_ai_gate_confirmation_allows_demo_execution(monkeypatch, tmp_path):
         bars=400,
         risk_fraction=0.0025,
         journal_path=str(tmp_path / "ai-confirm.jsonl"),
+        day_start_equity=100_000.0,
+        day_start_date_utc=datetime.now(timezone.utc).date().isoformat(),
         ai_gate_enabled=True,
     )
 
@@ -351,3 +355,40 @@ def test_direct_strategy_timeout_closes_exact_ticket(monkeypatch, tmp_path):
     assert outcome.order_ticket == 3003
     assert outcome.deal_ticket == 4004
     assert executor.close_calls[0]["ticket"] == 502
+
+
+def test_direct_strategy_demo_submission_refuses_absent_day_start_equity(monkeypatch, tmp_path):
+    from dataclasses import replace
+
+    monkeypatch.setattr("research_bot.mt5_direct_strategy.generate_direction", fake_signal(1))
+    executor = FakeExecutor(submission_enabled=True)
+    cfg = replace(config(tmp_path), day_start_equity=None, day_start_date_utc=None)
+    outcome = DirectMT5StrategyRunner(executor, cfg).evaluate_once()
+    assert outcome.status == "RISK_REJECTED"
+    assert outcome.reason == "MISSING_OR_STALE_DAY_START_EQUITY"
+    assert executor.executions == []
+    assert not (tmp_path / "direct.jsonl").exists()
+
+
+def test_direct_strategy_demo_submission_kills_daily_drawdown(monkeypatch, tmp_path):
+    from dataclasses import replace
+
+    monkeypatch.setattr("research_bot.mt5_direct_strategy.generate_direction", fake_signal(1))
+    executor = FakeExecutor(submission_enabled=True)
+    cfg = replace(config(tmp_path), day_start_equity=112_000.0)
+    outcome = DirectMT5StrategyRunner(executor, cfg).evaluate_once()
+    assert outcome.status == "RISK_REJECTED"
+    assert outcome.reason == "DAILY_DRAWDOWN_KILL_SWITCH"
+    assert executor.executions == []
+
+
+def test_direct_strategy_demo_submission_kills_stale_day_anchor(monkeypatch, tmp_path):
+    from dataclasses import replace
+
+    monkeypatch.setattr("research_bot.mt5_direct_strategy.generate_direction", fake_signal(-1))
+    executor = FakeExecutor(submission_enabled=True)
+    cfg = replace(config(tmp_path), day_start_date_utc="2000-01-01")
+    outcome = DirectMT5StrategyRunner(executor, cfg).evaluate_once()
+    assert outcome.status == "RISK_REJECTED"
+    assert outcome.reason == "MISSING_OR_STALE_DAY_START_EQUITY"
+    assert executor.executions == []
