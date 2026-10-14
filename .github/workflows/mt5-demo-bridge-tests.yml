@@ -67,6 +67,7 @@ jobs:
           pytest -q \
             tests/test_mt5_demo_adapter.py \
             tests/test_mt5_direct_strategy.py \
+            tests/test_mt5_demo_risk_gate.py \
             tests/test_mt5_ai_gate.py \
             tests/test_multitimeframe_strategies_v19.py \
             tests/test_tradingview_mt5_bridge.py \
