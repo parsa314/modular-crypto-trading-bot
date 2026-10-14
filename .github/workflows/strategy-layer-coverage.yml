@@ -1,0 +1,34 @@
+name: strategy-layer-coverage
+on:
+  pull_request:
+    paths:
+      - "research_bot/strategies/**"
+      - "tests/test_strategy_*.py"
+      - "tests/test_four_independent_strategies.py"
+      - ".github/workflows/strategy-layer-coverage.yml"
+  push:
+    branches:
+      - "feature/four-*"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  signal-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install pytest and coverage instrumentation
+        run: |
+          python -m pip install -e '.[dev]'
+          python -m pip install 'pytest-cov>=6,<8'
+      - name: Deterministic strategy tests, missing lines, and skip explanations
+        run: |
+          pytest -q -rs --cov=research_bot.strategies --cov-report=term-missing tests/test_strategy_*.py
+      - name: Full repository suite with explicit skip explanations
+        run: pytest -q -rs
