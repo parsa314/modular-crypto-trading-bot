@@ -1,0 +1,47 @@
+name: Paper trading infrastructure
+
+on:
+  push:
+    branches: ["research/btcusdt-m15-real-backtest-20261014"]
+    paths:
+      - "src/paper_trading/**"
+      - "tests/test_paper_trading.py"
+      - "start.sh"
+      - "pyproject.toml"
+      - ".github/workflows/paper-trading.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paper:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install focused dependencies
+        run: python -m pip install 'numpy==2.3.5' 'pandas==2.2.3' 'pytest==9.1.1' 'pyarrow==24.0.0' 'websockets==15.0.1' 'PyYAML==6.0.3'
+      - name: Check local execution, outage and persistence contracts
+        run: python -m pytest -q tests/test_paper_trading.py tests/test_cross_sectional_v3.py
+      - name: Run the real 2022 Parquet replay, with no holdout access
+        env:
+          PYTHONPATH: src:.
+          PAPER_PYTHON: python
+        run: |
+          ./start.sh --config src/paper_trading/config.replay.yaml --state-file /tmp/paper/state.json --log-dir /tmp/paper/logs
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          state = json.loads(Path('/tmp/paper/state.json').read_text())
+          assert not state['portfolio']['halt_reason']
+          events = [json.loads(line) for f in Path('/tmp/paper/logs').glob('*.jsonl') for line in f.read_text().splitlines()]
+          trades = [t for event in events for t in event.get('trades', [])]
+          assert trades
+          assert all(e['timestamp'] < '2022-03-01' for e in events)
+          assert all(all(w <= .10000001 for w in e['portfolio']['weights'].values()) for e in events)
+          print('REAL_PARQUET_REPLAY_ACCOUNTING_VERIFIED', len(events), len(trades))
+          PY

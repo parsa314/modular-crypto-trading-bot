@@ -6,6 +6,9 @@ __pycache__/
 .ruff_cache/
 *.pyc
 .venv/
+.venv-paper/
+var/paper/
+logs/
 
 # Local credentials and environment files must never be committed.
 .env
