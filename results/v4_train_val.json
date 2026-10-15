@@ -1,0 +1,19 @@
+{
+  "strategy": "v4_daily_spot",
+  "scope": "owner_requested_exploratory_development_trial",
+  "train_window": "2022-01-01/2023-12-31",
+  "val_window": "2024-01-01/2024-12-31",
+  "data_sha256": "1ca399c5e1e94884b53e6c0989fda9d264c3aa52bce78512e5d1089142279d01",
+  "sharpe_train": -0.2631378779083624,
+  "sharpe_val": -1.2898588212382198,
+  "sortino_val": -1.6914727132004594,
+  "maxdd_val": -0.7255363675529772,
+  "profit_factor_val": 0.5068860359891663,
+  "win_rate_val": 0.2692307692307692,
+  "num_trades_val": 143,
+  "return_val": -0.6527233540653721,
+  "return_btc_val": 1.111739310638249,
+  "return_ew_val": -0.06937449216215497,
+  "verdict": "FAIL",
+  "test3_opened": false
+}

@@ -1,0 +1,25 @@
+{
+  "strategy": "v3_cross_sectional_momentum",
+  "scope": "owner_requested_rewindowed_development_diagnostic",
+  "train_window": "2022-01-01/2023-12-31",
+  "val_window": "2024-01-01/2024-12-31",
+  "data_sha256": "1ca399c5e1e94884b53e6c0989fda9d264c3aa52bce78512e5d1089142279d01",
+  "data_rows": 401884,
+  "historical_symbols_after_epoch_split": 470,
+  "execution_adjustments": [
+    "listing_gap_as_separate_epoch_with_old_position_written_off",
+    "missing_execution_open_cancels_order_to_cash"
+  ],
+  "sharpe_train": -1.0638907492212715,
+  "sharpe_val": 0.19167455493752342,
+  "sortino_val": 0.28008808616096154,
+  "maxdd_val": -0.699157413463863,
+  "profit_factor_val": 1.1545928458348143,
+  "win_rate_val": 0.46153846153846156,
+  "num_trades_val": 730,
+  "return_val": -0.1438418084766745,
+  "return_btc_val": 1.111739310638249,
+  "return_ew_val": -0.050715803123853154,
+  "verdict": "FAIL",
+  "test3_opened": false
+}
