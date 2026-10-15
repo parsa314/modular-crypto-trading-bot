@@ -1,0 +1,70 @@
+{
+  "strategy": "v5 Wilder RSI(14) daily mean reversion; enter<30 exit>55 or five bars",
+  "fixed_universe_survivorship_risk": true,
+  "historical_top20_verified": false,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "DOGEUSDT",
+    "ADAUSDT",
+    "TRXUSDT",
+    "LTCUSDT",
+    "DOTUSDT",
+    "LINKUSDT",
+    "AVAXUSDT",
+    "BCHUSDT",
+    "XLMUSDT",
+    "ATOMUSDT",
+    "ETCUSDT",
+    "UNIUSDT",
+    "AAVEUSDT",
+    "FILUSDT",
+    "NEARUSDT"
+  ],
+  "train_2022_2023": {
+    "Sharpe": -0.08463545236316865,
+    "Sortino": -0.10896285891421485,
+    "MaxDD": 0.23313671053490903,
+    "NetReturn": -0.07315078018503285,
+    "ProfitFactor": 0.852276909874812,
+    "WinRate": 0.5,
+    "Trades": 198
+  },
+  "validation_2024": {
+    "Sharpe": 0.4969300146400894,
+    "Sortino": 0.8660034604852982,
+    "MaxDD": 0.11170653666281227,
+    "NetReturn": 0.05186760734935403,
+    "ProfitFactor": 2.2469239441744304,
+    "WinRate": 0.5925925925925926,
+    "Trades": 54
+  },
+  "train_BTC": {
+    "Sharpe": 0.16533774932152018,
+    "Sortino": 0.23539979047537896,
+    "MaxDD": 0.6693123705410324,
+    "NetReturn": -0.11397250571793482,
+    "ProfitFactor": null,
+    "WinRate": null,
+    "Trades": 0
+  },
+  "validation_BTC": {
+    "Sharpe": 1.6773757851233737,
+    "Sortino": 2.697205085446547,
+    "MaxDD": 0.2615137505386781,
+    "NetReturn": 1.118084045672715,
+    "ProfitFactor": null,
+    "WinRate": null,
+    "Trades": 0
+  },
+  "trades_total": 252,
+  "orders_total": 504,
+  "nominal_fee_plus_slippage_side_bps": 15,
+  "costs_quote_per_unit_equity": 0.034200660870618745,
+  "verdict": "FAIL",
+  "test3_opened": false,
+  "caveat": "Fixed 20 coin basket NOT verified exact top-20 at historical dates; thus exploratory v5 rather than canonical PIT universe."
+}
