@@ -1,0 +1,70 @@
+{
+  "strategy": "v4 Donchian 55-day breakout, exit 20-day low or 2xATR",
+  "historical_top20_verified": false,
+  "fixed_universe_survivorship_risk": true,
+  "symbol_count": 20,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "DOGEUSDT",
+    "ADAUSDT",
+    "TRXUSDT",
+    "LTCUSDT",
+    "DOTUSDT",
+    "LINKUSDT",
+    "AVAXUSDT",
+    "BCHUSDT",
+    "XLMUSDT",
+    "ATOMUSDT",
+    "ETCUSDT",
+    "UNIUSDT",
+    "AAVEUSDT",
+    "FILUSDT",
+    "NEARUSDT"
+  ],
+  "train_2022_2023": {
+    "Sharpe": -0.001029627165076621,
+    "Sortino": -0.001418060977440411,
+    "MaxDD": 0.17986709086929142,
+    "NetReturn": -0.016311068703419696,
+    "ProfitFactor": null,
+    "WinRate": null,
+    "Trades": 146
+  },
+  "validation_2024": {
+    "Sharpe": 0.9572033141120959,
+    "Sortino": 1.433900731912266,
+    "MaxDD": 0.163823011499718,
+    "NetReturn": 0.21689624269168628,
+    "ProfitFactor": null,
+    "WinRate": null,
+    "Trades": 102
+  },
+  "train_BTC": {
+    "Sharpe": 0.16533774932152018,
+    "Sortino": 0.23539979047537896,
+    "MaxDD": 0.6693123705410324,
+    "NetReturn": -0.11397250571793482,
+    "ProfitFactor": null,
+    "WinRate": null,
+    "Trades": 0
+  },
+  "validation_BTC": {
+    "Sharpe": 1.6773757851233737,
+    "Sortino": 2.697205085446547,
+    "MaxDD": 0.2615137505386781,
+    "NetReturn": 1.118084045672715,
+    "ProfitFactor": null,
+    "WinRate": null,
+    "Trades": 0
+  },
+  "closed_trade_count_total": 248,
+  "estimated_fees_slippage_total_usdt_per_unit_nav": 0.036525410674711364,
+  "orders_total": 496,
+  "verdict": "FAIL",
+  "test3_opened": false,
+  "limitations": "Fixed 20 historically liquid pairs are NOT independently verified exact top20 by historical market cap. Undefined per-fold PF/WinRate are null, not fabricated."
+}
