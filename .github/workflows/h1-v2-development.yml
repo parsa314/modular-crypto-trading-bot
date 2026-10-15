@@ -31,7 +31,7 @@ jobs:
       - name: Test causal execution invariants
         run: python -m pytest -q tests/test_h1_v2.py
       - name: Reproduce development verdict from committed BTC 2022-24 data only
-        run: python scripts/evaluate_h1_v2.py --output /tmp/h1_v2_development_ci.json
+        run: python -m scripts.evaluate_h1_v2 --output /tmp/h1_v2_development_ci.json
       - name: Check the locked gate and provenance against the committed result
         run: |
           python - <<'PY'
