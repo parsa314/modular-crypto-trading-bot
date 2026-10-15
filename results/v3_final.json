@@ -1,0 +1,90 @@
+{
+  "version": "v3_cross_sectional_momentum",
+  "source_commit": "7983bee7f0ff93ef61c43249bfb776c7e06ac0c4",
+  "source_file": "research_bot/cross_sectional_v3.py",
+  "outcome": "FAIL_DATA_AND_FROZEN_WINDOW_GATE",
+  "exact_user_verdict": "v3 rejected at validation stage",
+  "economic_validation_measured": false,
+  "valuation_inference": "NOT_EVALUATED",
+  "train_2022_2023": {
+    "period": "2022-01-01/2023-12-31",
+    "metrics": {
+      "Sharpe": null,
+      "Sortino": null,
+      "MaxDD": null,
+      "Profit_Factor": null,
+      "Win_Rate": null,
+      "Trade_Count": null,
+      "Net_Return": null,
+      "BTC_Return": null,
+      "Equal_Weight_Return": null
+    },
+    "evaluated": false
+  },
+  "validation_2024": {
+    "period": "2024-01-01/2024-12-31",
+    "metrics": {
+      "Sharpe": null,
+      "Sortino": null,
+      "MaxDD": null,
+      "Profit_Factor": null,
+      "Win_Rate": null,
+      "Trade_Count": null,
+      "Net_Return": null,
+      "BTC_Return": null,
+      "Equal_Weight_Return": null
+    },
+    "evaluated": false,
+    "pass": false,
+    "pass_rule": {
+      "sharpe_gt": 0.6,
+      "net_return_gt_BTC": true
+    },
+    "pass_evaluable": false
+  },
+  "failure_reasons": [
+    "FROZEN_V3_CUTOFF: DEVELOPMENT_END=2024-01-01; simulate_development rejects end>2024-01-01; new 2024 validation window cannot run without modifying source and preregistration.",
+    "SURVIVORSHIP_UNRESOLVED: no verified complete all-ever-listed Binance USDT spot catalog including delisted historical symbols.",
+    "DATA_PANEL_UNAVAILABLE: verified BTCUSDT M15 parquet alone is not a daily 25-to-50-asset cross-sectional OHLCV plus quote-volume panel."
+  ],
+  "prior_registered_folds": {
+    "train": "2019-01-01/2022-12-31",
+    "validation": "2023-01-01/2023-12-31",
+    "test3": "2024-01-01/2026-09-30"
+  },
+  "requested_folds": {
+    "train": "2022-01-01/2023-12-31",
+    "validation": "2024-01-01/2024-12-31",
+    "test3": "2025-01-01/2026-09-30"
+  },
+  "test3": {
+    "start": "2025-01-01",
+    "end": "2026-09-30",
+    "opened": false,
+    "evaluated": false,
+    "metrics": {
+      "Sharpe": null,
+      "Sortino": null,
+      "MaxDD": null,
+      "Profit_Factor": null,
+      "Win_Rate": null,
+      "Trade_Count": null,
+      "Net_Return": null,
+      "BTC_Return": null,
+      "Equal_Weight_Return": null
+    },
+    "final_verdict": "NOT_EVALUATED_DO_NOT_OPEN"
+  },
+  "next_stage": {
+    "alternative_strategy_requested": true,
+    "executed": false
+  },
+  "code_or_parameters_changed": false,
+  "provenance": {
+    "v3_contract_ci": "https://github.com/parsa314/modular-crypto-trading-bot/actions/runs/38729118181",
+    "ci_proves_economic_validation": false,
+    "source_pr": "https://github.com/parsa314/modular-crypto-trading-bot/pull/135"
+  },
+  "release_status": "NOT_LIVE_READY",
+  "note": "Rejected at the validation prerequisite gate. NO numerical performance evaluation occurred, so this is NOT empirical Sharpe underperformance."
+}
