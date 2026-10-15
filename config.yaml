@@ -1,0 +1,24 @@
+# Public, unauthenticated data only. NO API KEYS, NO LIVE ORDERS.
+mode: binance_ws
+strategy: momentum_rsi_fallback
+symbols:
+  - BTCUSDT
+  - ETHUSDT
+  - SOLUSDT
+  - XRPUSDT
+  - DOGEUSDT
+# Offline replay alternative: python -m paper_trading.main --config config.replay.yaml
+data_path: data/btc_usdt_m15_2022_2024.parquet
+manifest_path: data/btc_usdt_m15_2022_2024.manifest.json
+replay_hours: 168
+warmup_hours: 720
+initial_cash: 50000
+max_position_weight: 0.10
+max_daily_drawdown: 0.05
+max_total_drawdown: 0.15
+min_quote_volume_24h: 5000000
+fee_bps: 10
+momentum_days: 28
+rsi_period: 14
+log_dir: logs
+state_path: logs/paper_state.json
