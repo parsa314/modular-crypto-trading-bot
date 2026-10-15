@@ -1,0 +1,93 @@
+{
+  "strategy": "v6_volatility_breakout",
+  "evaluation_type": "EXPLORATORY_READ_ONLY",
+  "created_at_utc": "2026-10-15",
+  "source": {
+    "provider": "Binance Spot daily klines via connected public market-data API",
+    "frequency": "1d",
+    "exchange": "Binance Spot",
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "BNBUSDT",
+      "SOLUSDT",
+      "XRPUSDT"
+    ],
+    "raw_data_start_utc": "2021-12-01",
+    "train_start_utc": "2022-01-01",
+    "train_end_utc": "2023-12-31",
+    "validation_start_utc": "2024-01-01",
+    "validation_end_utc": "2024-12-31",
+    "bars_per_symbol": 1127,
+    "missing_daily_bars_by_symbol": {
+      "BTCUSDT": 0,
+      "ETHUSDT": 0,
+      "BNBUSDT": 0,
+      "SOLUSDT": 0,
+      "XRPUSDT": 0
+    },
+    "survivorship_bias_warning": "Five retrospectively known assets; NOT a historically point-in-time constructed universe; not evidence of broadly generalizable profitability."
+  },
+  "fixed_assumptions": {
+    "long_only": true,
+    "number_of_assets": 5,
+    "max_nominal_weight_each": 0.2,
+    "transaction_cost_bps_per_side": 15,
+    "atr_period": 14,
+    "atr_method": "Wilder recursive",
+    "entry": "Use previous CLOSED daily candle close > maximum of the PRIOR 20 daily highs (excluding signal candle) + 0.25 * ATR14 of signal candle; execute at next day's open",
+    "exit": "Use previous CLOSED daily candle close < highest close since entry - 2 * ATR14 of prior closed candle; execute at next day's open",
+    "slippage_is_modelled_not_realized": true,
+    "no_leverage": true,
+    "transaction_cost_description": "one modeled combined 15bp fee-plus-slippage on every buy and sell",
+    "annualization_factor": 365,
+    "starting_cash": 1,
+    "source_trading_orders": false
+  },
+  "train": {
+    "sharpe": 0.378092572231283,
+    "sortino": 0.5445549844930564,
+    "max_drawdown": 0.2970459913343436,
+    "net_return": 0.14284132467224708,
+    "profit_factor": 1.3601808253077086,
+    "win_rate": 0.40816326530612246,
+    "closed_trades": 49
+  },
+  "validation": {
+    "sharpe": 1.7866573682696445,
+    "sortino": 2.938098841560957,
+    "max_drawdown": 0.2443421472165056,
+    "net_return": 0.718262354640941,
+    "profit_factor": 4.0531896536562835,
+    "win_rate": 0.4,
+    "closed_trades": 30
+  },
+  "validation_btc": {
+    "sharpe": 1.7509658455501853,
+    "sortino": 2.823780575789811,
+    "max_drawdown": 0.261513750538678,
+    "net_return": 1.2064284164516823
+  },
+  "validation_equal_weight_five": {
+    "sharpe": 1.7249519060173744,
+    "sortino": 2.6028712057333108,
+    "max_drawdown": 0.2853484220119412,
+    "net_return": 1.2280626323813104
+  },
+  "acceptance_rule": "Validation Sharpe > 0.6 AND Validation net return > BTC buy-and-hold net return, both after modeled costs",
+  "sharpe_gate_pass": true,
+  "btc_outperformance_gate_pass": false,
+  "verdict": "FAIL",
+  "next": "v7",
+  "test3": {
+    "opened": false,
+    "sharpe": null
+  },
+  "limitations": [
+    "Metrics come from direct in-session JavaScript calculations on Binance public daily kline observations; no independent Github Actions execution of v6 has been performed.",
+    "The five selected assets are not point-in-time historical top 5 or top 20.",
+    "ATR-close-based exits are assumed executed on next daily open; no intrabar stop orders or actual fills.",
+    "This v6 is a newly specified proxy in a previously under-specified reserved family and cannot be presented as a preregistered holdout result.",
+    "A failed BTC benchmark means no Test-3 permission under the agreed rule."
+  ]
+}
