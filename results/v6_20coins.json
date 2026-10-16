@@ -1,0 +1,222 @@
+{
+  "strategy": "v6_fixed_20_coins",
+  "2022": {
+    "sharpe": -0.8945085140072877,
+    "sortino": -1.1632163748370137,
+    "maxdd": 0.2598256747089013,
+    "net_return": -0.21346551893431076,
+    "profit_factor": 0.39905261368899647,
+    "win_rate": 0.22535211267605634,
+    "num_trades": 71
+  },
+  "2022_btc": {
+    "sharpe": -1.2928471217968378,
+    "sortino": -1.7012585102303326,
+    "maxdd": 0.6693123705410324,
+    "net_return": -0.6431427373192888,
+    "profit_factor": null,
+    "win_rate": null,
+    "num_trades": 0
+  },
+  "2024_validation": {
+    "sharpe": 1.4753342003327843,
+    "sortino": 2.449643230350378,
+    "maxdd": 0.3280560132655084,
+    "net_return": 0.6385279205874117,
+    "profit_factor": 3.0624649048018684,
+    "win_rate": 0.3983050847457627,
+    "num_trades": 118
+  },
+  "2024_btc": {
+    "sharpe": 1.7509658455501842,
+    "sortino": 2.823780575789812,
+    "maxdd": 0.261513750538678,
+    "net_return": 1.2064284164516823,
+    "profit_factor": null,
+    "win_rate": null,
+    "num_trades": 0
+  },
+  "2024_equal_weight": {
+    "sharpe": 1.2410366046832393,
+    "sortino": 1.8352918551527417,
+    "maxdd": 0.4535053025953847,
+    "net_return": 0.8144166959168155,
+    "profit_factor": null,
+    "win_rate": null,
+    "num_trades": 0
+  },
+  "gate": {
+    "bear_beats_btc": true,
+    "val_sharpe_above_0_8_or_above_0_5_with_dd_below_25pct": true,
+    "pass": true
+  },
+  "verdict": "PASS_EXPLORATORY",
+  "universe": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "DOTUSDT",
+    "LINKUSDT",
+    "LTCUSDT",
+    "AVAXUSDT",
+    "SHIBUSDT",
+    "ATOMUSDT",
+    "UNIUSDT",
+    "ETCUSDT",
+    "XLMUSDT",
+    "BCHUSDT",
+    "TRXUSDT",
+    "FILUSDT",
+    "AAVEUSDT"
+  ],
+  "data_from": "Binance PUBLIC spot 1d klines",
+  "source_checksums": {
+    "BTCUSDT": {
+      "sha256": "f292c81f9d0fd055b8ad534a463b9aaa60e2044223bd82026659c652a69fad51",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "ETHUSDT": {
+      "sha256": "949fac4195f3ada6ffee0f2111cf3dac240e6114252f8758e99ef280e17ee25e",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "BNBUSDT": {
+      "sha256": "f69798600cc296d946de322bc68d026b92019e550516ee6fcfb4429cf78c2588",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "SOLUSDT": {
+      "sha256": "534f7c0e93f2ce5cac07d6aad0a28e77bfd1d8f5a6810613c213ac03b77bb7c8",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "XRPUSDT": {
+      "sha256": "d1f309582d9d02947054ab7ba06553a2e7e15d8adf1c62db9bdfebcd34d62044",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "ADAUSDT": {
+      "sha256": "dc9cd1362212d65bdb7e887f84e650c5e9fa56eddf5127a50264f8155c86a7db",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "DOGEUSDT": {
+      "sha256": "b02f9089564e55dcb4a4146566ea900d1187807453360a40fdb9c1c577c4e0fd",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "DOTUSDT": {
+      "sha256": "a374f9262d5e88fe5ca4bc271210684b8731ac366543ef32bb01f48c7dd4502d",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "LINKUSDT": {
+      "sha256": "13c528aeb92c6403fac94d6252377206cbddb42c23e13e75fa476f26078e1676",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "LTCUSDT": {
+      "sha256": "cddb92e2b7a8cb828d4078c51958eb540319ba65d7ff397807781db128d17477",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "AVAXUSDT": {
+      "sha256": "b74856436ced7feaadb5a27b0c82870de4b41286efcdb5ef99cc0a2601d8c5e2",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "SHIBUSDT": {
+      "sha256": "14f6d560740d72790444772f3d18be6f455d7cd8b830e5d091ec7fbf5af314e2",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "ATOMUSDT": {
+      "sha256": "60537924de34f3e517775e1b348732846b8ef11d00b9a73ecc32e843d29ae5c0",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "UNIUSDT": {
+      "sha256": "a034d2482aa183442c0967f79579f9f3b04df1b4ce8430e0601e707560541d16",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "ETCUSDT": {
+      "sha256": "ddae2a691815c876c0224fea3d99da0d7de27002eac293ec3042be7208a663bb",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "XLMUSDT": {
+      "sha256": "4aa196616dfb86b2ed81d2fa3719667ce7ab3cf510ebccb746f794eabecfc617",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "BCHUSDT": {
+      "sha256": "4da1c201662ecc4cba7f13a56c7ff0f876c7e7ae696ae6d15aec5f67d2a127de",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "TRXUSDT": {
+      "sha256": "c5a955b9a946e9cce2464c8eb1162f2af5030cba9bd8570120277431decd31dc",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "FILUSDT": {
+      "sha256": "ac7b77533e6016eafed9dc17b29276f9f9ac2ba039da37b517ab4dd6e81149ee",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    },
+    "AAVEUSDT": {
+      "sha256": "16b95427fbef22b113d9ac9423cc5d44f3f4c790ffc65a43404b19a7d8cb608c",
+      "rows": 1127,
+      "api_hosts": [
+        "https://data-api.binance.vision"
+      ]
+    }
+  },
+  "fees_plus_slippage_bps_per_side": 15,
+  "warning": "20 fixed retrospectively selected assets, NOT historical PIT top-20; 2024 rules modified after earlier 2024 test; exploratory only",
+  "test3": "conditional_only"
+}
