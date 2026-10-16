@@ -1,0 +1,21 @@
+# Public market data only. No account credentials are accepted.
+mode: websocket
+universe: [BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, ADAUSDT, DOGEUSDT, AVAXUSDT, LINKUSDT, DOTUSDT, LTCUSDT, BCHUSDT, ATOMUSDT, NEARUSDT, UNIUSDT, AAVEUSDT, ETCUSDT, FILUSDT, XLMUSDT, TRXUSDT]
+initial_cash: 10000.0
+state_file: var/paper/live_state.json
+log_dir: logs/paper
+mark_seconds: 5
+max_stale_seconds: 120
+strategy:
+  # PASS -> v3, FAIL -> hybrid, missing verdict -> observe.
+  name: auto
+  result_file: results/v3_final.json
+  catalog_file: data/v3_historical_catalog.json
+cost:
+  fee_bps: 10.0
+  tier_penalty_bps: {1: 5.0, 2: 15.0, 3: 40.0}
+risk:
+  daily_drawdown: 0.05
+  total_drawdown: 0.15
+  max_position: 0.10
+  min_volume24_usdt: 5000000.0

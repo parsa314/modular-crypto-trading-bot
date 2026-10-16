@@ -1,0 +1,55 @@
+name: Reproduce v3-v5 Train and Validation numbers
+
+on:
+  push:
+    branches: ["research/btcusdt-m15-real-backtest-20261014"]
+    paths:
+      - "data/binance_spot_usdt_1d_20211001_20241231.csv.gz"
+      - "scripts/execute_mode_v3_train_val.py"
+      - "scripts/execute_mode_v4_v5_train_val.py"
+      - "results/v3_train_val.json"
+      - "results/v4_train_val.json"
+      - "results/v5_train_val.json"
+      - ".github/workflows/execute-mode-train-val.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install numerical dependencies
+        run: python -m pip install 'numpy==2.3.5' 'pandas==2.2.3'
+      - name: Recompute strategy returns through 2024 only
+        run: |
+          python scripts/execute_mode_v3_train_val.py
+          python scripts/execute_mode_v4_v5_train_val.py
+      - name: Match committed economic results
+        run: |
+          python - <<'PY'
+          import json
+          import math
+          import subprocess
+          from pathlib import Path
+
+          for name in ('v3', 'v4', 'v5'):
+              path = f'results/{name}_train_val.json'
+              expected = json.loads(subprocess.check_output(['git', 'show', f'HEAD:{path}']))
+              actual = json.loads(Path(path).read_text())
+              assert actual.keys() == expected.keys(), name
+              for key, value in expected.items():
+                  measured = actual[key]
+                  if isinstance(value, (int, float)) and not isinstance(value, bool):
+                      assert math.isclose(measured, value, rel_tol=1e-9, abs_tol=1e-9), (name, key, measured, value)
+                  else:
+                      assert measured == value, (name, key)
+              assert actual['test3_opened'] is False
+              print(name, 'Train Sharpe', actual['sharpe_train'], 'Val Sharpe', actual['sharpe_val'], actual['verdict'])
+          PY

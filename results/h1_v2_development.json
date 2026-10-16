@@ -1,0 +1,153 @@
+{
+  "pre_registration_commit": "c134d74e35b55b156c71012fbe33dc0ecfa869fd",
+  "source_sha256": "f7bf84ccaff343dbb627c17e6245ae6f2488f940a3ed6867efd262115ea9d401",
+  "original_entry_count": 299,
+  "original_diagnostics": {
+    "eligible_candidate_bars": 3754,
+    "actual_votes": {
+      "BUY": 623,
+      "SELL": 565
+    },
+    "excluded_bar_audit_sample": 100,
+    "execution_delay_bars": 2
+  },
+  "train_atr_median": 0.0031661497412327115,
+  "train_volatility_terciles": [
+    0.02121289324924663,
+    0.030093908928896036
+  ],
+  "excluded": {
+    "feature_warmup": 5,
+    "gap_in_outcome_window": 1,
+    "embargo": 5,
+    "outcome_crosses_boundary": 1
+  },
+  "train_candidates": 175,
+  "train_positive": 90,
+  "train_negative": 85,
+  "validation_candidates": 112,
+  "holdouts_opened": false,
+  "model": {
+    "name": "XGBoost",
+    "version": "3.4.1",
+    "train_probability_range": [
+      0.4239228665828705,
+      0.6195139288902283
+    ],
+    "validation_probability_range": [
+      0.4239228665828705,
+      0.6195139288902283
+    ],
+    "validation_predicted_ge_075": 0
+  },
+  "validation": {
+    "meta": {
+      "net_return": 0.0,
+      "sharpe": null,
+      "sortino": null,
+      "calmar": null,
+      "maxdd": 0.0,
+      "longest_dd_days": 0,
+      "win_rate": null,
+      "profit_factor": null,
+      "expectancy_per_trade": null,
+      "skew_daily": null,
+      "excess_kurt_daily": null,
+      "trades": 0,
+      "turnover_sides": 0,
+      "exposure_fraction": 0.0,
+      "days": 346
+    },
+    "same_exit_baseline": {
+      "net_return": -0.2399644499318614,
+      "sharpe": -2.0937943419084477,
+      "sortino": -2.6055887329169787,
+      "calmar": -1.0128082903455087,
+      "maxdd": 0.24815215900549048,
+      "longest_dd_days": 337,
+      "win_rate": 0.5046728971962616,
+      "profit_factor": 0.6113498043487537,
+      "expectancy_per_trade": -0.0024928053120283717,
+      "skew_daily": -0.26414379130783955,
+      "excess_kurt_daily": 6.861396924915807,
+      "trades": 107,
+      "turnover_sides": 214,
+      "exposure_fraction": 0.0879395472061657,
+      "days": 346
+    },
+    "buy_hold": {
+      "net_return": 1.237939596251965,
+      "sharpe": 1.874409520306559,
+      "sortino": 3.068552120058268,
+      "calmar": 5.120798465749902,
+      "maxdd": 0.26151364947640954,
+      "longest_dd_days": 237,
+      "win_rate": 1.0,
+      "profit_factor": null,
+      "expectancy_per_trade": 1.237939596251965,
+      "skew_daily": 0.5385250351299278,
+      "excess_kurt_daily": 2.0488254393746725,
+      "trades": 1,
+      "turnover_sides": 2,
+      "exposure_fraction": 1.0,
+      "days": 346
+    },
+    "donchian20": {
+      "net_return": -0.5995097784831557,
+      "sharpe": -2.162364863438304,
+      "sortino": -3.257562848704327,
+      "calmar": -0.9031098499314791,
+      "maxdd": 0.6855609784888612,
+      "longest_dd_days": 302,
+      "win_rate": 0.26153846153846155,
+      "profit_factor": 0.7147031447073626,
+      "expectancy_per_trade": -0.0021537542156842156,
+      "skew_daily": 1.3189969020077663,
+      "excess_kurt_daily": 4.6219565615526665,
+      "trades": 390,
+      "turnover_sides": 780,
+      "exposure_fraction": 0.5447374759152216,
+      "days": 346
+    },
+    "random1000_median_metrics": {
+      "net_return": 0.0,
+      "sharpe": null,
+      "sortino": null,
+      "calmar": null,
+      "maxdd": 0.0,
+      "longest_dd_days": 0.0,
+      "win_rate": null,
+      "profit_factor": null,
+      "expectancy_per_trade": null,
+      "skew_daily": null,
+      "excess_kurt_daily": null,
+      "trades": 0.0,
+      "turnover_sides": 0.0,
+      "exposure_fraction": 0.0,
+      "days": 346.0
+    },
+    "random1000_note": "Matched to selected trade durations/count; zero selected trades gives 1000 flat paths.",
+    "random1000_same_exit_baseline_median_metrics": {
+      "net_return": -0.23089442130877402,
+      "sharpe": -1.7604245939586995,
+      "sortino": -2.3124390117470313,
+      "calmar": -0.8887571112036248,
+      "maxdd": 0.27885379208565697,
+      "longest_dd_days": 302.0,
+      "win_rate": 0.3364485981308411,
+      "profit_factor": 0.5845431940299775,
+      "expectancy_per_trade": -0.0023505009783207917,
+      "skew_daily": -0.27141584150283815,
+      "excess_kurt_daily": 19.37531424830312,
+      "trades": 107.0,
+      "turnover_sides": 214.0,
+      "exposure_fraction": 0.0879395472061657,
+      "days": 346.0
+    },
+    "win_rate_uplift_absolute": null,
+    "ece_5_equal_count": 0.04064121762556688,
+    "paired_bootstrap_lower_025_daily_log_excess_vs_bh": -0.005201372652479632,
+    "development_gate_pass": false
+  },
+  "verdict": "H1_REJECTED_DEVELOPMENT"
+}

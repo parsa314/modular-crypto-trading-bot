@@ -1,0 +1,53 @@
+name: H1 v2 preregistered development audit
+
+on:
+  push:
+    branches: ["research/btcusdt-m15-real-backtest-20261014"]
+    paths:
+      - ".github/workflows/h1-v2-development.yml"
+      - "scripts/evaluate_h1_v2.py"
+      - "tests/test_h1_v2.py"
+      - "results/h1_v2_development.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  h1-development:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen research dependencies
+        run: |
+          python -m pip install \
+            'numpy==2.3.5' 'pandas==2.2.3' 'scipy==1.17.0' \
+            'scikit-learn==1.8.0' 'xgboost==3.4.1' 'pyarrow==24.0.0' \
+            'pytest==9.1.1'
+      - name: Test causal execution invariants
+        run: python -m pytest -q tests/test_h1_v2.py
+      - name: Reproduce development verdict from committed BTC 2022-24 data only
+        run: python -m scripts.evaluate_h1_v2 --output /tmp/h1_v2_development_ci.json
+      - name: Check the locked gate and provenance against the committed result
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          expected = json.loads(Path('results/h1_v2_development.json').read_text())
+          actual = json.loads(Path('/tmp/h1_v2_development_ci.json').read_text())
+          for key in ('pre_registration_commit', 'source_sha256', 'original_entry_count',
+                      'train_candidates', 'train_positive', 'train_negative',
+                      'validation_candidates', 'holdouts_opened', 'verdict'):
+              assert actual[key] == expected[key], key
+          assert actual['verdict'] == 'H1_REJECTED_DEVELOPMENT'
+          assert actual['validation']['meta']['trades'] == 0
+          assert actual['validation']['development_gate_pass'] is False
+          assert actual['model']['validation_predicted_ge_075'] == 0
+          assert actual['model']['validation_probability_range'][1] < 0.75
+          assert actual['holdouts_opened'] is False
+          print('DEVELOPMENT_GATE_REPRODUCED_WITH_HOLDOUTS_SEALED')
+          PY

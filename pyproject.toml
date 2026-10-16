@@ -20,6 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "httpx>=0.27,<1"]
+paper = ["websockets==15.0.1", "PyYAML==6.0.3", "pyarrow==24.0.0"]
 ml = [
   "xgboost>=3.0,<4",
   "lightgbm>=4.5,<5",
@@ -44,4 +45,4 @@ include = ["research_bot*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = [".", "src"]

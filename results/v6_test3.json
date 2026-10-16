@@ -1,0 +1,26 @@
+{
+  "strategy": "v6_fixed_20_coins",
+  "start": "2025-01-01",
+  "end_inclusive": "2026-09-30",
+  "v6": {
+    "sharpe": -0.17282756052125955,
+    "sortino": -0.25908114016935735,
+    "maxdd": 0.27957877252270635,
+    "net_return": -0.08424943099438897,
+    "profit_factor": 0.8352621825667127,
+    "win_rate": 0.3772455089820359,
+    "num_trades": 167
+  },
+  "btc": {
+    "sharpe": 0.0658093245771018,
+    "sortino": 0.09509953422954015,
+    "maxdd": 0.529717659135106,
+    "net_return": -0.10903324631758016,
+    "profit_factor": null,
+    "win_rate": null,
+    "num_trades": 0
+  },
+  "verdict": "REJECTED_FINAL",
+  "first_look_only": true,
+  "caveat": "Not a real-money execution authorization. This is a retrospectively selected 20-asset proxy and 2024 thresholds changed post hoc."
+}

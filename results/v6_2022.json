@@ -1,0 +1,23 @@
+{
+  "strategy": "v6_5_coins_2022_bear",
+  "strategy_metrics": {
+    "sharpe": -1.0372896152077826,
+    "sortino": -1.2981584616556083,
+    "maxdd": 0.2970459913343436,
+    "net_return": -0.2423106737436047,
+    "profit_factor": 0.33729123330125815,
+    "win_rate": 0.23809523809523808,
+    "num_trades": 21
+  },
+  "btc_metrics": {
+    "sharpe": -1.2928471217968378,
+    "sortino": -1.7012585102303326,
+    "maxdd": 0.6693123705410324,
+    "net_return": -0.6431427373192888,
+    "profit_factor": null,
+    "win_rate": null,
+    "num_trades": 0
+  },
+  "verdict": "PASS_BEAR_RELATIVE_TO_BTC",
+  "test3": "not opened"
+}
