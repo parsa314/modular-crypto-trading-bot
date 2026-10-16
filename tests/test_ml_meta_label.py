@@ -59,6 +59,7 @@ def test_train_purged_by_event_end_before_validation():
 def test_models_do_not_claim_metric_without_classes():
     df=pd.DataFrame({
         "strategy_id":["v5_rsi14_meanrev"]*180,
+        "symbol":["BTCUSDT"]*180,
         "vol_regime":["LOW"]*180,
         "signal_time":pd.date_range("2019-01-01",periods=180,freq="D",tz="UTC"),
         "event_end":pd.date_range("2019-01-01",periods=180,freq="D",tz="UTC")+pd.Timedelta(days=5),
