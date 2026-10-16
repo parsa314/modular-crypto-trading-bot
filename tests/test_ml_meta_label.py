@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from scripts.ml_meta_label_experiment import (
-    SYMBOLS,compute_atr,label_event,purged_folds,ml_experiment,build_features
+    SYMBOLS,label_event,purged_folds,ml_experiment,build_features
 )
 
 def ohlcv(rows=250):
