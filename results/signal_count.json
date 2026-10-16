@@ -1,0 +1,644 @@
+{
+  "total": 8669,
+  "train": 3272,
+  "validation": 1717,
+  "test_reused": 3539,
+  "by_strategy": {
+    "v5_rsi14_meanrev": 4267,
+    "v6_atr_breakout": 3716,
+    "v4_donchian55": 387,
+    "v1_original_four_style": 299
+  },
+  "class_train": {
+    "1": 1891,
+    "0": 1381
+  },
+  "class_validation": {
+    "1": 997,
+    "0": 720
+  },
+  "class_test_reused": {
+    "1": 1810,
+    "0": 1729
+  },
+  "historical_universe_requested": 50,
+  "historical_universe_with_sufficient_bars": 50,
+  "historical_manifest": [
+    {
+      "symbol": "BTCUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "c2003b8c4bd012f3d0411783783f8715dad60825b2d4d5e4838f37221a06426f",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ETHUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "34479227a0df6f7f34b45a617ac1ae20e9f8b8990afdea5dcd1872c2686e716a",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "BNBUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "d1a937d2a40f6144c95a657184b44b363b6101244ee6aa4a9b157aca111879ec",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "SOLUSDT",
+      "first": "2020-08-11 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2242,
+      "internal_gaps": 0,
+      "sha256_rows": "343bb450c7db35356eef3e643009e4d9847da30ffada01c24d59775da09bca7c",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "XRPUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "58e681e557748e40ac30d451f43276a01c2601abfbc9f0eed8402f8348e56cc3",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ADAUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "71de32cebf6bc10a77624eb77ea89afebcd76919d9a0527286bc51fa0eba7f21",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "first": "2019-07-05 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2645,
+      "internal_gaps": 0,
+      "sha256_rows": "ef631f426f2e012a0951b7b4cdcde3711ce14c9bfcd487f7d82f6f9ae5795a6f",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "DOTUSDT",
+      "first": "2020-08-18 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2235,
+      "internal_gaps": 0,
+      "sha256_rows": "9690c38da52db55206cc0c5e6870227e20ef4e5a9e482b4f8bb24c3b4edc78b3",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "LINKUSDT",
+      "first": "2019-01-16 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2815,
+      "internal_gaps": 0,
+      "sha256_rows": "408edd54e7d9394c524c31685619ba86e4e611a13f94b14a6711d33ce824fcad",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "LTCUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "10d740a4d967a5ed4856bd05a53ab949dc1cf0000d71e71d3180b59386acd50f",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "AVAXUSDT",
+      "first": "2020-09-22 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2200,
+      "internal_gaps": 0,
+      "sha256_rows": "aea868fbcf43014a3672fdff26ff98ca65f62e3800db9891031b3d193489fc3f",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "SHIBUSDT",
+      "first": "2021-05-10 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 1970,
+      "internal_gaps": 0,
+      "sha256_rows": "fbffc4c8471577e6f9d2885f0de869dd7cb5c1e7f006281baa265f8d2ede918b",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ATOMUSDT",
+      "first": "2019-04-29 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2712,
+      "internal_gaps": 0,
+      "sha256_rows": "95fc9a3ceb16d99f6ce44fd33a6383cacb9aef0082392077b96c27bacf0ba96c",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "UNIUSDT",
+      "first": "2020-09-17 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2205,
+      "internal_gaps": 0,
+      "sha256_rows": "c839b094b983d05b5a8651970106ad606e869ba68c167fd6705bccee79ccd03d",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ETCUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "636d3379e0a4787eb35e8a238c4323e2316d677b9ede4266484700f8d0dbbc16",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "XLMUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "97299817100d7a4140be20a9cd5072dd63c41c4871a2ac3de165fe56855819e5",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "BCHUSDT",
+      "first": "2019-11-28 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2499,
+      "internal_gaps": 0,
+      "sha256_rows": "948573376ad13bc210ee2ae1ab91cf61903eace55050c71842c41979e0eae788",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "TRXUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "13c9f05b2c9ee2a9714f702dd276307760cab0fb59c5035221019909c4995abd",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "FILUSDT",
+      "first": "2020-10-15 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2177,
+      "internal_gaps": 0,
+      "sha256_rows": "3d0ddc4b18feae30b1f8b7cbd114108b20988e64166104e903b8f69c5010e692",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "AAVEUSDT",
+      "first": "2020-10-15 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2177,
+      "internal_gaps": 0,
+      "sha256_rows": "1ddd868ba8dd6b503240c345ef5042b43a27fbf152a61f7f7ebcfb83c5150ae9",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ALGOUSDT",
+      "first": "2019-06-22 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2658,
+      "internal_gaps": 0,
+      "sha256_rows": "5a67660014bec6a99c96282fcef7aed6dd6ecc910e6710f705145a2b17e82b06",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "EOSUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2025-05-26 00:00:00+00:00",
+      "rows": 2338,
+      "internal_gaps": 0,
+      "sha256_rows": "947266df119c6f8b5debedabfb450bd2c492711baa1cdedb1f1fc28e60bec08e",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "XTZUSDT",
+      "first": "2019-09-24 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2564,
+      "internal_gaps": 0,
+      "sha256_rows": "a0654b7f0b90ddcca5bcd960236bf1fa8ade12b435f59b66a6be8f18e9de4204",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "DASHUSDT",
+      "first": "2019-03-28 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2744,
+      "internal_gaps": 0,
+      "sha256_rows": "0d5283ded6a7250a3075c071945e2f98c7fc736fbe69f48545fdea03190936fe",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ZECUSDT",
+      "first": "2019-03-21 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2751,
+      "internal_gaps": 0,
+      "sha256_rows": "8c6cd90bd61a35ea80ccc9ab456072bfd4c4d98fc348d93dc07e271a74c9aa36",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "COMPUSDT",
+      "first": "2020-06-25 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2289,
+      "internal_gaps": 0,
+      "sha256_rows": "fc9d9e76682b18ce5d178def8ddad4027afe6f1d54b0e3c5efbb1f0c84435520",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "MKRUSDT",
+      "first": "2020-07-23 00:00:00+00:00",
+      "last": "2025-09-15 00:00:00+00:00",
+      "rows": 1881,
+      "internal_gaps": 0,
+      "sha256_rows": "29e5009542f50aafa98ceeaff8755c5baba0dcfaa2f62c631669753fa24ed04c",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "CRVUSDT",
+      "first": "2020-08-15 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2238,
+      "internal_gaps": 0,
+      "sha256_rows": "22dc16fb2485e1b069dbc4324121c2516be5035f94415adcfdf8d8d6ff03af33",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "SUSHIUSDT",
+      "first": "2020-09-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2221,
+      "internal_gaps": 0,
+      "sha256_rows": "48b5cff0a03c5a89f7973c17b1af818953dd04abb1fa79c12c654fb7b5263cb1",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "SNXUSDT",
+      "first": "2020-07-09 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2275,
+      "internal_gaps": 0,
+      "sha256_rows": "5af8f88c14833e22306a56e502d0eb925d9d95debb0e700c9263b723f815ebad",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "YFIUSDT",
+      "first": "2020-08-10 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2243,
+      "internal_gaps": 0,
+      "sha256_rows": "83019f33452580d7b80ea08940c5006aa8356d55606af3c0fd6978cd090c152f",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "BALUSDT",
+      "first": "2020-08-11 00:00:00+00:00",
+      "last": "2025-04-16 00:00:00+00:00",
+      "rows": 1710,
+      "internal_gaps": 0,
+      "sha256_rows": "c6c11e04716f962df81fa405e8f0b0f2ffea818aeb10a6f4eb2b64a9bfb9e099",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ENJUSDT",
+      "first": "2019-04-18 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2723,
+      "internal_gaps": 0,
+      "sha256_rows": "7a49f873ba9f1a51fde9455735e9861241e2a2d4c823b635837b2884a44592f8",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "CHZUSDT",
+      "first": "2019-09-06 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2582,
+      "internal_gaps": 0,
+      "sha256_rows": "8c80e54818e974a4a4510d0f7ab164a82a11fa73c49eaf20d7a2b017cb8f8ffe",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "NEARUSDT",
+      "first": "2020-10-14 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2178,
+      "internal_gaps": 0,
+      "sha256_rows": "d7b480be1c6a03f7dcac3c944eb3dca14167bd5491bce4b845fa43d39a53f8fc",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "GRTUSDT",
+      "first": "2020-12-17 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2114,
+      "internal_gaps": 0,
+      "sha256_rows": "c4d30d2a8815fa06d1692030dc9e8526af5ce25da1c38b24e6166220da64f841",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "AXSUSDT",
+      "first": "2020-11-04 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2157,
+      "internal_gaps": 0,
+      "sha256_rows": "3ce49e4b5fcc9461aa8ccb1f76a05d84dcc2630122ac9f9d71769a23dddd7ff9",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "SANDUSDT",
+      "first": "2020-08-14 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2239,
+      "internal_gaps": 0,
+      "sha256_rows": "2eefcf2ea887c5f3b6fb0769b0821379748b7a099624ff10ef4ae475bf0c6898",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "MANAUSDT",
+      "first": "2020-08-06 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2247,
+      "internal_gaps": 0,
+      "sha256_rows": "250649b5070431ffbdf477865070c41bc6b88a3221b85ee2a8eb2cb594d3fa68",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ICPUSDT",
+      "first": "2021-05-11 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 1969,
+      "internal_gaps": 0,
+      "sha256_rows": "e92f5636d9635b69a047a28059001d9f2d005721dcd75adb22746895c9e66f88",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "VETUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "3c2e2412151ac4bec224ea346aa7fa268020f9b0a118d52bd98bcfb69c57f970",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "HBARUSDT",
+      "first": "2019-09-29 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2559,
+      "internal_gaps": 0,
+      "sha256_rows": "12641e34adacad567acf1fe74845ccf2860e781d7374ab2754d10bf34c03a5a5",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "THETAUSDT",
+      "first": "2019-04-10 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2731,
+      "internal_gaps": 0,
+      "sha256_rows": "a52fe85951ff40dd17d8f46e9b3dcb7b531dc3028f1a48d5165e7732d8fdaf37",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "EGLDUSDT",
+      "first": "2020-09-03 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2219,
+      "internal_gaps": 0,
+      "sha256_rows": "bdda680da11b2bbd3476f21cbe2e76c398ad45871976efaeeb8ffdc48d20d311",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "RUNEUSDT",
+      "first": "2020-09-04 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2218,
+      "internal_gaps": 0,
+      "sha256_rows": "a37adfec7fbe9e72546cb47a4b0b88b7bb5809272f6ed2b4bcefefbb874d9b57",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "KAVAUSDT",
+      "first": "2019-10-25 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2533,
+      "internal_gaps": 0,
+      "sha256_rows": "d8d20d29732b0eca3e7b4efabb0724499ba5ee89aa546054475d9c3d8ea82ce2",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ONEUSDT",
+      "first": "2019-06-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2679,
+      "internal_gaps": 0,
+      "sha256_rows": "36309aeb24bfd273bd26bc879f0d490856fa94d3cb314efbc542242a27df3f25",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "ZILUSDT",
+      "first": "2019-02-19 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2781,
+      "internal_gaps": 0,
+      "sha256_rows": "631bce327f7e59645fe1d2348204dab389377e87100805535e4423a8f84f0229",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "BATUSDT",
+      "first": "2019-03-04 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2768,
+      "internal_gaps": 0,
+      "sha256_rows": "e6f5864326f87d0ca916d539bb77e4cd4a93c94173196cbd8c134d696f739219",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    },
+    {
+      "symbol": "NEOUSDT",
+      "first": "2019-01-01 00:00:00+00:00",
+      "last": "2026-09-30 00:00:00+00:00",
+      "rows": 2830,
+      "internal_gaps": 0,
+      "sha256_rows": "dddb6794f0dd819f36a14303aede0824a4f1d32b3c384063af24681970595081",
+      "api_endpoints": [
+        "https://data-api.binance.vision"
+      ],
+      "status": "AVAILABLE"
+    }
+  ],
+  "v1_authentic_M15_BTC_events": 299,
+  "minimum_5000_rows_met": true,
+  "regime": {
+    "method": "train-only BTC 20d volatility tercile proxy, NOT HMM",
+    "train_cutoffs": [
+      0.029514206537298405,
+      0.03766315600384651
+    ]
+  },
+  "sample_limitations": [
+    "Asset roster is static/retrospectively selected, not all-ever-listed or historical PIT top50",
+    "v4/v5/v6 genuine stated daily rules, but independent overlapping ENTRY EVENTS, not portfolio fills",
+    "v1 uses genuine BTC 2022-24 M15 four-arm model BUY transitions only, not fabricated M15 signals for 50 coins",
+    "STOP_FIRST daily OHLC ambiguous intrabar path; 20-bar triple barrier is research-only",
+    "Test 2024-26 has been observed repeatedly in prior research; NOT unexposed OOS"
+  ]
+}

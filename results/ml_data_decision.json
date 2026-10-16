@@ -1,0 +1,9 @@
+{
+  "n_total": 8669,
+  "n_labeled": 8669,
+  "n_positive": 4807,
+  "n_negative": 3862,
+  "minimum_5000_rows_met": true,
+  "decision": "ML_TRAINED_EXPLORATORY",
+  "independence": "2024-26 ALREADY EXPOSED in earlier v6 testing, contaminated as untouched holdout"
+}

@@ -1,0 +1,59 @@
+{
+  "status": "TRAINED_EXPLORATORY",
+  "train_positive_fraction": 0.5779339853300733,
+  "training_cv": [
+    {
+      "n_train": 273,
+      "n_validation": 419,
+      "precision_top_decile": 0.6904761904761905
+    },
+    {
+      "n_train": 738,
+      "n_validation": 494,
+      "precision_top_decile": 0.7
+    },
+    {
+      "n_train": 1137,
+      "n_validation": 507,
+      "precision_top_decile": 0.7843137254901961
+    },
+    {
+      "n_train": 1682,
+      "n_validation": 885,
+      "precision_top_decile": 0.6966292134831461
+    },
+    {
+      "n_train": 2463,
+      "n_validation": 619,
+      "precision_top_decile": 0.46774193548387094
+    }
+  ],
+  "validation_precision_top_decile": 0.7209302325581395,
+  "validation_score_threshold": 0.6899780631065369,
+  "test_is_NOT_virgin": true,
+  "test_raw": {
+    "n": 3539,
+    "win_rate": 0.5114439107092399,
+    "mean_net_per_event": 0.004407137715681364
+  },
+  "test_filtered": {
+    "n": 421,
+    "win_rate": 0.47268408551068886,
+    "mean_net_per_event": -0.01474029671331551
+  },
+  "test_precision_top_decile": 0.4745762711864407,
+  "event_based_raw_daily_proxy": {
+    "realized_pnl_daily_proxy_sharpe": 0.2926519817873551,
+    "approx_sum_risk_allocated_event_net_return": 0.1591643624917725,
+    "warning": "Event exit-date book at 1% fixed notional, NOT tradable mark-to-market NAV; overlapping positions can exceed capital."
+  },
+  "event_based_filtered_daily_proxy": {
+    "realized_pnl_daily_proxy_sharpe": -0.33931382094561846,
+    "approx_sum_risk_allocated_event_net_return": -0.06178424883934867,
+    "warning": "Event exit-date book at 1% fixed notional, NOT tradable mark-to-market NAV; overlapping positions can exceed capital."
+  },
+  "sharpe_delta_proxy": -0.6319658027329735,
+  "model_adds_value_under_0_3_proxy_rule": false,
+  "ml_meets_0_55_validation_precision": true,
+  "note": "This is a research-only preliminary experiment. A raw trade selection edge and daily realized-PnL proxy do NOT prove a portfolio Sharpe gain, execution, or production readiness."
+}
