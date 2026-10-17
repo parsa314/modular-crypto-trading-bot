@@ -1,0 +1,40 @@
+{
+  "phase": "1",
+  "step": "MT5Forge Demo connection/history/check-only order",
+  "started_at_utc": "2026-10-17T07:30:09.917921+00:00",
+  "backend": "mt5forge",
+  "reviewed_backend_version": "1.0.3",
+  "installed_backend_version": "1.0.3",
+  "source": "https://pypi.org/project/mt5forge/1.0.3/",
+  "source_api": [
+    "MT5Connector.login(MT5Credentials)",
+    "MarketDataFeed.get_candles(shift=1)",
+    "OrderBuilder.build_market_request(OrderRequest,price)",
+    "guarded MetaTrader5.order_check"
+  ],
+  "runtime": {
+    "platform": "Linux",
+    "python": "3.12.14",
+    "official_mt5_package_available": false
+  },
+  "configured_demo_selectors": {
+    "MT5_DEMO_LOGIN": false,
+    "MT5_DEMO_PASSWORD": false,
+    "MT5_DEMO_SERVER": false,
+    "MT5_DEMO_TERMINAL_PATH": false
+  },
+  "symbol": "EURUSD",
+  "timeframe": "H1",
+  "requested_closed_bars": 100,
+  "connected": false,
+  "verified_demo": false,
+  "closed_bars_received": 0,
+  "closed_candles": [],
+  "open_positions_count": null,
+  "order_check": null,
+  "orders_submitted": 0,
+  "fills": 0,
+  "status": "UNAVAILABLE",
+  "error": "MT5Forge terminal connection requires Windows and a configured Demo terminal; current host is not Windows",
+  "finished_at_utc": "2026-10-17T07:30:09.918671+00:00"
+}

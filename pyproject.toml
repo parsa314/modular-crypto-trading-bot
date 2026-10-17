@@ -24,6 +24,7 @@ ml = [
   "xgboost>=3.0,<4",
   "lightgbm>=4.5,<5",
   "catboost>=1.2,<2",
+  "hmmlearn>=0.3,<0.4",
 ]
 deep = [
   "torch>=2.14,<2.15",
@@ -38,9 +39,25 @@ rl = [
   "gymnasium>=1.0,<2",
   "stable-baselines3>=2.6,<3",
 ]
+ai = [
+  "xgboost>=3,<4",
+  "lightgbm>=4.5,<5",
+  "hmmlearn>=0.3,<0.4",
+  "pyarrow>=16,<25",
+  "gymnasium>=1,<2",
+  "stable-baselines3>=2.6,<3",
+  "torch>=2.8,<3",
+  "filelock>=3,<4",
+  "websockets>=15,<17",
+]
+mt5 = [
+  "MetaTrader5>=5.0,<6; sys_platform == 'win32'",
+  "mt5forge==1.0.3; sys_platform == 'win32' and python_version >= '3.12'",
+]
+validation = ["purgedcv==0.1.11; python_version >= '3.11'"]
 
 [tool.setuptools.packages.find]
-include = ["research_bot*"]
+include = ["research_bot*", "src*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
