@@ -71,5 +71,5 @@ def test_models_do_not_claim_metric_without_classes():
               "corr_btc","hour","day_of_week","btc_volatility"]}
     })
     counts,metrics=ml_experiment(df)
-    assert metrics["status"]=="INSUFFICIENT_TRAIN_OR_VALIDATION_FOR_MODEL"
-    assert counts["test_reused"]==0
+    assert metrics["status"]=="INSUFFICIENT_SAMPLES_FOR_NUMERIC_MODEL"
+    assert counts["test_unread"]==0
