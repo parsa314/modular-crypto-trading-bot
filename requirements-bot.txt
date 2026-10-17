@@ -1,0 +1,6 @@
+pandas>=2.2,<3
+numpy>=1.26,<3
+pyarrow>=16,<25
+PyYAML>=6,<7
+websockets>=13,<17
+pytest>=8,<10

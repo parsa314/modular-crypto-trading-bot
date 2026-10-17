@@ -1,0 +1,17 @@
+# Verified historical BTCUSDT ONLY; not a historical top-10 universe.
+mode: replay
+symbols: [BTCUSDT]
+data_path: data/btc_usdt_m15_2022_2024.parquet
+manifest_path: data/btc_usdt_m15_2022_2024.manifest.json
+initial_cash: 1000
+max_position: 0.10
+daily_kill: 0.05
+total_kill: 0.15
+min_quote_24h: 5000000
+fee_bps: 10
+slip_bps: 5
+warmup_bars: 80
+replay_bars: 280
+state_path: logs/bot-replay/state.json
+log_dir: logs/bot-replay
+max_stream_idle_seconds: 90

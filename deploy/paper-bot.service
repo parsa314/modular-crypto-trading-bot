@@ -1,0 +1,16 @@
+[Unit]
+Description=Public Binance H4 Donchian PAPER bot - NO EXCHANGE ORDERS
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/modular-crypto-trading-bot
+ExecStart=/usr/bin/bash %h/modular-crypto-trading-bot/start.sh
+Restart=no
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

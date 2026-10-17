@@ -1,0 +1,15 @@
+# PUBLIC Binance spot prices only. NO API KEY, NO REAL ORDERS.
+mode: binance_ws
+symbols: [BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, ADAUSDT, DOGEUSDT, LINKUSDT, LTCUSDT, AVAXUSDT]
+initial_cash: 1000
+max_position: 0.10
+daily_kill: 0.05
+total_kill: 0.15
+min_quote_24h: 5000000
+fee_bps: 10
+slip_bps: 5
+warmup_bars: 80
+replay_bars: 280
+state_path: logs/bot/state.json
+log_dir: logs/bot
+max_stream_idle_seconds: 90
