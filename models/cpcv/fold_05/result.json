@@ -1,0 +1,169 @@
+{
+  "fold_id": 5,
+  "status": "COMPLETED",
+  "test_groups": [
+    0,
+    5
+  ],
+  "train_events": 707,
+  "train_binary_labels": 674,
+  "approved_training_events": 70,
+  "inner_folds": [
+    {
+      "fold": 1,
+      "train_rows": 565,
+      "test_rows": 142,
+      "precision": 0.42857142857142855,
+      "selected": 14,
+      "samples": 138
+    },
+    {
+      "fold": 2,
+      "train_rows": 565,
+      "test_rows": 142,
+      "precision": 0.14285714285714285,
+      "selected": 14,
+      "samples": 137
+    },
+    {
+      "fold": 3,
+      "train_rows": 566,
+      "test_rows": 141,
+      "precision": 0.35714285714285715,
+      "selected": 14,
+      "samples": 133
+    },
+    {
+      "fold": 4,
+      "train_rows": 566,
+      "test_rows": 141,
+      "precision": 0.5,
+      "selected": 14,
+      "samples": 131
+    },
+    {
+      "fold": 5,
+      "train_rows": 566,
+      "test_rows": 141,
+      "precision": 0.42857142857142855,
+      "selected": 14,
+      "samples": 135
+    }
+  ],
+  "episode_periods": {
+    "0": {
+      "start": "2022-07-04 00:00:00+00:00",
+      "end": "2023-01-02 00:00:00+00:00"
+    },
+    "1": {
+      "start": "2023-01-02 00:00:00+00:00",
+      "end": "2023-07-04 00:00:00+00:00"
+    },
+    "2": {
+      "start": "2023-07-04 00:00:00+00:00",
+      "end": "2024-01-03 00:00:00+00:00"
+    },
+    "3": {
+      "start": "2024-01-03 00:00:00+00:00",
+      "end": "2024-07-02 00:00:00+00:00"
+    }
+  },
+  "threshold": 0.5321397542953491,
+  "threshold_source": "outer-train inner OOF90th percentile",
+  "training": {
+    "algorithm": "PPO",
+    "seed": 42,
+    "requested_steps": 100000,
+    "actual_environment_steps": 100352,
+    "training_seconds": 65.85553050099998,
+    "n_steps": 512,
+    "batch_size": 128,
+    "n_epochs": 5,
+    "network": [
+      32,
+      32
+    ],
+    "torch_threads": 1,
+    "device": "cpu",
+    "approved_training_events": 70,
+    "probability_source": "purged_oof",
+    "model_path": "models/cpcv/fold_05/ppo.zip",
+    "model_sha256": "02774b50217cc1732a0bd7abd9801399e250e3e92b21b6dd81ef7ef79f7d6086",
+    "period_start": "2022-01-01 00:00:00+00:00",
+    "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+    "training_episodes": 4,
+    "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+    "valuation": "actual intratrade closed-bar NAV and realized exit",
+    "observation_names": [
+      "position",
+      "cash_initial_capital_units",
+      "unrealized_pnl",
+      "ml_probability",
+      "atr_pct",
+      "regime_range",
+      "regime_trend",
+      "regime_volatile"
+    ],
+    "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+    "zero_variance_reward_sharpe": 0.0,
+    "zero_variance_reported_sharpe": null
+  },
+  "test_segments": [
+    {
+      "start": "2022-01-01 00:00:00+00:00",
+      "end_exclusive": "2022-07-03 00:00:00+00:00",
+      "approved_events": 16,
+      "fixed_fraction_2pct": {
+        "sharpe": -3.8492888415767146,
+        "sharpe_defined": true,
+        "return": -0.001603769045322334,
+        "max_drawdown": 0.0016384181841042622,
+        "approved_events": 16,
+        "num_trades": 16,
+        "daily_observations": 183,
+        "mean_allocation": 0.02,
+        "valuation": "actual intratrade closed-bar NAV and realized exit"
+      },
+      "ppo": {
+        "sharpe": null,
+        "sharpe_defined": false,
+        "return": 0.0,
+        "max_drawdown": 0.0,
+        "approved_events": 16,
+        "num_trades": 0,
+        "daily_observations": 183,
+        "mean_allocation": 0.0,
+        "valuation": "actual intratrade closed-bar NAV and realized exit"
+      }
+    },
+    {
+      "start": "2024-07-03 00:00:00+00:00",
+      "end_exclusive": "2025-01-01 00:00:00+00:00",
+      "approved_events": 8,
+      "fixed_fraction_2pct": {
+        "sharpe": -2.029694615534254,
+        "sharpe_defined": true,
+        "return": -0.0005036861903725542,
+        "max_drawdown": 0.0005895640809757685,
+        "approved_events": 8,
+        "num_trades": 8,
+        "daily_observations": 182,
+        "mean_allocation": 0.02,
+        "valuation": "actual intratrade closed-bar NAV and realized exit"
+      },
+      "ppo": {
+        "sharpe": null,
+        "sharpe_defined": false,
+        "return": 0.0,
+        "max_drawdown": 0.0,
+        "approved_events": 8,
+        "num_trades": 0,
+        "daily_observations": 182,
+        "mean_allocation": 0.0,
+        "valuation": "actual intratrade closed-bar NAV and realized exit"
+      }
+    }
+  ],
+  "elapsed_seconds": 66.63625942800013,
+  "model_directory": "models/cpcv/fold_05"
+}

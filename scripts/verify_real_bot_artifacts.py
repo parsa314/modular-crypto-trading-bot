@@ -98,11 +98,22 @@ def verify_cpcv():
         _same(reproduced[key], report[key])
     assert reproduced["verdict"] == report["verdict"]
     steps = []
+    hashes = []
     for fold in report["folds"]:
-        with zipfile.ZipFile(fold["training"]["model_path"]) as checkpoint:
+        model_path = Path(fold["training"]["model_path"])
+        digest = hashlib.sha256(model_path.read_bytes()).hexdigest()
+        assert digest == fold["training"]["model_sha256"]
+        hashes.append(digest)
+        with zipfile.ZipFile(model_path) as checkpoint:
             data = json.loads(checkpoint.read("data"))
         assert data["num_timesteps"] == fold["training"]["actual_environment_steps"] >= 100000
+        approved = pd.read_parquet(Path(fold["model_directory"]) / "approved_train.parquet")
+        for segment in fold["test_segments"]:
+            begin, end = pd.Timestamp(segment["start"]), pd.Timestamp(segment["end_exclusive"])
+            assert not ((approved.available_at >= begin) & (approved.available_at < end)).any()
+            assert not ((approved.entry_time < end) & (approved.exit_time > begin)).any()
         steps.append(data["num_timesteps"])
+    assert len(set(hashes)) == 15, "Each outer fold must have its own independently fitted PPO checkpoint"
     return {"phase": 4, "refits": len(steps), "actual_ppo_steps": sum(steps),
             "pbo": reproduced["pbo"], "dsr": reproduced["dsr"], "path_statistics_reproduced": True}
 
