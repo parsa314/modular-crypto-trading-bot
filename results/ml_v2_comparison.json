@@ -1,0 +1,1435 @@
+{
+  "counts": {
+    "total": 48954,
+    "train": 35899,
+    "validation": 12926,
+    "positive_train": 10294,
+    "positive_val": 3679,
+    "effective_uniqueness_train_weight_sum": 18216.18776954217,
+    "by_timeframe": {
+      "4h": 42608,
+      "1d": 6346
+    },
+    "by_strategy": {
+      "v5_rsi14": 20669,
+      "v6_atr_breakout": 15238,
+      "v4_donchian55": 13047
+    }
+  },
+  "nested_train_cv_auc": {
+    "XGBoost": 0.5504800385850368,
+    "LightGBM": 0.5496405144056886,
+    "CatBoost": 0.5499579123512872
+  },
+  "outer_folds": {
+    "XGBoost": [
+      {
+        "outer_start": "2021-01-01",
+        "train_rows": 6618,
+        "outer_rows": 12097,
+        "auc": 0.5348713253075119
+      },
+      {
+        "outer_start": "2022-01-01",
+        "train_rows": 15327,
+        "outer_rows": 13061,
+        "auc": 0.5660887518625617
+      }
+    ],
+    "LightGBM": [
+      {
+        "outer_start": "2021-01-01",
+        "train_rows": 6618,
+        "outer_rows": 12097,
+        "auc": 0.5369817007928315
+      },
+      {
+        "outer_start": "2022-01-01",
+        "train_rows": 15327,
+        "outer_rows": 13061,
+        "auc": 0.5622993280185457
+      }
+    ],
+    "CatBoost": [
+      {
+        "outer_start": "2021-01-01",
+        "train_rows": 6618,
+        "outer_rows": 12097,
+        "auc": 0.5356490741681968
+      },
+      {
+        "outer_start": "2022-01-01",
+        "train_rows": 15327,
+        "outer_rows": 13061,
+        "auc": 0.5642667505343775
+      }
+    ]
+  },
+  "validation": {
+    "XGBoost": {
+      "auc": 0.5629221798549564,
+      "precision_top_decile": 0.42614075792730083,
+      "precision": 0.42614075792730083,
+      "recall": 0.1497689589562381,
+      "f1": 0.22164119066773935,
+      "selected_events": 1293,
+      "positive_rate": 0.2846201454432926,
+      "passes_auc_0_55": true
+    },
+    "LightGBM": {
+      "auc": 0.553042951890864,
+      "precision_top_decile": 0.3805104408352668,
+      "precision": 0.3802163833075734,
+      "recall": 0.1337319923892362,
+      "f1": 0.1978684898451639,
+      "selected_events": 1294,
+      "positive_rate": 0.2846201454432926,
+      "passes_auc_0_55": true
+    },
+    "CatBoost": {
+      "auc": 0.5532755670219793,
+      "precision_top_decile": 0.41840680587780354,
+      "precision": 0.41840680587780354,
+      "recall": 0.14705082902962763,
+      "f1": 0.2176186645213194,
+      "selected_events": 1293,
+      "positive_rate": 0.2846201454432926,
+      "passes_auc_0_55": true
+    },
+    "Ensemble": {
+      "auc": 0.5580521505281364,
+      "precision_top_decile": 0.41067285382830626,
+      "precision": 0.41067285382830626,
+      "recall": 0.14433269910301713,
+      "f1": 0.21359613837489944,
+      "selected_events": 1293,
+      "positive_rate": 0.2846201454432926,
+      "passes_auc_0_55": true
+    }
+  },
+  "model_selected_by_training_only_cv": "XGBoost",
+  "verdict": "PASS",
+  "metrics_are_2023_validation_only": true,
+  "test_2024_2026": "NOT_OPENED",
+  "source": {
+    "prices": "Binance public unauthenticated spot 4h/daily klines",
+    "funding": "Binance public USD-M perpetual funding, missing is NaN not zero",
+    "requested_symbols": 50,
+    "data_window": "2019-01-01 to 2023-12-31",
+    "2024_test_opened": false,
+    "universe_warning": "50 retro-selected symbols, not historical point-in-time top50",
+    "hmm_train": {
+      "trained_rows": 8731,
+      "means": [
+        -4.828486585588266,
+        -4.8282712641952665,
+        -4.078626556873881
+      ]
+    },
+    "price_manifest": [
+      {
+        "symbol": "BTCUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "a8058a319eab1cf4797c0bbb125e97895755bf45e70268fee461a7b20c587320",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "BTCUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "017b2d4235c064fdcebb664f9040fc58dd6e4b328c849d940b038a3142283c95",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "ETHUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "fb6e4783f6ea45655805d1a3039d19ac15fa2a11dd74cc842eeca2033e83cd37",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "ETHUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "e3cc94e8feb5b698d7a705d6848876b231d681d096fcfc765f2b76543a12dc4d",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "BNBUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "472b755c1102b8e2f30ad284dc0814a70835234e046683ac20e53e13cf829849",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "BNBUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "eded437b5718d16a43378bcc00abf8105e430551b23de48224775c37349737b3",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "SOLUSDT",
+        "tf": "4h",
+        "bars": 7427,
+        "first": "2020-08-11 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "0b00f2f55122782ee8e8874f82ea31e9bd4967b18caeb96427f89be0aa20b97e",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "SOLUSDT",
+        "tf": "1d",
+        "bars": 1238,
+        "first": "2020-08-11 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "ef0ca032392c62cab3a01af2e93f5b97f096c9705fb53590293f9cae88652812",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "XRPUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "7441e47faf1fef517dd002b30d60c0d0a26a838dbea8e54cefe2039385df040b",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "XRPUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "a6afd61a4d4d1274174b6366d52a33f2778fd84c1cf779ef33bfa58e9c3f34db",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "ADAUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "ad5ce346f78377444dd7e99afcdd5ffed2fa46bd3aa24c692e5b59ff9d53e378",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "ADAUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "654398ccd3bb9ce6e305a990033e9ae7e3b7570aa0674c769d78921560c8e10b",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "DOGEUSDT",
+        "tf": "4h",
+        "bars": 9841,
+        "first": "2019-07-05 12:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 2,
+        "sha256_price_rows": "e055fa3b94079bdd96f0ee0a749920af20df4c5fe89ef2e0945a16c1f055ebbf",
+        "status": "AVAILABLE",
+        "pages": 10
+      },
+      {
+        "symbol": "DOGEUSDT",
+        "tf": "1d",
+        "bars": 1641,
+        "first": "2019-07-05 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "9b9627374a3166cfc5a0ac850c1233daf1d877fcbb5546e953848d9005a3f3e3",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "DOTUSDT",
+        "tf": "4h",
+        "bars": 7381,
+        "first": "2020-08-18 20:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "473997b494194fc4e7e86793cf0b112854f93358f9224a69dab3d03e12149aeb",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "DOTUSDT",
+        "tf": "1d",
+        "bars": 1231,
+        "first": "2020-08-18 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "6a3047965fadf1d5fb88d65667a8954c17c98a909221ab7c70e0cadfc6415044",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "LINKUSDT",
+        "tf": "4h",
+        "bars": 10859,
+        "first": "2019-01-16 08:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "354cc680cf55fe7758442459bbdc3558f118921936b6ee2ba6fc80d3ff72a34f",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "LINKUSDT",
+        "tf": "1d",
+        "bars": 1811,
+        "first": "2019-01-16 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "59ebbaf55c1928f17e2702d1a49f3c2c39b071927c03e32d71bfeeb1dc420310",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "LTCUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "0e80aa0969f5e324cc701228d56ae7747b4fa064d51fd3e458bd686352453f8b",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "LTCUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "7d886510f9f3724eadf87cc491d34b323713953d10f5becd423a38273eb7e852",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "AVAXUSDT",
+        "tf": "4h",
+        "bars": 7175,
+        "first": "2020-09-22 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "ece8aaa465ed12a08e075d6dd5602e8fc446ba8da05f7b2a282ed20cca23e495",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "AVAXUSDT",
+        "tf": "1d",
+        "bars": 1196,
+        "first": "2020-09-22 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "7fba021f387b2edcb177dc08af4f2c4dcbcbb1f307b08c4f8c1407a0f9654764",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "SHIBUSDT",
+        "tf": "4h",
+        "bars": 5794,
+        "first": "2021-05-10 08:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "3f7089c30ce658590cd3d5c863b1851564d16644a1214a283b32f53201026e0c",
+        "status": "AVAILABLE",
+        "pages": 6
+      },
+      {
+        "symbol": "SHIBUSDT",
+        "tf": "1d",
+        "bars": 966,
+        "first": "2021-05-10 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "0de62372d6add5aa41c3e9ae47ebdd85ad16505d9b5e7847adb55f91d3b74b1d",
+        "status": "AVAILABLE",
+        "pages": 1
+      },
+      {
+        "symbol": "ATOMUSDT",
+        "tf": "4h",
+        "bars": 10243,
+        "first": "2019-04-29 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 3,
+        "sha256_price_rows": "b4bf60491fdbef21b7a1210a8dc5cfdfeca0e38510d20f510c091443408360c5",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "ATOMUSDT",
+        "tf": "1d",
+        "bars": 1708,
+        "first": "2019-04-29 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "d71fe5b55e610052dbe07c386a2e18bd01b13057b739ac8fc8cd8f05deca2272",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "UNIUSDT",
+        "tf": "4h",
+        "bars": 7206,
+        "first": "2020-09-17 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "e1135c3d2ca819e39d890a726abfaafb18159b26add38a33d981c1d5352d1167",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "UNIUSDT",
+        "tf": "1d",
+        "bars": 1201,
+        "first": "2020-09-17 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "1ff98d2f538f23894981e306a766e87d2b708018bf37259363cb8b4f0ba57dfc",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "ETCUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "074b23f0a96ee7ca4e1040e6e782f5a2e116030db233d468d7983dc58697fb3e",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "ETCUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "d1d990405f35218c396444c05020944eb4013e08570f53f6e8bbd1320f53839b",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "XLMUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "f872b2e578f497379df4fd8598c20d94b445bc5d3f6a6cf02b588b37f1b821ae",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "XLMUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "5224f9aba67b2ad063e77223299772f6e9f64cd17c769b57e2d6a51c40c4b914",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "BCHUSDT",
+        "tf": "4h",
+        "bars": 8967,
+        "first": "2019-11-28 08:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 1,
+        "sha256_price_rows": "4d4dfa64181b5c05bf8d60b75174ff56a43f1c9445922e764fc5216e953ee0c8",
+        "status": "AVAILABLE",
+        "pages": 9
+      },
+      {
+        "symbol": "BCHUSDT",
+        "tf": "1d",
+        "bars": 1495,
+        "first": "2019-11-28 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "158b5a50732318d0204c88d5a8cee933fc9939fc0e72723d6ae0d1cd39636c1f",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "TRXUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "81f3ea74743ba252c2d175626198fb847555ac7f43bf46aebde3d83b37bfdf49",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "TRXUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "d5b90c355e71912ec7592e2d0296a44603b436c70d63b48e1fec7ad95b62b066",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "FILUSDT",
+        "tf": "4h",
+        "bars": 7034,
+        "first": "2020-10-15 16:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "275441166905588911ae157db6eb09c3e95d5ab74175caedfff3b2be2db2d338",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "FILUSDT",
+        "tf": "1d",
+        "bars": 1173,
+        "first": "2020-10-15 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "f1e7bb4275a1702fa8800f9b185034fc4f80154f389223fcfcf4e566345c9b31",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "AAVEUSDT",
+        "tf": "4h",
+        "bars": 7038,
+        "first": "2020-10-15 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "822ea2e5001bbd6f5a627ad193b75b9e08c5c76ffa6d04a3489e3cc8b33e03ad",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "AAVEUSDT",
+        "tf": "1d",
+        "bars": 1173,
+        "first": "2020-10-15 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "c541512bdbe960d9b36b4a019b133aaa3c3730aab3532d26d242643db1d61f36",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "ALGOUSDT",
+        "tf": "4h",
+        "bars": 9922,
+        "first": "2019-06-22 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 2,
+        "sha256_price_rows": "b037f7b2cc824ea1a27f3aa5c69bc77a40ba0be986c77f6e7b01d39ae68a14ea",
+        "status": "AVAILABLE",
+        "pages": 10
+      },
+      {
+        "symbol": "ALGOUSDT",
+        "tf": "1d",
+        "bars": 1654,
+        "first": "2019-06-22 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "f1db92a10dea15134d77ab77736ad7949ea014768f8d27bc0b762663c3d6729a",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "EOSUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "bc45f1f6aaa5f07d53999d4e9c63323d0a0534384b49b41d2e45332025ef52c3",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "EOSUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "3ae1948b7f46ace69fbc6c291aaf7ee6fbee9852caf68e64a49a62c954d8c2e4",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "XTZUSDT",
+        "tf": "4h",
+        "bars": 9357,
+        "first": "2019-09-24 08:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 1,
+        "sha256_price_rows": "1a14243fda440674382c1a78087b531b897ffb9471ecd0e11943730baccc9cdb",
+        "status": "AVAILABLE",
+        "pages": 10
+      },
+      {
+        "symbol": "XTZUSDT",
+        "tf": "1d",
+        "bars": 1560,
+        "first": "2019-09-24 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "8798ac8f29b17ba6f8193a2f805031698a24de14b5a413041f25332993984a02",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "DASHUSDT",
+        "tf": "4h",
+        "bars": 10435,
+        "first": "2019-03-28 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 3,
+        "sha256_price_rows": "f22e47451593e64e460c7a741f30bd8ea0c48c8b5186c020f93ce471fd3fa005",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "DASHUSDT",
+        "tf": "1d",
+        "bars": 1740,
+        "first": "2019-03-28 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "f94c2dfaa1feb438c05e42884caaa7e8f4b7d4c3fbd65e96c5554e5346c7a72c",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "ZECUSDT",
+        "tf": "4h",
+        "bars": 10477,
+        "first": "2019-03-21 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 3,
+        "sha256_price_rows": "9aa97a84b7eb46395cbea92f7a318a2c7359294c4260cfa91043b24c3923886d",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "ZECUSDT",
+        "tf": "1d",
+        "bars": 1747,
+        "first": "2019-03-21 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "c8b4b670839f71e4bcc83dcceb76776587176f625796580b62b77061f6446f4e",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "COMPUSDT",
+        "tf": "4h",
+        "bars": 7709,
+        "first": "2020-06-25 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "e0e4a845b7b5ece9f23469ced038fd3ce9e06c9f020cee3ea940d74d91d7eacb",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "COMPUSDT",
+        "tf": "1d",
+        "bars": 1285,
+        "first": "2020-06-25 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "9b1c923affc1595fd3d6f64fe6a6a7fbb86db591346999f938fdc633e47fdf23",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "MKRUSDT",
+        "tf": "4h",
+        "bars": 7539,
+        "first": "2020-07-23 12:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "829fcbd6909e645c27433fa5c61cec6d398442f897905f90aac31cbd7995c7e8",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "MKRUSDT",
+        "tf": "1d",
+        "bars": 1257,
+        "first": "2020-07-23 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "5e559d4921d66be270498ce275f2a92c7bbdb59f8462b764a4524ce90546aaad",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "CRVUSDT",
+        "tf": "4h",
+        "bars": 7403,
+        "first": "2020-08-15 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "fe098fba1e6e8a785b9452fc3c593b8c5b6c9634ff2ee2e01586bf4032ad2941",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "CRVUSDT",
+        "tf": "1d",
+        "bars": 1234,
+        "first": "2020-08-15 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "a965c6e5a44d2375b1aa45448404609533bf74ad5600ca5a33fea2f61ee81112",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "SUSHIUSDT",
+        "tf": "4h",
+        "bars": 7300,
+        "first": "2020-09-01 08:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "a6d858e7b733af2352cdbe391926ed453ca2baf7e859adcabe71e9c8ecff908e",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "SUSHIUSDT",
+        "tf": "1d",
+        "bars": 1217,
+        "first": "2020-09-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "62535ce9430f3eeecd9994952bb6ee58e9a4f05da0b82cfc054d760c4a047a46",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "SNXUSDT",
+        "tf": "4h",
+        "bars": 7623,
+        "first": "2020-07-09 12:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "1ea04510da0bd4147b3807d6cd1b9b46a186dcdfc52fd4604a69715599085ade",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "SNXUSDT",
+        "tf": "1d",
+        "bars": 1271,
+        "first": "2020-07-09 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "28dbdb6c1000303d9518a9b9afe0d590c918d929a4a9f1ce383ba260adbb9721",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "YFIUSDT",
+        "tf": "4h",
+        "bars": 7431,
+        "first": "2020-08-10 12:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "d4dced63433b27f265262416934c0fcdcdde33732edb3785f8d17b43449811b0",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "YFIUSDT",
+        "tf": "1d",
+        "bars": 1239,
+        "first": "2020-08-10 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "6d07e692faaee6de220e085dd821b7d49d8990b0883634ed1edcc0601a99b1f6",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "BALUSDT",
+        "tf": "4h",
+        "bars": 7427,
+        "first": "2020-08-11 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "e181455e061591006b515cc10fb11544e61104b93e5c0739f0b9bbb61d35f41d",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "BALUSDT",
+        "tf": "1d",
+        "bars": 1238,
+        "first": "2020-08-11 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "ee4a2fee4d438f6c73cda0145f58d98f12713b01f1bbd8f1b556464df895aa99",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "ENJUSDT",
+        "tf": "4h",
+        "bars": 10309,
+        "first": "2019-04-18 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 3,
+        "sha256_price_rows": "a373633fa60d806683311ad1f25bcff6c550f1d7b42ca01ec292f7003732b0a4",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "ENJUSDT",
+        "tf": "1d",
+        "bars": 1719,
+        "first": "2019-04-18 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "bacb1f93bb2f20ba86f553111e921a63245dcdd4d7e1740ffac26495e82e373c",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "CHZUSDT",
+        "tf": "4h",
+        "bars": 9466,
+        "first": "2019-09-06 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 1,
+        "sha256_price_rows": "a843ead982cc0afe56dc4e13d500b1930ae04be20470790f106e461bf2226613",
+        "status": "AVAILABLE",
+        "pages": 10
+      },
+      {
+        "symbol": "CHZUSDT",
+        "tf": "1d",
+        "bars": 1578,
+        "first": "2019-09-06 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "6498132926c9a5d3cd2f038b87ea186d226fb986e282268a9b437985bc780a10",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "NEARUSDT",
+        "tf": "4h",
+        "bars": 7043,
+        "first": "2020-10-14 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "68f9df851f37821727c7c80a763e9e5f1f4ce27c323ea94d7575cfa1ebb608ed",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "NEARUSDT",
+        "tf": "1d",
+        "bars": 1174,
+        "first": "2020-10-14 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "de89525ef8e1f1a2f74b31a62ffdc05e020f84e441c771548ae1429bdb4b8a3c",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "GRTUSDT",
+        "tf": "4h",
+        "bars": 6655,
+        "first": "2020-12-17 20:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "ecb9b8abf600708f09896dc78ccd1d74497e05ca6994583f46a296e6745c5cd3",
+        "status": "AVAILABLE",
+        "pages": 7
+      },
+      {
+        "symbol": "GRTUSDT",
+        "tf": "1d",
+        "bars": 1110,
+        "first": "2020-12-17 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "1bb3b9ab7688a0a3797c03b5b2763504cf05a181bbe2c48d30a54227f4dc79ea",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "AXSUSDT",
+        "tf": "4h",
+        "bars": 6915,
+        "first": "2020-11-04 12:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "dd6716ac3a67a72c8ae59474d8d5fb1a719043e2c9de335228a8a1956bf8ced2",
+        "status": "AVAILABLE",
+        "pages": 7
+      },
+      {
+        "symbol": "AXSUSDT",
+        "tf": "1d",
+        "bars": 1153,
+        "first": "2020-11-04 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "df11ec65181e1779c8dc713e60db748d1456684afb8f0cc072802a535b9926e1",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "SANDUSDT",
+        "tf": "4h",
+        "bars": 7407,
+        "first": "2020-08-14 12:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "378cffe48e003f6a068416ea3086dec4a394ca82058b4c3086a6a34358b787ac",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "SANDUSDT",
+        "tf": "1d",
+        "bars": 1235,
+        "first": "2020-08-14 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "c3f3aa2326436b94994a725b2937f48c16445e549e02fe4efc574d258d3e63fc",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "MANAUSDT",
+        "tf": "4h",
+        "bars": 7456,
+        "first": "2020-08-06 08:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "3c76ae507ea154b2e0e22e71f8548eb414b3307e23a73ad7dfd29f0f9a9ad5fa",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "MANAUSDT",
+        "tf": "1d",
+        "bars": 1243,
+        "first": "2020-08-06 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "958d049fa67982804fb49c25b96eca5c4da2930464c112947179be6c1e986220",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "ICPUSDT",
+        "tf": "4h",
+        "bars": 5790,
+        "first": "2021-05-11 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "1a52a9aff5dec7c51782c5a1e2e703ab5b1f3b0f6ecad7b9f41c3dab70bd11cd",
+        "status": "AVAILABLE",
+        "pages": 6
+      },
+      {
+        "symbol": "ICPUSDT",
+        "tf": "1d",
+        "bars": 965,
+        "first": "2021-05-11 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "8491734d5f16db0ae1023557c929c60ec2735cee47a1cb8cebc53d091971f5a9",
+        "status": "AVAILABLE",
+        "pages": 1
+      },
+      {
+        "symbol": "VETUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "4b70e3c4cf673005c797674c859075ce4bb7453abd7fc4657d2f4d19de9a4c69",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "VETUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "2cb2ab397617f6f01d9de5a9e52521eedd4c71a0f4822f4cb31e9bed7a5f65fc",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "HBARUSDT",
+        "tf": "4h",
+        "bars": 9328,
+        "first": "2019-09-29 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 1,
+        "sha256_price_rows": "ce357e274b1f2696052a7f803353dd905710fb6b070cf084a6502056a485ffe3",
+        "status": "AVAILABLE",
+        "pages": 10
+      },
+      {
+        "symbol": "HBARUSDT",
+        "tf": "1d",
+        "bars": 1555,
+        "first": "2019-09-29 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "3a50ba722050a1bdb1e97160e96fb1248b67de06daf470c56b0ee14b7479fc1e",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "THETAUSDT",
+        "tf": "4h",
+        "bars": 10357,
+        "first": "2019-04-10 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 3,
+        "sha256_price_rows": "1578b6b9f96d515b449f4880bf91ef8420b58119246f29d59c08bbe967d6c069",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "THETAUSDT",
+        "tf": "1d",
+        "bars": 1727,
+        "first": "2019-04-10 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "aeb2500d7089cbca1b27925c5c4473e3b719962bb7353463072feef5a6bdb036",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "EGLDUSDT",
+        "tf": "4h",
+        "bars": 7290,
+        "first": "2020-09-03 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "4ee33e85d18c0777cee8a57c9a808f1bce83ad2611c40d49c9f4d75772452c83",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "EGLDUSDT",
+        "tf": "1d",
+        "bars": 1215,
+        "first": "2020-09-03 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "db0c9c402319d682e3efff6565147e86c336e2da4551a5375ccbf2a182f0adf6",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "RUNEUSDT",
+        "tf": "4h",
+        "bars": 7283,
+        "first": "2020-09-04 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "44c8a159f9facce3e8fa36e17867153fe1e2be79ac2596a74a3dfe329e0bb914",
+        "status": "AVAILABLE",
+        "pages": 8
+      },
+      {
+        "symbol": "RUNEUSDT",
+        "tf": "1d",
+        "bars": 1214,
+        "first": "2020-09-04 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "bf621c5a4ecb875344e6574db02b70d718eb540b214e2519f9ab88dfaa2ef8f6",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "KAVAUSDT",
+        "tf": "4h",
+        "bars": 9173,
+        "first": "2019-10-25 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 1,
+        "sha256_price_rows": "9a5a4b07c4240c9a574a9e3bf98c9077b6431dfa89d18a691f0db501dfa9946e",
+        "status": "AVAILABLE",
+        "pages": 10
+      },
+      {
+        "symbol": "KAVAUSDT",
+        "tf": "1d",
+        "bars": 1529,
+        "first": "2019-10-25 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "f8e7dd4dfd851318dc27feb25fe7f90d6b7d2837dd8de4fe5af5052b3ad04e17",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "ONEUSDT",
+        "tf": "4h",
+        "bars": 10047,
+        "first": "2019-06-01 04:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 2,
+        "sha256_price_rows": "278369da2ed525101e7b7b85013c89c2513f519511602466d98dd8044e38d3d7",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "ONEUSDT",
+        "tf": "1d",
+        "bars": 1675,
+        "first": "2019-06-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "8ea20c0135d0c09c93823fee1d20e749723a98b0835b08915a74fa8bc96c2f9c",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "ZILUSDT",
+        "tf": "4h",
+        "bars": 10655,
+        "first": "2019-02-19 08:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "71682ad4c4ceaff5b7eda8d5d48a20ab073d903877a643f2b167140094155b2a",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "ZILUSDT",
+        "tf": "1d",
+        "bars": 1777,
+        "first": "2019-02-19 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "66c4a619296cccde802fd8f486be826c8527ccb55f8c6470f699df5e95f8de95",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "BATUSDT",
+        "tf": "4h",
+        "bars": 10577,
+        "first": "2019-03-04 08:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "f5d4d8e8f7483939f264ceddbcaf6829430b9dabb5a875ab62b00a5a86d6fa63",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "BATUSDT",
+        "tf": "1d",
+        "bars": 1764,
+        "first": "2019-03-04 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "9c3653ac984a9509cde8153ea274dfe46b82f7f62d2a0a407474bd558a9346d0",
+        "status": "AVAILABLE",
+        "pages": 2
+      },
+      {
+        "symbol": "NEOUSDT",
+        "tf": "4h",
+        "bars": 10951,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 20:00:00+00:00",
+        "gap_intervals": 4,
+        "sha256_price_rows": "2dc1028f7df0f56abebcc648f0f1e78d2ef586bdd581bb19f4d662dd4df8cba6",
+        "status": "AVAILABLE",
+        "pages": 11
+      },
+      {
+        "symbol": "NEOUSDT",
+        "tf": "1d",
+        "bars": 1826,
+        "first": "2019-01-01 00:00:00+00:00",
+        "last": "2023-12-31 00:00:00+00:00",
+        "gap_intervals": 0,
+        "sha256_price_rows": "ee7f105a0af270705cb596290e41dede95fbe8c81d7393b50d32bfb39fb0dcbf",
+        "status": "AVAILABLE",
+        "pages": 2
+      }
+    ],
+    "funding_manifest": [
+      {
+        "symbol": "BTCUSDT",
+        "status": "SOURCE_BLOCKED",
+        "error": "PUBLIC_SOURCE_FAILED ['HTTP Error 451: ', 'HTTP Error 451: ', 'HTTP Error 451: ']"
+      },
+      {
+        "symbol": "ETHUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "BNBUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "SOLUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "XRPUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "ADAUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "DOGEUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "DOTUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "LINKUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "LTCUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "AVAXUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "SHIBUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "ATOMUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "UNIUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "ETCUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "XLMUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "BCHUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "TRXUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "FILUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "AAVEUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "ALGOUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "EOSUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "XTZUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "DASHUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "ZECUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "COMPUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "MKRUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "CRVUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "SUSHIUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "SNXUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "YFIUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "BALUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "ENJUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "CHZUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "NEARUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "GRTUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "AXSUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "SANDUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "MANAUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "ICPUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "VETUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "HBARUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "THETAUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "EGLDUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "RUNEUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "KAVAUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "ONEUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "ZILUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "BATUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      },
+      {
+        "symbol": "NEOUSDT",
+        "status": "NOT_QUERIED_AFTER_SOURCE_BLOCKED"
+      }
+    ]
+  }
+}
