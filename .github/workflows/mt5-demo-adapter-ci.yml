@@ -1,0 +1,36 @@
+name: MT5 demo-only native adapter invariants
+on:
+  push:
+    branches: ["engineering/mt5-demo-adapter-20261017"]
+    paths:
+      - "src/adapters/**"
+      - "scripts/test_mt5_connection.py"
+      - "tests/test_mt5_broker_adapter.py"
+      - ".github/workflows/mt5-demo-adapter-ci.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  guard-native-demo-adapter:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install 'pandas>=2.2,<3' 'numpy>=1.26,<3' 'pytest>=8,<10'
+      - run: python -m compileall -q src/adapters scripts/test_mt5_connection.py
+      - name: Test injected MT5 demo terminal guards
+        run: python -m pytest -q tests/test_mt5_broker_adapter.py
+      - name: Assert no hardcoded credentials, live account or connection claims
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/adapters/mt5_broker.py').read_text()
+          assert 'ACCOUNT_TRADE_MODE_DEMO' in p
+          assert 'DEMO_ORDER_EXECUTION_DISABLED_BY_DEFAULT' in p
+          assert 'expected_demo_login' in p
+          assert 'password=' not in p
+          print('MT5_DEMO_ONLY_GUARDS_PRESENT; INTEGRATION_TERMINAL_NOT_CONNECTED')
+          PY

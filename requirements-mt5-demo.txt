@@ -1,0 +1,3 @@
+# Windows/local MT5 terminal only. No native package installed on Linux CI.
+MetaTrader5>=5.0.45,<6
+pandas>=2.2,<3
