@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+pytest.importorskip("gymnasium", reason="Signal RL contracts require the RL extra")
+pytest.importorskip("stable_baselines3", reason="Signal RL contracts require the RL extra")
+
 from src.rl.signal_env import TradingEnv, evaluate_signal_policy
 from src.rl.train_signal_ppo import train_signal_ppo
 

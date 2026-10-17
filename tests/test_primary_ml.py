@@ -5,6 +5,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+pytest.importorskip("purgedcv", reason="Primary ML contracts require the validation extra")
+pytest.importorskip("xgboost", reason="Primary ML contracts require the AI stack")
+
 from src.ml.meta_labeler import PRIMARY_FEATURES, PrimaryMetaLabeler, new_model
 from src.ml.real_bot_pipeline import primary_outcome, trade_stream, fit_primary_model
 from src.strategies import PrimarySignal
