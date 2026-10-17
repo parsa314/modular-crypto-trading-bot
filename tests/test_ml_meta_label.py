@@ -4,9 +4,10 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 import pytest
-from scripts.ml_meta_label_experiment import (
-    SYMBOLS,compute_atr,label_event,purged_folds,ml_experiment,build_features
-)
+from ml.data_loader import SYMBOLS
+from ml.triple_barrier import label_event
+from ml.meta_labeler import purged_folds,ml_experiment
+from ml.feature_engineer import build_features
 
 def ohlcv(rows=250):
     times=pd.date_range("2020-01-01",periods=rows,freq="D",tz="UTC")
