@@ -1,0 +1,15 @@
+{
+  "algorithm": "SAC",
+  "seed": 7,
+  "timesteps": 500000,
+  "validation_2023": {
+    "sharpe": 0.6904409275514815,
+    "net_return": 0.19863620033956386,
+    "maxdd": 0.36664951998816064,
+    "evaluated_accounts": 50,
+    "note": "Equal-weight across independently simulated spot-symbol accounts (not executable shared cross-asset portfolio)"
+  },
+  "training_assets": 50,
+  "validation_assets": 50,
+  "test_2024_opened": false
+}

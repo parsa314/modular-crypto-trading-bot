@@ -1,0 +1,15 @@
+{
+  "algorithm": "PPO",
+  "seed": 42,
+  "timesteps": 500000,
+  "validation_2023": {
+    "sharpe": 1.5017594329679922,
+    "net_return": 1.0508260136594632,
+    "maxdd": 0.44505891939410225,
+    "evaluated_accounts": 50,
+    "note": "Equal-weight across independently simulated spot-symbol accounts (not executable shared cross-asset portfolio)"
+  },
+  "training_assets": 50,
+  "validation_assets": 50,
+  "test_2024_opened": false
+}

@@ -1,0 +1,88 @@
+{
+  "runs": [
+    {
+      "algorithm": "PPO",
+      "seed": 42,
+      "timesteps": 500000,
+      "validation_2023": {
+        "sharpe": 1.5017594329679922,
+        "net_return": 1.0508260136594632,
+        "maxdd": 0.44505891939410225,
+        "evaluated_accounts": 50,
+        "note": "Equal-weight across independently simulated spot-symbol accounts (not executable shared cross-asset portfolio)"
+      },
+      "training_assets": 50,
+      "validation_assets": 50,
+      "test_2024_opened": false,
+      "pass": false
+    },
+    {
+      "algorithm": "PPO",
+      "seed": 7,
+      "timesteps": 500000,
+      "validation_2023": {
+        "sharpe": null,
+        "net_return": 0.0,
+        "maxdd": 0.0,
+        "evaluated_accounts": 50,
+        "note": "Equal-weight across independently simulated spot-symbol accounts (not executable shared cross-asset portfolio)"
+      },
+      "training_assets": 50,
+      "validation_assets": 50,
+      "test_2024_opened": false,
+      "pass": false
+    },
+    {
+      "algorithm": "SAC",
+      "seed": 42,
+      "timesteps": 500000,
+      "validation_2023": {
+        "sharpe": 0.5540924026717242,
+        "net_return": 0.12805738791066812,
+        "maxdd": 0.3580583315141068,
+        "evaluated_accounts": 50,
+        "note": "Equal-weight across independently simulated spot-symbol accounts (not executable shared cross-asset portfolio)"
+      },
+      "training_assets": 50,
+      "validation_assets": 50,
+      "test_2024_opened": false,
+      "pass": false
+    },
+    {
+      "algorithm": "SAC",
+      "seed": 7,
+      "timesteps": 500000,
+      "validation_2023": {
+        "sharpe": 0.6904409275514815,
+        "net_return": 0.19863620033956386,
+        "maxdd": 0.36664951998816064,
+        "evaluated_accounts": 50,
+        "note": "Equal-weight across independently simulated spot-symbol accounts (not executable shared cross-asset portfolio)"
+      },
+      "training_assets": 50,
+      "validation_assets": 50,
+      "test_2024_opened": false,
+      "pass": false
+    }
+  ],
+  "baseline_fixed_2pct": {
+    "sharpe": 1.517355796305049,
+    "net_return": 0.017874278195282978,
+    "maxdd": 0.009729069373855093,
+    "evaluated_accounts": 50,
+    "note": "Equal-weight across independently simulated spot-symbol accounts (not executable shared cross-asset portfolio)"
+  },
+  "baseline_btc_buy_hold": {
+    "sharpe": 2.4423892577685655,
+    "net_return": 1.553683692170332,
+    "maxdd": 0.21185976603209733,
+    "evaluated_accounts": 1,
+    "note": "Equal-weight across independently simulated spot-symbol accounts (not executable shared cross-asset portfolio)"
+  },
+  "validation_2023_only": true,
+  "test_2024_opened": false,
+  "total_timesteps_train": 2000000,
+  "verdict": "FAIL",
+  "funding_limitation": "0 neutral proxy, funding not downloaded in this RL branch",
+  "return_1h_limitation": "uses observed H4 return in state slot; 1h is not inferable from H4 data"
+}
