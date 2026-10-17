@@ -1,0 +1,10 @@
+{
+  "n_total": 5073,
+  "n_labeled": 5073,
+  "n_positive": 2051,
+  "n_negative": 3022,
+  "minimum_5000_rows_met": true,
+  "decision": "ML_TRAINED_EXPLORATORY",
+  "2024_2026_holdout_accessed": false,
+  "caveat": "Previous v6 research already used this holdout historically; no new access by this job."
+}

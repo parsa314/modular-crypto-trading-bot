@@ -1,0 +1,85 @@
+{
+  "status": "TRAINED_EXPLORATORY_2023_ONLY",
+  "test_2024_2026": "NOT_OPENED_BY_THIS_EXPERIMENT",
+  "n_train": 3328,
+  "n_validation": 1681,
+  "train_positive_fraction": 0.3840144230769231,
+  "training_purged_cv": [
+    {
+      "n_train": 345,
+      "n_oof": 420,
+      "precision_top_decile": 0.9761904761904762,
+      "best_iteration": 44
+    },
+    {
+      "n_train": 747,
+      "n_oof": 497,
+      "precision_top_decile": 0.5,
+      "best_iteration": 11
+    },
+    {
+      "n_train": 1208,
+      "n_oof": 503,
+      "precision_top_decile": 0.7647058823529411,
+      "best_iteration": 43
+    },
+    {
+      "n_train": 1740,
+      "n_oof": 886,
+      "precision_top_decile": 0.2808988764044944,
+      "best_iteration": 0
+    },
+    {
+      "n_train": 2591,
+      "n_oof": 675,
+      "precision_top_decile": 0.5588235294117647,
+      "best_iteration": 16
+    }
+  ],
+  "validation_best_iteration": 0,
+  "validation_top_decile_threshold": 0.3847697377204895,
+  "validation_precision_top_decile": 0.5325443786982249,
+  "validation_precision": 0.4548736462093863,
+  "validation_recall": 0.532394366197183,
+  "validation_f1": 0.49059052563270605,
+  "validation_auc": 0.5281661130531905,
+  "validation_average_precision": 0.44107895535808905,
+  "validation_raw": {
+    "n": 1681,
+    "win_rate": 0.4223676383105294,
+    "mean_net_per_event": 0.015698063263408966
+  },
+  "validation_filtered": {
+    "n": 831,
+    "win_rate": 0.4548736462093863,
+    "mean_net_per_event": 0.01959716999172842
+  },
+  "meets_precision_0_60": false,
+  "disclosure": "2023 validation labels used in XGBoost early stopping; precision is model-selection validation, NOT a novel independent OOS estimate.",
+  "validation_portfolio_raw": {
+    "sharpe": 0.9738077976436974,
+    "sortino": 1.4936414965672078,
+    "maxdd": 0.07839810504272193,
+    "net_return": 0.1203371923592087,
+    "n_days": 365,
+    "entry_fills": 1350,
+    "exit_fills": 1350,
+    "skipped_risk_cap": 331,
+    "cost_per_side_bps": 15,
+    "accounting": "1% NAV/event, <=10%/symbol, <=70% gross, mark-to-market daily; research only"
+  },
+  "validation_portfolio_filtered": {
+    "sharpe": 1.1977837160265439,
+    "sortino": 1.8822421950484123,
+    "maxdd": 0.05986329617331887,
+    "net_return": 0.10717687458315939,
+    "n_days": 365,
+    "entry_fills": 749,
+    "exit_fills": 749,
+    "skipped_risk_cap": 82,
+    "cost_per_side_bps": 15,
+    "accounting": "1% NAV/event, <=10%/symbol, <=70% gross, mark-to-market daily; research only"
+  },
+  "validation_sharpe_delta": 0.22397591838284647,
+  "meets_delta_sharpe_0_3": false
+}

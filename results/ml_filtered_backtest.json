@@ -1,0 +1,30 @@
+{
+  "raw": {
+    "sharpe": 0.9738077976436974,
+    "sortino": 1.4936414965672078,
+    "maxdd": 0.07839810504272193,
+    "net_return": 0.1203371923592087,
+    "n_days": 365,
+    "entry_fills": 1350,
+    "exit_fills": 1350,
+    "skipped_risk_cap": 331,
+    "cost_per_side_bps": 15,
+    "accounting": "1% NAV/event, <=10%/symbol, <=70% gross, mark-to-market daily; research only"
+  },
+  "filtered": {
+    "sharpe": 1.1977837160265439,
+    "sortino": 1.8822421950484123,
+    "maxdd": 0.05986329617331887,
+    "net_return": 0.10717687458315939,
+    "n_days": 365,
+    "entry_fills": 749,
+    "exit_fills": 749,
+    "skipped_risk_cap": 82,
+    "cost_per_side_bps": 15,
+    "accounting": "1% NAV/event, <=10%/symbol, <=70% gross, mark-to-market daily; research only"
+  },
+  "delta_sharpe": 0.22397591838284647,
+  "source": "Real Binance daily prices 2019-2023; BTC real M15 2022-23",
+  "period": "2023-01-01/2023-12-31",
+  "not_virgin_test": true
+}
