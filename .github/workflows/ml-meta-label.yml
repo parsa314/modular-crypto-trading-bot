@@ -3,6 +3,7 @@ on:
   push:
     branches: ["research/ml-meta-label-20261016"]
     paths:
+      - "src/ml/**"
       - "scripts/ml_meta_label_experiment.py"
       - "tests/test_ml_meta_label.py"
       - ".github/workflows/ml-meta-label.yml"
@@ -20,28 +21,34 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install real ML dependencies (no GPU/RL)
-        run: python -m pip install 'numpy>=1.26,<3' 'pandas>=2.2,<3' 'pyarrow>=16,<25' 'scikit-learn>=1.5,<2' 'xgboost>=3,<4' 'pytest>=8,<10'
-      - name: Run invariant tests
-        run: PYTHONPATH=.:src pytest -q tests/test_ml_meta_label.py
-      - name: Download actual Spot public klines, count and learn; never authenticate
-        run: PYTHONPATH=. python scripts/ml_meta_label_experiment.py
-      - name: Publish actual signals and measured numeric results
+      - name: Install core and actual ML dependencies (no RL)
+        run: python -m pip install 'numpy>=1.26,<3' 'pandas>=2.2,<3' 'pyarrow>=16,<25' 'scikit-learn>=1.5,<2' 'xgboost>=3,<4' 'hmmlearn>=0.3,<0.4' 'joblib>=1.4,<2' 'pytest>=8,<10'
+      - name: Test causal barriers and CV invariants
+        run: PYTHONPATH=.:src python -m pytest -q tests/test_ml_meta_label.py
+      - name: Compute real signals 2019-23 and evaluate 2023 only
+        run: PYTHONPATH=.:src python scripts/ml_meta_label_experiment.py
+      - name: Record actual computed models and numerical metrics
         if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/signals.parquet results/signal_count.json results/ml_data_decision.json results/ml_comparison.json
+          git add results/signals.parquet results/signal_count.json results/ml_data_decision.json results/ml_comparison.json results/ml_filtered_backtest.json
+          if [ -f models/meta_labeler_v1.json ]; then
+             git add models/meta_labeler_v1.json models/meta_labeler_v1_encoder.joblib
+          fi
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "results(ml): 50 asset source-audited signal counts, triple-barrier labels and learned MetaLabel metrics"
+          git commit -m "results(ml): count real triple-barrier signals; measure 2023 XGBoost precision and paper NAV"
           git push origin HEAD:research/ml-meta-label-20261016
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ml-50-symbol-real-data-experiment
+          name: ml-50-symbol-2019-2023-only
           path: |
             results/signal_count.json
             results/ml_data_decision.json
             results/ml_comparison.json
+            results/ml_filtered_backtest.json
             results/signals.parquet
+            models/meta_labeler_v1.json
+            models/meta_labeler_v1_encoder.joblib
           if-no-files-found: warn
