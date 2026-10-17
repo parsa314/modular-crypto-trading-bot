@@ -1,0 +1,55 @@
+name: Standalone paper trading — offline integrity
+on:
+  push:
+    branches: ["engineering/paper-trading-20261015"]
+    paths:
+      - "src/paper_trading/**"
+      - "config.yaml"
+      - "config.replay.yaml"
+      - "requirements-paper.txt"
+      - "tests/test_paper_trading.py"
+      - ".github/workflows/paper-trading-ci.yml"
+      - "start.sh"
+      - "data/btc_usdt_m15_2022_2024.*"
+  pull_request:
+    paths:
+      - "src/paper_trading/**"
+      - "config.yaml"
+      - "config.replay.yaml"
+      - "requirements-paper.txt"
+      - "tests/test_paper_trading.py"
+      - ".github/workflows/paper-trading-ci.yml"
+      - "start.sh"
+permissions:
+  contents: read
+jobs:
+  offline-contract-and-real-parquet-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements-paper.txt
+      - name: Compile paper runtime, never import execution adapters
+        run: python -m compileall -q src/paper_trading
+      - name: Run contracts and real noncommercial data smoke replay (no network)
+        env:
+          PYTHONPATH: src
+        run: python -m pytest -q -rs tests/test_paper_trading.py
+      - name: Validate shell and refuse secrets in committed source
+        run: |
+          bash -n start.sh
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          c=yaml.safe_load(Path("config.yaml").read_text())
+          assert c["mode"] == "binance_ws"
+          assert set(c)=={"mode","strategy","symbols","data_path","manifest_path","replay_hours","warmup_hours","initial_cash","max_position_weight","max_daily_drawdown","max_total_drawdown","min_quote_volume_24h","fee_bps","momentum_days","rsi_period","log_dir","state_path"}
+          for forbidden in ("api_key","api_secret","live_execution","exchange_client"):
+              assert forbidden not in c
+          assert Path("data/btc_usdt_m15_2022_2024.parquet").is_file()
+          print("PAPER_ONLY_CONFIG_OK")
+          PY

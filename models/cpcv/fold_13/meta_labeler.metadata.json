@@ -1,0 +1,24 @@
+{
+  "feature_names": [
+    "atr_ratio",
+    "volume_ratio",
+    "rsi",
+    "macd_hist",
+    "regime",
+    "hour_of_day",
+    "signal_confidence"
+  ],
+  "threshold": 0.5293676495552063,
+  "features": {
+    "atr_ratio": "ATR14 / mean ATR of previous20 calendar days",
+    "volume_ratio": "volume / mean volume of previous20 calendar days",
+    "rsi": "Wilder RSI14 /100",
+    "macd_hist": "(MACD12,26 - EMA9 signal) / ATR14",
+    "regime": "3-state forward-filtered BTC daily HMM, calibrated before2019",
+    "hour_of_day": "UTC decision hour including quarter-hour fraction",
+    "signal_confidence": "clip(abs(EMA20-EMA50)/ATR14,0,1)"
+  },
+  "outer_fold": 13,
+  "seed": 42,
+  "threshold_source": "inner purged five-fold OOF only"
+}

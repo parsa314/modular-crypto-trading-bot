@@ -1,0 +1,118 @@
+{
+  "phase": 2,
+  "strategy": "primary_ema20_50",
+  "model": "XGBoost",
+  "features": [
+    "atr_ratio",
+    "volume_ratio",
+    "rsi",
+    "macd_hist",
+    "regime",
+    "hour_of_day",
+    "signal_confidence"
+  ],
+  "feature_rows": 1045,
+  "binary_labels": 996,
+  "train_binary_labels": 675,
+  "validation_binary_labels": 321,
+  "train": "2022-2023",
+  "validation": "2024",
+  "purged_kfold": [
+    {
+      "fold": 1,
+      "train_rows": 564,
+      "test_rows": 142,
+      "precision": 0.14285714285714285,
+      "selected": 14,
+      "samples": 136
+    },
+    {
+      "fold": 2,
+      "train_rows": 565,
+      "test_rows": 141,
+      "precision": 0.42857142857142855,
+      "selected": 14,
+      "samples": 136
+    },
+    {
+      "fold": 3,
+      "train_rows": 565,
+      "test_rows": 141,
+      "precision": 0.35714285714285715,
+      "selected": 14,
+      "samples": 137
+    },
+    {
+      "fold": 4,
+      "train_rows": 565,
+      "test_rows": 141,
+      "precision": 0.5,
+      "selected": 14,
+      "samples": 135
+    },
+    {
+      "fold": 5,
+      "train_rows": 565,
+      "test_rows": 141,
+      "precision": 0.2857142857142857,
+      "selected": 14,
+      "samples": 131
+    }
+  ],
+  "purge_bars": 5,
+  "embargo_bars": 5,
+  "actual_label_interval_purge": true,
+  "precision_top_decile": 0.3333333333333333,
+  "top_decile": {
+    "precision": 0.3333333333333333,
+    "selected": 33,
+    "samples": 321
+  },
+  "threshold": 0.5332021415233612,
+  "threshold_source": "training OOF 90th percentile",
+  "raw": {
+    "sharpe": -10.287139933439526,
+    "return": -0.6665300845175901,
+    "max_drawdown": 0.6665300845175901,
+    "num_trades": 338,
+    "win_rate": 0.2958579881656805,
+    "profit_factor": 0.25066242102352365,
+    "timeouts": 18,
+    "daily_observations": 366
+  },
+  "ml_filtered": {
+    "sharpe": -3.803945770200094,
+    "return": -0.11868559585178906,
+    "max_drawdown": 0.13085375873280924,
+    "num_trades": 35,
+    "win_rate": 0.3142857142857143,
+    "profit_factor": 0.10672529819719707,
+    "timeouts": 2,
+    "daily_observations": 366
+  },
+  "approved_rl_train_trades": 71,
+  "approved_rl_val_trades": 35,
+  "rl_input": "data/real_bot/approved_signals.parquet",
+  "verdict": "FAIL",
+  "seed": 42,
+  "cost_bps_each_side": 15,
+  "regime_calibration": "BTC daily before2019; forward-only daily posterior as-of each M15 close",
+  "labeling": {
+    "profit_atr": 2,
+    "stop_atr": 1,
+    "horizon_bars": 20,
+    "bar_minutes": 15,
+    "timeout": "excluded from binary labels, retained in frozen-model validation execution",
+    "double_touch": "loss",
+    "entry": "next exact observed open"
+  },
+  "source_sha256": "f7bf84ccaff343dbb627c17e6245ae6f2488f940a3ed6867efd262115ea9d401",
+  "model_sha256": "40e1672a6eeb6a3780795861a9e500ea14ac67a31a516b529ec3b8158ee9cafc",
+  "approved_signals_sha256": "7fcf691cfbe09f028b26325ca176562004bce5b9f323fb7cb45df450acdfbba7",
+  "limitations": [
+    "Single BTC M15 experiment; no Forex performance claim",
+    "2024 was previously inspected; this is a retrospective engineering experiment",
+    "RL training sees cross-fitted ML-approved events including timeouts; classifier fitting uses binary outcomes only",
+    "Meta-model criterion failure is reported but does not cancel user-requested PPO training"
+  ]
+}

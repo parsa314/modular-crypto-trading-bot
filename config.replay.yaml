@@ -1,0 +1,19 @@
+# Offline deterministic engineering replay of authentic Binance BTCUSDT M15
+# candles. One coin CANNOT meet 5-asset quintile; safely stays cash.
+mode: parquet
+strategy: momentum_rsi_fallback
+symbols: [BTCUSDT]
+data_path: data/btc_usdt_m15_2022_2024.parquet
+manifest_path: data/btc_usdt_m15_2022_2024.manifest.json
+replay_hours: 168
+warmup_hours: 720
+initial_cash: 50000
+max_position_weight: 0.10
+max_daily_drawdown: 0.05
+max_total_drawdown: 0.15
+min_quote_volume_24h: 5000000
+fee_bps: 10
+momentum_days: 28
+rsi_period: 14
+log_dir: logs/replay
+state_path: logs/replay/paper_state.json

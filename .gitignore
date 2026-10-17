@@ -19,3 +19,8 @@ build/
 dist/
 *.egg-info/
 .DS_Store
+
+# Paper trading state is private, ephemeral operational data.
+logs/
+*.key
+*.pem

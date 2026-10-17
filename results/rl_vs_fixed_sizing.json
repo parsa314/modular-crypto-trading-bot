@@ -1,0 +1,112 @@
+{
+  "phase": 3,
+  "input_file": "data/real_bot/approved_signals.parquet",
+  "input_sha256": "7fcf691cfbe09f028b26325ca176562004bce5b9f323fb7cb45df450acdfbba7",
+  "event_source": "actual EMA20/50 signals approved by ML; includes all approved timeout outcomes",
+  "training": {
+    "algorithm": "PPO",
+    "seed": 42,
+    "requested_steps": 100000,
+    "actual_environment_steps": 100352,
+    "training_seconds": 62.57941900200001,
+    "n_steps": 512,
+    "batch_size": 128,
+    "n_epochs": 5,
+    "network": [
+      32,
+      32
+    ],
+    "torch_threads": 1,
+    "device": "cpu",
+    "approved_training_events": 71,
+    "probability_source": "purged_oof",
+    "model_path": "models/ppo_agent.zip",
+    "model_sha256": "90d08e153595d082ae85b9d765b07cad2f57641978ebf702be908acfe259c298",
+    "period_start": "2022-01-01 00:00:00+00:00",
+    "period_end_exclusive": "2024-01-01 00:00:00+00:00",
+    "training_episodes": 1,
+    "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+    "valuation": "actual intratrade closed-bar NAV and realized exit",
+    "observation_names": [
+      "position",
+      "cash_initial_capital_units",
+      "unrealized_pnl",
+      "ml_probability",
+      "atr_pct",
+      "regime_range",
+      "regime_trend",
+      "regime_volatile"
+    ],
+    "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+    "zero_variance_reward_sharpe": 0.0,
+    "zero_variance_reported_sharpe": null
+  },
+  "fixed_fraction": 0.02,
+  "fixed": {
+    "sharpe": -3.8042974133352967,
+    "sharpe_defined": true,
+    "return": -0.0025133873562885878,
+    "max_drawdown": 0.0027909112053823293,
+    "approved_events": 35,
+    "num_trades": 35,
+    "daily_observations": 366,
+    "mean_allocation": 0.020000000000000007,
+    "valuation": "actual intratrade closed-bar NAV and realized exit"
+  },
+  "rl": {
+    "sharpe": null,
+    "sharpe_defined": false,
+    "return": 0.0,
+    "max_drawdown": 0.0,
+    "approved_events": 35,
+    "num_trades": 0,
+    "daily_observations": 366,
+    "mean_allocation": 0.0,
+    "valuation": "actual intratrade closed-bar NAV and realized exit"
+  },
+  "train_fixed": {
+    "sharpe": -2.7787738617185407,
+    "sharpe_defined": true,
+    "return": -0.0040937671547325305,
+    "max_drawdown": 0.0040937671547325305,
+    "approved_events": 71,
+    "num_trades": 71,
+    "daily_observations": 730,
+    "mean_allocation": 0.02000000000000001,
+    "valuation": "actual intratrade closed-bar NAV and realized exit"
+  },
+  "train_rl": {
+    "sharpe": null,
+    "sharpe_defined": false,
+    "return": 0.0,
+    "max_drawdown": 0.0,
+    "approved_events": 71,
+    "num_trades": 0,
+    "daily_observations": 730,
+    "mean_allocation": 0.0,
+    "valuation": "actual intratrade closed-bar NAV and realized exit"
+  },
+  "train_period": [
+    "2022-01-01",
+    "2024-01-01"
+  ],
+  "validation_period": [
+    "2024-01-01",
+    "2025-01-01"
+  ],
+  "calendar_end_exclusive": true,
+  "daily_close_binning": "exit_time minus 1ns",
+  "cost_accounting": "event net_return already includes 15bp entry and 15bp exit; no double charging",
+  "acceptance_rule": "defined validation Sharpe RL > defined validation Sharpe fixed",
+  "verdict": "FAIL",
+  "rl_active": false,
+  "selected_policy": "fixed_fraction_2pct",
+  "test_opened": false,
+  "limitations": [
+    "NAV uses provided intratrade closed-bar marks when available; exit-only fallback is labeled in each metric.",
+    "All decision observations have flat position and zero unrealized PnL by nonoverlap construction.",
+    "Action sizes capital allocation only; stops and targets are fixed by the upstream real strategy.",
+    "Models and acceptance are assessed on validation; no fresh-test profitability claim."
+  ],
+  "daily_returns_file": "results/rl_vs_fixed_sizing_daily.parquet"
+}

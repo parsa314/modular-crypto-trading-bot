@@ -1,0 +1,3355 @@
+{
+  "phase": 4,
+  "strategy": "primary_ema20_50_ml_ppo",
+  "purgedcv_version": "0.1.11",
+  "N": 6,
+  "k": 2,
+  "outer_splits": 15,
+  "oos_paths": 5,
+  "completed_refits": 15,
+  "prediction_grouping": "whole UTC calendar dates; simultaneous events never split",
+  "purge_bars": 5,
+  "embargo_bars": 5,
+  "bar_minutes": 15,
+  "purge_padding_minutes": 75,
+  "embargo_minutes": 75,
+  "intervals": "calendar-day interval extended to latest actual event exit; conservative whole-date purge",
+  "training": "ML and threshold refit inside every outer train; PPO trains only inner-OOF approved training events",
+  "group_boundary_policy": "training outcomes crossing segments are dropped; held trades close at their final actual permitted close",
+  "timeout_policy": "retained in ML inference and PPO sizing, never fabricated binary classes",
+  "daily_close_binning": "actual closed marks/exit availability minus1ns; no duplicated dates across the five separate paths",
+  "candidate_scope": [
+    "fixed_fraction_2pct",
+    "ppo"
+  ],
+  "seed": 42,
+  "requested_steps_per_fold": 100000,
+  "workers": 2,
+  "source_sha256": "d4b5d72af7d34027f223684e6ec37c79f425313c7144181037427a0c1c05a8db",
+  "folds": [
+    {
+      "fold_id": 1,
+      "status": "COMPLETED",
+      "test_groups": [
+        0,
+        1
+      ],
+      "train_events": 699,
+      "train_binary_labels": 663,
+      "approved_training_events": 69,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 559,
+          "test_rows": 140,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 136
+        },
+        {
+          "fold": 2,
+          "train_rows": 559,
+          "test_rows": 140,
+          "precision": 0.5384615384615384,
+          "selected": 13,
+          "samples": 129
+        },
+        {
+          "fold": 3,
+          "train_rows": 559,
+          "test_rows": 140,
+          "precision": 0.5,
+          "selected": 14,
+          "samples": 131
+        },
+        {
+          "fold": 4,
+          "train_rows": 559,
+          "test_rows": 140,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 136
+        },
+        {
+          "fold": 5,
+          "train_rows": 560,
+          "test_rows": 139,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 131
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2023-01-03 00:00:00+00:00",
+          "end": "2023-07-04 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end": "2024-01-03 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end": "2024-07-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.525931441783905,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 77.83307622200005,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 69,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_01/ppo.zip",
+        "model_sha256": "2ce1ba2a2a1330620a856246b47bf42663f899757efdaf138d448abe22955858",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end_exclusive": "2022-07-03 00:00:00+00:00",
+          "approved_events": 16,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.064951670722875,
+            "sharpe_defined": true,
+            "return": -0.0017550565404608198,
+            "max_drawdown": 0.0017550565404608198,
+            "approved_events": 16,
+            "num_trades": 16,
+            "daily_observations": 183,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 16,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end_exclusive": "2023-01-02 00:00:00+00:00",
+          "approved_events": 7,
+          "fixed_fraction_2pct": {
+            "sharpe": -1.7046548815869151,
+            "sharpe_defined": true,
+            "return": -0.0004876931260582307,
+            "max_drawdown": 0.0005725001507700389,
+            "approved_events": 7,
+            "num_trades": 7,
+            "daily_observations": 183,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 7,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 80.69972783000003,
+      "model_directory": "models/cpcv/fold_01"
+    },
+    {
+      "fold_id": 2,
+      "status": "COMPLETED",
+      "test_groups": [
+        0,
+        2
+      ],
+      "train_events": 693,
+      "train_binary_labels": 656,
+      "approved_training_events": 70,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 554,
+          "test_rows": 139,
+          "precision": 0.5,
+          "selected": 14,
+          "samples": 135
+        },
+        {
+          "fold": 2,
+          "train_rows": 554,
+          "test_rows": 139,
+          "precision": 0.15384615384615385,
+          "selected": 13,
+          "samples": 126
+        },
+        {
+          "fold": 3,
+          "train_rows": 554,
+          "test_rows": 139,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 131
+        },
+        {
+          "fold": 4,
+          "train_rows": 555,
+          "test_rows": 138,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 134
+        },
+        {
+          "fold": 5,
+          "train_rows": 555,
+          "test_rows": 138,
+          "precision": 0.38461538461538464,
+          "selected": 13,
+          "samples": 130
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-07-04 00:00:00+00:00",
+          "end": "2023-01-01 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2023-07-05 00:00:00+00:00",
+          "end": "2024-01-03 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end": "2024-07-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.519933342933655,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 71.24034284599998,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 70,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_02/ppo.zip",
+        "model_sha256": "f804028e2c712dcf6058f006109fad481b6b75c7d5347ac7bd812c6211b50678",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end_exclusive": "2022-07-03 00:00:00+00:00",
+          "approved_events": 13,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.704585340553948,
+            "sharpe_defined": true,
+            "return": -0.0011381690251675014,
+            "max_drawdown": 0.0011744770040184038,
+            "approved_events": 13,
+            "num_trades": 13,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 13,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end_exclusive": "2023-07-04 00:00:00+00:00",
+          "approved_events": 12,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.3535559340811667,
+            "sharpe_defined": true,
+            "return": -0.0007150723801975234,
+            "max_drawdown": 0.0008693973318635306,
+            "approved_events": 12,
+            "num_trades": 12,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 12,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 74.05438337700002,
+      "model_directory": "models/cpcv/fold_02"
+    },
+    {
+      "fold_id": 3,
+      "status": "COMPLETED",
+      "test_groups": [
+        0,
+        3
+      ],
+      "train_events": 676,
+      "train_binary_labels": 650,
+      "approved_training_events": 68,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 540,
+          "test_rows": 136,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 132
+        },
+        {
+          "fold": 2,
+          "train_rows": 540,
+          "test_rows": 135,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 132
+        },
+        {
+          "fold": 3,
+          "train_rows": 540,
+          "test_rows": 135,
+          "precision": 0.46153846153846156,
+          "selected": 13,
+          "samples": 128
+        },
+        {
+          "fold": 4,
+          "train_rows": 541,
+          "test_rows": 135,
+          "precision": 0.2857142857142857,
+          "selected": 14,
+          "samples": 131
+        },
+        {
+          "fold": 5,
+          "train_rows": 541,
+          "test_rows": 135,
+          "precision": 0.38461538461538464,
+          "selected": 13,
+          "samples": 127
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-07-04 00:00:00+00:00",
+          "end": "2023-01-02 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end": "2023-07-03 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2024-01-04 00:00:00+00:00",
+          "end": "2024-07-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5257174670696259,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 87.09589337799991,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 68,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_03/ppo.zip",
+        "model_sha256": "eeeed8aab37b577e47278a4d7e8ed7db87f0033cfcf528160e68c32b082fe34a",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end_exclusive": "2022-07-03 00:00:00+00:00",
+          "approved_events": 10,
+          "fixed_fraction_2pct": {
+            "sharpe": -2.220979780070495,
+            "sharpe_defined": true,
+            "return": -0.0005675495650955265,
+            "max_drawdown": 0.0006321414291902139,
+            "approved_events": 10,
+            "num_trades": 10,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 10,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end_exclusive": "2024-01-03 00:00:00+00:00",
+          "approved_events": 18,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.216829304995156,
+            "sharpe_defined": true,
+            "return": -0.0008041287691195054,
+            "max_drawdown": 0.0008581738667128302,
+            "approved_events": 18,
+            "num_trades": 18,
+            "daily_observations": 183,
+            "mean_allocation": 0.020000000000000004,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 18,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 87.85042432599994,
+      "model_directory": "models/cpcv/fold_03"
+    },
+    {
+      "fold_id": 4,
+      "status": "COMPLETED",
+      "test_groups": [
+        0,
+        4
+      ],
+      "train_events": 689,
+      "train_binary_labels": 658,
+      "approved_training_events": 69,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 551,
+          "test_rows": 138,
+          "precision": 0.21428571428571427,
+          "selected": 14,
+          "samples": 134
+        },
+        {
+          "fold": 2,
+          "train_rows": 551,
+          "test_rows": 138,
+          "precision": 0.2857142857142857,
+          "selected": 14,
+          "samples": 135
+        },
+        {
+          "fold": 3,
+          "train_rows": 551,
+          "test_rows": 138,
+          "precision": 0.38461538461538464,
+          "selected": 13,
+          "samples": 128
+        },
+        {
+          "fold": 4,
+          "train_rows": 551,
+          "test_rows": 138,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 132
+        },
+        {
+          "fold": 5,
+          "train_rows": 552,
+          "test_rows": 137,
+          "precision": 0.5384615384615384,
+          "selected": 13,
+          "samples": 129
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-07-04 00:00:00+00:00",
+          "end": "2023-01-02 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end": "2023-07-04 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end": "2024-01-02 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-04 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5454270243644715,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 85.04210283899988,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 69,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_04/ppo.zip",
+        "model_sha256": "df1d1e6c2575d0eb782d51bc4f4bca0d3ffffea4fe739c38387e86dc58692127",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end_exclusive": "2022-07-03 00:00:00+00:00",
+          "approved_events": 12,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.7355283758597726,
+            "sharpe_defined": true,
+            "return": -0.0012696208057541014,
+            "max_drawdown": 0.0013103487754234644,
+            "approved_events": 12,
+            "num_trades": 12,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 12,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end_exclusive": "2024-07-03 00:00:00+00:00",
+          "approved_events": 14,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.6004191104859764,
+            "sharpe_defined": true,
+            "return": -0.000936740462859742,
+            "max_drawdown": 0.0010134197799673839,
+            "approved_events": 14,
+            "num_trades": 14,
+            "daily_observations": 182,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 14,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 85.95344447000002,
+      "model_directory": "models/cpcv/fold_04"
+    },
+    {
+      "fold_id": 5,
+      "status": "COMPLETED",
+      "test_groups": [
+        0,
+        5
+      ],
+      "train_events": 707,
+      "train_binary_labels": 674,
+      "approved_training_events": 70,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 565,
+          "test_rows": 142,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 138
+        },
+        {
+          "fold": 2,
+          "train_rows": 565,
+          "test_rows": 142,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 137
+        },
+        {
+          "fold": 3,
+          "train_rows": 566,
+          "test_rows": 141,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 133
+        },
+        {
+          "fold": 4,
+          "train_rows": 566,
+          "test_rows": 141,
+          "precision": 0.5,
+          "selected": 14,
+          "samples": 131
+        },
+        {
+          "fold": 5,
+          "train_rows": 566,
+          "test_rows": 141,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 135
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-07-04 00:00:00+00:00",
+          "end": "2023-01-02 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end": "2023-07-04 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end": "2024-01-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end": "2024-07-02 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5321397542953491,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 65.85553050099998,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 70,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_05/ppo.zip",
+        "model_sha256": "02774b50217cc1732a0bd7abd9801399e250e3e92b21b6dd81ef7ef79f7d6086",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end_exclusive": "2022-07-03 00:00:00+00:00",
+          "approved_events": 16,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.8492888415767146,
+            "sharpe_defined": true,
+            "return": -0.001603769045322334,
+            "max_drawdown": 0.0016384181841042622,
+            "approved_events": 16,
+            "num_trades": 16,
+            "daily_observations": 183,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 16,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end_exclusive": "2025-01-01 00:00:00+00:00",
+          "approved_events": 8,
+          "fixed_fraction_2pct": {
+            "sharpe": -2.029694615534254,
+            "sharpe_defined": true,
+            "return": -0.0005036861903725542,
+            "max_drawdown": 0.0005895640809757685,
+            "approved_events": 8,
+            "num_trades": 8,
+            "daily_observations": 182,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 8,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 66.63625942800013,
+      "model_directory": "models/cpcv/fold_05"
+    },
+    {
+      "fold_id": 6,
+      "status": "COMPLETED",
+      "test_groups": [
+        1,
+        2
+      ],
+      "train_events": 702,
+      "train_binary_labels": 662,
+      "approved_training_events": 71,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 561,
+          "test_rows": 141,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 135
+        },
+        {
+          "fold": 2,
+          "train_rows": 561,
+          "test_rows": 141,
+          "precision": 0.3076923076923077,
+          "selected": 13,
+          "samples": 128
+        },
+        {
+          "fold": 3,
+          "train_rows": 562,
+          "test_rows": 140,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 131
+        },
+        {
+          "fold": 4,
+          "train_rows": 562,
+          "test_rows": 140,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 136
+        },
+        {
+          "fold": 5,
+          "train_rows": 562,
+          "test_rows": 140,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 132
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-02 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2023-07-05 00:00:00+00:00",
+          "end": "2024-01-03 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end": "2024-07-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.49615707397460934,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 64.22040153299986,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 71,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_06/ppo.zip",
+        "model_sha256": "b7d74f43cc0a4bf87be9d3a0a8d99643448210f7e6e95f1259feac6e9109fb70",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end_exclusive": "2023-01-02 00:00:00+00:00",
+          "approved_events": 23,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.5808315844179983,
+            "sharpe_defined": true,
+            "return": -0.0016641896608275975,
+            "max_drawdown": 0.0016641896608275975,
+            "approved_events": 23,
+            "num_trades": 23,
+            "daily_observations": 183,
+            "mean_allocation": 0.020000000000000007,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 23,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end_exclusive": "2023-07-04 00:00:00+00:00",
+          "approved_events": 20,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.369423917590913,
+            "sharpe_defined": true,
+            "return": -0.0012233309025648786,
+            "max_drawdown": 0.0013748400930251314,
+            "approved_events": 20,
+            "num_trades": 20,
+            "daily_observations": 183,
+            "mean_allocation": 0.020000000000000004,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 20,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 64.92957312299995,
+      "model_directory": "models/cpcv/fold_06"
+    },
+    {
+      "fold_id": 7,
+      "status": "COMPLETED",
+      "test_groups": [
+        1,
+        3
+      ],
+      "train_events": 684,
+      "train_binary_labels": 655,
+      "approved_training_events": 69,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 547,
+          "test_rows": 137,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 131
+        },
+        {
+          "fold": 2,
+          "train_rows": 547,
+          "test_rows": 137,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 133
+        },
+        {
+          "fold": 3,
+          "train_rows": 547,
+          "test_rows": 137,
+          "precision": 0.46153846153846156,
+          "selected": 13,
+          "samples": 130
+        },
+        {
+          "fold": 4,
+          "train_rows": 547,
+          "test_rows": 137,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 133
+        },
+        {
+          "fold": 5,
+          "train_rows": 548,
+          "test_rows": 136,
+          "precision": 0.38461538461538464,
+          "selected": 13,
+          "samples": 128
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-02 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2023-01-03 00:00:00+00:00",
+          "end": "2023-07-03 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2024-01-04 00:00:00+00:00",
+          "end": "2024-07-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.47530867755413064,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 122.74957552799992,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 69,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_07/ppo.zip",
+        "model_sha256": "80c5ed4da015bf178124bfcd0f87deb8cfa05c54473e7f40a299dfed06b13d13",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end_exclusive": "2023-01-02 00:00:00+00:00",
+          "approved_events": 14,
+          "fixed_fraction_2pct": {
+            "sharpe": -1.4374967157864516,
+            "sharpe_defined": true,
+            "return": -0.00045480068962433506,
+            "max_drawdown": 0.0005420936519326958,
+            "approved_events": 14,
+            "num_trades": 14,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 14,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end_exclusive": "2024-01-03 00:00:00+00:00",
+          "approved_events": 23,
+          "fixed_fraction_2pct": {
+            "sharpe": -5.768344723751384,
+            "sharpe_defined": true,
+            "return": -0.0015094553012515721,
+            "max_drawdown": 0.0015234316184492558,
+            "approved_events": 23,
+            "num_trades": 23,
+            "daily_observations": 183,
+            "mean_allocation": 0.020000000000000007,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 23,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 123.77661533100013,
+      "model_directory": "models/cpcv/fold_07"
+    },
+    {
+      "fold_id": 8,
+      "status": "COMPLETED",
+      "test_groups": [
+        1,
+        4
+      ],
+      "train_events": 697,
+      "train_binary_labels": 663,
+      "approved_training_events": 70,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 557,
+          "test_rows": 140,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 134
+        },
+        {
+          "fold": 2,
+          "train_rows": 557,
+          "test_rows": 140,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 136
+        },
+        {
+          "fold": 3,
+          "train_rows": 558,
+          "test_rows": 139,
+          "precision": 0.5384615384615384,
+          "selected": 13,
+          "samples": 130
+        },
+        {
+          "fold": 4,
+          "train_rows": 558,
+          "test_rows": 139,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 132
+        },
+        {
+          "fold": 5,
+          "train_rows": 558,
+          "test_rows": 139,
+          "precision": 0.5,
+          "selected": 14,
+          "samples": 131
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-02 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2023-01-03 00:00:00+00:00",
+          "end": "2023-07-04 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end": "2024-01-02 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-04 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5293112397193909,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 122.02579914300009,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 70,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_08/ppo.zip",
+        "model_sha256": "1e4f483ebac585166b7cbf192c6e925b669b20b3f85ca514594f67c7ffe9fb0b",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end_exclusive": "2023-01-02 00:00:00+00:00",
+          "approved_events": 12,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.214816853919469,
+            "sharpe_defined": true,
+            "return": -0.0008966768346289067,
+            "max_drawdown": 0.0008966768346289067,
+            "approved_events": 12,
+            "num_trades": 12,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 12,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end_exclusive": "2024-07-03 00:00:00+00:00",
+          "approved_events": 14,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.327555130949108,
+            "sharpe_defined": true,
+            "return": -0.0014617245556862724,
+            "max_drawdown": 0.0015446315112781495,
+            "approved_events": 14,
+            "num_trades": 14,
+            "daily_observations": 182,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 14,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 122.95487138399994,
+      "model_directory": "models/cpcv/fold_08"
+    },
+    {
+      "fold_id": 9,
+      "status": "COMPLETED",
+      "test_groups": [
+        1,
+        5
+      ],
+      "train_events": 715,
+      "train_binary_labels": 679,
+      "approved_training_events": 72,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 572,
+          "test_rows": 143,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 137
+        },
+        {
+          "fold": 2,
+          "train_rows": 572,
+          "test_rows": 143,
+          "precision": 0.2857142857142857,
+          "selected": 14,
+          "samples": 139
+        },
+        {
+          "fold": 3,
+          "train_rows": 572,
+          "test_rows": 143,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 133
+        },
+        {
+          "fold": 4,
+          "train_rows": 572,
+          "test_rows": 143,
+          "precision": 0.2857142857142857,
+          "selected": 14,
+          "samples": 133
+        },
+        {
+          "fold": 5,
+          "train_rows": 572,
+          "test_rows": 143,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 137
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-02 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2023-01-03 00:00:00+00:00",
+          "end": "2023-07-04 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end": "2024-01-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end": "2024-07-02 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5126283407211304,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 143.90273723799987,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 72,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_09/ppo.zip",
+        "model_sha256": "6eb358a08cb8b8aebfb7d11c7c5ebb44e36b7940199bf9e83a82a030d5bf5583",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end_exclusive": "2023-01-02 00:00:00+00:00",
+          "approved_events": 12,
+          "fixed_fraction_2pct": {
+            "sharpe": -2.1907698244595455,
+            "sharpe_defined": true,
+            "return": -0.0007377109715578367,
+            "max_drawdown": 0.0008040229639738605,
+            "approved_events": 12,
+            "num_trades": 12,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 12,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end_exclusive": "2025-01-01 00:00:00+00:00",
+          "approved_events": 14,
+          "fixed_fraction_2pct": {
+            "sharpe": -2.992729392633472,
+            "sharpe_defined": true,
+            "return": -0.000808878347564268,
+            "max_drawdown": 0.0008212991249427759,
+            "approved_events": 14,
+            "num_trades": 14,
+            "daily_observations": 182,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 14,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 145.21947192300013,
+      "model_directory": "models/cpcv/fold_09"
+    },
+    {
+      "fold_id": 10,
+      "status": "COMPLETED",
+      "test_groups": [
+        2,
+        3
+      ],
+      "train_events": 681,
+      "train_binary_labels": 651,
+      "approved_training_events": 69,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 544,
+          "test_rows": 137,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 131
+        },
+        {
+          "fold": 2,
+          "train_rows": 545,
+          "test_rows": 136,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 132
+        },
+        {
+          "fold": 3,
+          "train_rows": 545,
+          "test_rows": 136,
+          "precision": 0.38461538461538464,
+          "selected": 13,
+          "samples": 128
+        },
+        {
+          "fold": 4,
+          "train_rows": 545,
+          "test_rows": 136,
+          "precision": 0.21428571428571427,
+          "selected": 14,
+          "samples": 132
+        },
+        {
+          "fold": 5,
+          "train_rows": 545,
+          "test_rows": 136,
+          "precision": 0.46153846153846156,
+          "selected": 13,
+          "samples": 128
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-03 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end": "2023-01-01 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2024-01-04 00:00:00+00:00",
+          "end": "2024-07-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.49318885803222656,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 125.71716969599993,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 69,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_10/ppo.zip",
+        "model_sha256": "aa2b071121ec4e584bfbd751a2d983029c160094707e7bcfadd29a57b6cb0bfa",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end_exclusive": "2023-07-04 00:00:00+00:00",
+          "approved_events": 16,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.092148463262765,
+            "sharpe_defined": true,
+            "return": -0.0009868418013243563,
+            "max_drawdown": 0.0011152090135660986,
+            "approved_events": 16,
+            "num_trades": 16,
+            "daily_observations": 183,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 16,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end_exclusive": "2024-01-03 00:00:00+00:00",
+          "approved_events": 14,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.831170983907334,
+            "sharpe_defined": true,
+            "return": -0.0009875150132132582,
+            "max_drawdown": 0.0009875150132132582,
+            "approved_events": 14,
+            "num_trades": 14,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 14,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 127.01186612000015,
+      "model_directory": "models/cpcv/fold_10"
+    },
+    {
+      "fold_id": 11,
+      "status": "COMPLETED",
+      "test_groups": [
+        2,
+        4
+      ],
+      "train_events": 693,
+      "train_binary_labels": 658,
+      "approved_training_events": 70,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 554,
+          "test_rows": 139,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 133
+        },
+        {
+          "fold": 2,
+          "train_rows": 554,
+          "test_rows": 139,
+          "precision": 0.21428571428571427,
+          "selected": 14,
+          "samples": 134
+        },
+        {
+          "fold": 3,
+          "train_rows": 554,
+          "test_rows": 139,
+          "precision": 0.3076923076923077,
+          "selected": 13,
+          "samples": 130
+        },
+        {
+          "fold": 4,
+          "train_rows": 555,
+          "test_rows": 138,
+          "precision": 0.2857142857142857,
+          "selected": 14,
+          "samples": 131
+        },
+        {
+          "fold": 5,
+          "train_rows": 555,
+          "test_rows": 138,
+          "precision": 0.46153846153846156,
+          "selected": 13,
+          "samples": 130
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-03 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end": "2023-01-01 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2023-07-05 00:00:00+00:00",
+          "end": "2024-01-02 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-04 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5084858536720278,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 142.93177029999993,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 70,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_11/ppo.zip",
+        "model_sha256": "f1970e606d624eb1ad29c01bd2a2d26e1b4e3607e872e1b45a2f3c4daa2477af",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end_exclusive": "2023-07-04 00:00:00+00:00",
+          "approved_events": 17,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.0266756924295075,
+            "sharpe_defined": true,
+            "return": -0.0010826697928515427,
+            "max_drawdown": 0.001211024691769813,
+            "approved_events": 17,
+            "num_trades": 17,
+            "daily_observations": 183,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 17,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end_exclusive": "2024-07-03 00:00:00+00:00",
+          "approved_events": 17,
+          "fixed_fraction_2pct": {
+            "sharpe": -5.128622797274086,
+            "sharpe_defined": true,
+            "return": -0.0014111538738617035,
+            "max_drawdown": 0.0014935376772410303,
+            "approved_events": 17,
+            "num_trades": 17,
+            "daily_observations": 182,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 17,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 144.3510347849999,
+      "model_directory": "models/cpcv/fold_11"
+    },
+    {
+      "fold_id": 12,
+      "status": "COMPLETED",
+      "test_groups": [
+        2,
+        5
+      ],
+      "train_events": 711,
+      "train_binary_labels": 674,
+      "approved_training_events": 72,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 568,
+          "test_rows": 143,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 137
+        },
+        {
+          "fold": 2,
+          "train_rows": 569,
+          "test_rows": 142,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 137
+        },
+        {
+          "fold": 3,
+          "train_rows": 569,
+          "test_rows": 142,
+          "precision": 0.21428571428571427,
+          "selected": 14,
+          "samples": 132
+        },
+        {
+          "fold": 4,
+          "train_rows": 569,
+          "test_rows": 142,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 132
+        },
+        {
+          "fold": 5,
+          "train_rows": 569,
+          "test_rows": 142,
+          "precision": 0.2857142857142857,
+          "selected": 14,
+          "samples": 136
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-03 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end": "2023-01-01 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2023-07-05 00:00:00+00:00",
+          "end": "2024-01-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end": "2024-07-02 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5117772221565247,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 131.09804014700012,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 72,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_12/ppo.zip",
+        "model_sha256": "3b41624631309f1cc57455498282f293ef6d8e693c8f7a16a654cf356bb4c6c3",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end_exclusive": "2023-07-04 00:00:00+00:00",
+          "approved_events": 14,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.9167346818062607,
+            "sharpe_defined": true,
+            "return": -0.0008348760266709832,
+            "max_drawdown": 0.0008695216744756262,
+            "approved_events": 14,
+            "num_trades": 14,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 14,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end_exclusive": "2025-01-01 00:00:00+00:00",
+          "approved_events": 15,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.77795031258276,
+            "sharpe_defined": true,
+            "return": -0.0009230139772108403,
+            "max_drawdown": 0.0009230139772108403,
+            "approved_events": 15,
+            "num_trades": 15,
+            "daily_observations": 182,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 15,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 132.412602654,
+      "model_directory": "models/cpcv/fold_12"
+    },
+    {
+      "fold_id": 13,
+      "status": "COMPLETED",
+      "test_groups": [
+        3,
+        4
+      ],
+      "train_events": 677,
+      "train_binary_labels": 652,
+      "approved_training_events": 68,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 541,
+          "test_rows": 136,
+          "precision": 0.23076923076923078,
+          "selected": 13,
+          "samples": 130
+        },
+        {
+          "fold": 2,
+          "train_rows": 541,
+          "test_rows": 136,
+          "precision": 0.21428571428571427,
+          "selected": 14,
+          "samples": 132
+        },
+        {
+          "fold": 3,
+          "train_rows": 542,
+          "test_rows": 135,
+          "precision": 0.46153846153846156,
+          "selected": 13,
+          "samples": 130
+        },
+        {
+          "fold": 4,
+          "train_rows": 542,
+          "test_rows": 135,
+          "precision": 0.2857142857142857,
+          "selected": 14,
+          "samples": 133
+        },
+        {
+          "fold": 5,
+          "train_rows": 542,
+          "test_rows": 135,
+          "precision": 0.46153846153846156,
+          "selected": 13,
+          "samples": 127
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-03 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end": "2023-01-02 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end": "2023-07-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-07-04 00:00:00+00:00",
+          "end": "2025-01-01 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5293676495552063,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 93.41725507800015,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 68,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_13/ppo.zip",
+        "model_sha256": "f5e31f93eb3f7fb334f7564d69ee2cdd409f8b59944c35877bc0b48c914d8a57",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end_exclusive": "2024-01-03 00:00:00+00:00",
+          "approved_events": 15,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.8154553327695995,
+            "sharpe_defined": true,
+            "return": -0.0010012345151836355,
+            "max_drawdown": 0.0010012345151836355,
+            "approved_events": 15,
+            "num_trades": 15,
+            "daily_observations": 183,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 15,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end_exclusive": "2024-07-03 00:00:00+00:00",
+          "approved_events": 14,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.8167740261602066,
+            "sharpe_defined": true,
+            "return": -0.001006280395095538,
+            "max_drawdown": 0.0010156217467972573,
+            "approved_events": 14,
+            "num_trades": 14,
+            "daily_observations": 182,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 14,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 94.81931087699991,
+      "model_directory": "models/cpcv/fold_13"
+    },
+    {
+      "fold_id": 14,
+      "status": "COMPLETED",
+      "test_groups": [
+        3,
+        5
+      ],
+      "train_events": 694,
+      "train_binary_labels": 668,
+      "approved_training_events": 70,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 555,
+          "test_rows": 139,
+          "precision": 0.07142857142857142,
+          "selected": 14,
+          "samples": 133
+        },
+        {
+          "fold": 2,
+          "train_rows": 555,
+          "test_rows": 139,
+          "precision": 0.21428571428571427,
+          "selected": 14,
+          "samples": 134
+        },
+        {
+          "fold": 3,
+          "train_rows": 555,
+          "test_rows": 139,
+          "precision": 0.21428571428571427,
+          "selected": 14,
+          "samples": 135
+        },
+        {
+          "fold": 4,
+          "train_rows": 555,
+          "test_rows": 139,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 134
+        },
+        {
+          "fold": 5,
+          "train_rows": 556,
+          "test_rows": 138,
+          "precision": 0.21428571428571427,
+          "selected": 14,
+          "samples": 132
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-03 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end": "2023-01-02 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end": "2023-07-03 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2024-01-04 00:00:00+00:00",
+          "end": "2024-07-02 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5060749232769013,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 151.49090208000007,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 70,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_14/ppo.zip",
+        "model_sha256": "ddf12f4628fc9b1e0cde60a095ea4ae68919e9928cae57cd6561f7dbef721192",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end_exclusive": "2024-01-03 00:00:00+00:00",
+          "approved_events": 13,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.25482934103174,
+            "sharpe_defined": true,
+            "return": -0.0007981023615243332,
+            "max_drawdown": 0.0007981023615243332,
+            "approved_events": 13,
+            "num_trades": 13,
+            "daily_observations": 183,
+            "mean_allocation": 0.019999999999999997,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 13,
+            "num_trades": 0,
+            "daily_observations": 183,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end_exclusive": "2025-01-01 00:00:00+00:00",
+          "approved_events": 5,
+          "fixed_fraction_2pct": {
+            "sharpe": -1.4024323067761637,
+            "sharpe_defined": true,
+            "return": -0.00016369778995339868,
+            "max_drawdown": 0.0002599923201689336,
+            "approved_events": 5,
+            "num_trades": 5,
+            "daily_observations": 182,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 5,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 152.81744872299987,
+      "model_directory": "models/cpcv/fold_14"
+    },
+    {
+      "fold_id": 15,
+      "status": "COMPLETED",
+      "test_groups": [
+        4,
+        5
+      ],
+      "train_events": 708,
+      "train_binary_labels": 677,
+      "approved_training_events": 71,
+      "inner_folds": [
+        {
+          "fold": 1,
+          "train_rows": 566,
+          "test_rows": 142,
+          "precision": 0.14285714285714285,
+          "selected": 14,
+          "samples": 136
+        },
+        {
+          "fold": 2,
+          "train_rows": 566,
+          "test_rows": 142,
+          "precision": 0.42857142857142855,
+          "selected": 14,
+          "samples": 137
+        },
+        {
+          "fold": 3,
+          "train_rows": 566,
+          "test_rows": 142,
+          "precision": 0.2857142857142857,
+          "selected": 14,
+          "samples": 138
+        },
+        {
+          "fold": 4,
+          "train_rows": 567,
+          "test_rows": 141,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 134
+        },
+        {
+          "fold": 5,
+          "train_rows": 567,
+          "test_rows": 141,
+          "precision": 0.35714285714285715,
+          "selected": 14,
+          "samples": 132
+        }
+      ],
+      "episode_periods": {
+        "0": {
+          "start": "2022-01-01 00:00:00+00:00",
+          "end": "2022-07-03 00:00:00+00:00"
+        },
+        "1": {
+          "start": "2022-07-03 00:00:00+00:00",
+          "end": "2023-01-02 00:00:00+00:00"
+        },
+        "2": {
+          "start": "2023-01-02 00:00:00+00:00",
+          "end": "2023-07-04 00:00:00+00:00"
+        },
+        "3": {
+          "start": "2023-07-04 00:00:00+00:00",
+          "end": "2024-01-02 00:00:00+00:00"
+        }
+      },
+      "threshold": 0.5375251293182374,
+      "threshold_source": "outer-train inner OOF90th percentile",
+      "training": {
+        "algorithm": "PPO",
+        "seed": 42,
+        "requested_steps": 100000,
+        "actual_environment_steps": 100352,
+        "training_seconds": 90.6293348690001,
+        "n_steps": 512,
+        "batch_size": 128,
+        "n_epochs": 5,
+        "network": [
+          32,
+          32
+        ],
+        "torch_threads": 1,
+        "device": "cpu",
+        "approved_training_events": 71,
+        "probability_source": "purged_oof",
+        "model_path": "models/cpcv/fold_15/ppo.zip",
+        "model_sha256": "0d1efd97a2bf30582a770bdb30c2080b4a6604fac1646b2cb72005e528435598",
+        "period_start": "2022-01-01 00:00:00+00:00",
+        "period_end_exclusive": "2025-01-01 00:00:00+00:00",
+        "training_episodes": 4,
+        "episode_reset": "round-robin, fresh capital per contiguous calendar segment",
+        "valuation": "actual intratrade closed-bar NAV and realized exit",
+        "observation_names": [
+          "position",
+          "cash_initial_capital_units",
+          "unrealized_pnl",
+          "ml_probability",
+          "atr_pct",
+          "regime_range",
+          "regime_trend",
+          "regime_volatile"
+        ],
+        "reward": "trailing 30 calendar-day realized daily NAV Sharpe minus 2*max(0, drawdown-0.1)",
+        "zero_variance_reward_sharpe": 0.0,
+        "zero_variance_reported_sharpe": null
+      },
+      "test_segments": [
+        {
+          "start": "2024-01-03 00:00:00+00:00",
+          "end_exclusive": "2024-07-03 00:00:00+00:00",
+          "approved_events": 17,
+          "fixed_fraction_2pct": {
+            "sharpe": -4.317689523806686,
+            "sharpe_defined": true,
+            "return": -0.0015143941055633103,
+            "max_drawdown": 0.0015972966880909434,
+            "approved_events": 17,
+            "num_trades": 17,
+            "daily_observations": 182,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 17,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        },
+        {
+          "start": "2024-07-03 00:00:00+00:00",
+          "end_exclusive": "2025-01-01 00:00:00+00:00",
+          "approved_events": 15,
+          "fixed_fraction_2pct": {
+            "sharpe": -3.7354762784316926,
+            "sharpe_defined": true,
+            "return": -0.0011056955004740132,
+            "max_drawdown": 0.001229835210088348,
+            "approved_events": 15,
+            "num_trades": 15,
+            "daily_observations": 182,
+            "mean_allocation": 0.02,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          },
+          "ppo": {
+            "sharpe": null,
+            "sharpe_defined": false,
+            "return": 0.0,
+            "max_drawdown": 0.0,
+            "approved_events": 15,
+            "num_trades": 0,
+            "daily_observations": 182,
+            "mean_allocation": 0.0,
+            "valuation": "actual intratrade closed-bar NAV and realized exit"
+          }
+        }
+      ],
+      "elapsed_seconds": 91.54655799800003,
+      "model_directory": "models/cpcv/fold_15"
+    }
+  ],
+  "path_returns_file": "results/final_validation_paths.parquet",
+  "pbo": 0.0,
+  "pbo_defined": true,
+  "dsr": null,
+  "dsr_defined": false,
+  "conservative_dsr_rejection_bound": 0.0,
+  "pbo_aggregation": "mean of five separately computed path CSCV PBO values",
+  "dsr_aggregation": "minimum of five separate path DSR probabilities",
+  "pbo_scope": [
+    "fixed_fraction_2pct",
+    "ppo"
+  ],
+  "candidate_count": 2,
+  "n_trials": 2,
+  "pbo_method": "purgedcv.probability_of_backtest_overfitting, CSCV six blocks/20 combinations per path",
+  "pbo_rank_utility": "monotone atan(per-observation Sharpe), constant slices ranked below every defined Sharpe",
+  "dsr_units": "per-observation population Sharpe; sample variance across two actual candidates; non-excess kurtosis",
+  "multiplicity_limitation": "Two sizing algorithms are the observed selection scope; earlier project experiments are not a known complete independent-trial census",
+  "path_statistics": [
+    {
+      "path": 1,
+      "pbo": 0.0,
+      "pbo_defined": true,
+      "dsr": null,
+      "dsr_defined": false,
+      "dsr_undefined_reason": "PPO path has zero volatility; its Sharpe and DSR are undefined",
+      "fixed_sharpe": -3.0655058320110675,
+      "ppo_sharpe": null,
+      "ppo_return": 0.0,
+      "ppo_max_drawdown": 0.0,
+      "observations": 1096,
+      "zero_volatility_candidates": [
+        "ppo"
+      ],
+      "pbo_diagnostics": {
+        "pbo": 0.0,
+        "logits": [
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452
+        ],
+        "slope": -0.9585432022516712,
+        "is_oos_performance": [
+          [
+            -0.10530639261103492,
+            -0.10062217556687
+          ],
+          [
+            -0.09858896889188465,
+            -0.10511518072105731
+          ],
+          [
+            -0.10209488433849309,
+            -0.10455807743243703
+          ],
+          [
+            -0.12097913004720388,
+            -0.09126028896328599
+          ],
+          [
+            -0.08046817063997436,
+            -0.1200907934387821
+          ],
+          [
+            -0.0812087076469739,
+            -0.11839688008339991
+          ],
+          [
+            -0.0988272335158038,
+            -0.10454454539112186
+          ],
+          [
+            -0.07537555775047952,
+            -0.12328516653279216
+          ],
+          [
+            -0.09273731081509472,
+            -0.10929821598486558
+          ],
+          [
+            -0.09494789796621804,
+            -0.10835372858650962
+          ],
+          [
+            -0.10835372858650962,
+            -0.09494789796621804
+          ],
+          [
+            -0.10929821598486558,
+            -0.09273731081509472
+          ],
+          [
+            -0.12328516653279216,
+            -0.07537555775047952
+          ],
+          [
+            -0.10454454539112186,
+            -0.0988272335158038
+          ],
+          [
+            -0.11839688008339991,
+            -0.0812087076469739
+          ],
+          [
+            -0.1200907934387821,
+            -0.08046817063997436
+          ],
+          [
+            -0.09126028896328599,
+            -0.12097913004720388
+          ],
+          [
+            -0.10455807743243703,
+            -0.10209488433849309
+          ],
+          [
+            -0.10511518072105731,
+            -0.09858896889188465
+          ],
+          [
+            -0.10062217556687,
+            -0.10530639261103492
+          ]
+        ],
+        "n_combos": 20
+      },
+      "dsr_diagnostics": null
+    },
+    {
+      "path": 2,
+      "pbo": 0.0,
+      "pbo_defined": true,
+      "dsr": null,
+      "dsr_defined": false,
+      "dsr_undefined_reason": "PPO path has zero volatility; its Sharpe and DSR are undefined",
+      "fixed_sharpe": -3.9752992433487915,
+      "ppo_sharpe": null,
+      "ppo_return": 0.0,
+      "ppo_max_drawdown": 0.0,
+      "observations": 1096,
+      "zero_volatility_candidates": [
+        "ppo"
+      ],
+      "pbo_diagnostics": {
+        "pbo": 0.0,
+        "logits": [
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452
+        ],
+        "slope": -0.9791200938912862,
+        "is_oos_performance": [
+          [
+            -0.14159607078958902,
+            -0.12292933234365012
+          ],
+          [
+            -0.12885625051967198,
+            -0.13309420710206019
+          ],
+          [
+            -0.14302371085741056,
+            -0.12460613268110518
+          ],
+          [
+            -0.15517183228383716,
+            -0.1112512006532612
+          ],
+          [
+            -0.11808367461369297,
+            -0.1491809129721682
+          ],
+          [
+            -0.12663683825579267,
+            -0.13555624643404612
+          ],
+          [
+            -0.13938256255902626,
+            -0.12179627717870566
+          ],
+          [
+            -0.11621288433754409,
+            -0.14782907067064419
+          ],
+          [
+            -0.12944028219751944,
+            -0.13504254563278678
+          ],
+          [
+            -0.13853210508706537,
+            -0.1222822220401683
+          ],
+          [
+            -0.1222822220401683,
+            -0.13853210508706537
+          ],
+          [
+            -0.13504254563278678,
+            -0.12944028219751944
+          ],
+          [
+            -0.14782907067064419,
+            -0.11621288433754409
+          ],
+          [
+            -0.12179627717870566,
+            -0.13938256255902626
+          ],
+          [
+            -0.13555624643404612,
+            -0.12663683825579267
+          ],
+          [
+            -0.1491809129721682,
+            -0.11808367461369297
+          ],
+          [
+            -0.1112512006532612,
+            -0.15517183228383716
+          ],
+          [
+            -0.12460613268110518,
+            -0.14302371085741056
+          ],
+          [
+            -0.13309420710206019,
+            -0.12885625051967198
+          ],
+          [
+            -0.12292933234365012,
+            -0.14159607078958902
+          ]
+        ],
+        "n_combos": 20
+      },
+      "dsr_diagnostics": null
+    },
+    {
+      "path": 3,
+      "pbo": 0.0,
+      "pbo_defined": true,
+      "dsr": null,
+      "dsr_defined": false,
+      "dsr_undefined_reason": "PPO path has zero volatility; its Sharpe and DSR are undefined",
+      "fixed_sharpe": -3.4390893471004125,
+      "ppo_sharpe": null,
+      "ppo_return": 0.0,
+      "ppo_max_drawdown": 0.0,
+      "observations": 1096,
+      "zero_volatility_candidates": [
+        "ppo"
+      ],
+      "pbo_diagnostics": {
+        "pbo": 0.0,
+        "logits": [
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452
+        ],
+        "slope": -0.9959465322880608,
+        "is_oos_performance": [
+          [
+            -0.14923240838598675,
+            -0.08145803513137985
+          ],
+          [
+            -0.14300978118440516,
+            -0.08460300285015503
+          ],
+          [
+            -0.13769294704752907,
+            -0.09462367071273775
+          ],
+          [
+            -0.15264918165740943,
+            -0.07866127862591105
+          ],
+          [
+            -0.10952213141535591,
+            -0.11911156852936121
+          ],
+          [
+            -0.10069188382828441,
+            -0.12618515848196954
+          ],
+          [
+            -0.11636485114299246,
+            -0.11047333675534002
+          ],
+          [
+            -0.09688112454524465,
+            -0.13155181395834503
+          ],
+          [
+            -0.11230867540519628,
+            -0.11567006198398587
+          ],
+          [
+            -0.10372699986388427,
+            -0.12309004681247471
+          ],
+          [
+            -0.12309004681247471,
+            -0.10372699986388427
+          ],
+          [
+            -0.11567006198398587,
+            -0.11230867540519628
+          ],
+          [
+            -0.13155181395834503,
+            -0.09688112454524465
+          ],
+          [
+            -0.11047333675534002,
+            -0.11636485114299246
+          ],
+          [
+            -0.12618515848196954,
+            -0.10069188382828441
+          ],
+          [
+            -0.11911156852936121,
+            -0.10952213141535591
+          ],
+          [
+            -0.07866127862591105,
+            -0.15264918165740943
+          ],
+          [
+            -0.09462367071273775,
+            -0.13769294704752907
+          ],
+          [
+            -0.08460300285015503,
+            -0.14300978118440516
+          ],
+          [
+            -0.08145803513137985,
+            -0.14923240838598675
+          ]
+        ],
+        "n_combos": 20
+      },
+      "dsr_diagnostics": null
+    },
+    {
+      "path": 4,
+      "pbo": 0.0,
+      "pbo_defined": true,
+      "dsr": null,
+      "dsr_defined": false,
+      "dsr_undefined_reason": "PPO path has zero volatility; its Sharpe and DSR are undefined",
+      "fixed_sharpe": -3.534565417822368,
+      "ppo_sharpe": null,
+      "ppo_return": 0.0,
+      "ppo_max_drawdown": 0.0,
+      "observations": 1096,
+      "zero_volatility_candidates": [
+        "ppo"
+      ],
+      "pbo_diagnostics": {
+        "pbo": 0.0,
+        "logits": [
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452
+        ],
+        "slope": -0.9888876488344318,
+        "is_oos_performance": [
+          [
+            -0.11593774232351955,
+            -0.12012524691372657
+          ],
+          [
+            -0.10869747072558662,
+            -0.12399339019430056
+          ],
+          [
+            -0.11867832710266207,
+            -0.11799021227724207
+          ],
+          [
+            -0.13643882558824724,
+            -0.09769517850548659
+          ],
+          [
+            -0.09828167277312916,
+            -0.13260859890979712
+          ],
+          [
+            -0.10697991669991494,
+            -0.1260503243957255
+          ],
+          [
+            -0.12663651863794115,
+            -0.1067001888045972
+          ],
+          [
+            -0.1009901933972231,
+            -0.13044177048237943
+          ],
+          [
+            -0.12140809271215618,
+            -0.11145342742742054
+          ],
+          [
+            -0.12896627742096362,
+            -0.1042395703243578
+          ],
+          [
+            -0.1042395703243578,
+            -0.12896627742096362
+          ],
+          [
+            -0.11145342742742054,
+            -0.12140809271215618
+          ],
+          [
+            -0.13044177048237943,
+            -0.1009901933972231
+          ],
+          [
+            -0.1067001888045972,
+            -0.12663651863794115
+          ],
+          [
+            -0.1260503243957255,
+            -0.10697991669991494
+          ],
+          [
+            -0.13260859890979712,
+            -0.09828167277312916
+          ],
+          [
+            -0.09769517850548659,
+            -0.13643882558824724
+          ],
+          [
+            -0.11799021227724207,
+            -0.11867832710266207
+          ],
+          [
+            -0.12399339019430056,
+            -0.10869747072558662
+          ],
+          [
+            -0.12012524691372657,
+            -0.11593774232351955
+          ]
+        ],
+        "n_combos": 20
+      },
+      "dsr_diagnostics": null
+    },
+    {
+      "path": 5,
+      "pbo": 0.0,
+      "pbo_defined": true,
+      "dsr": null,
+      "dsr_defined": false,
+      "dsr_undefined_reason": "PPO path has zero volatility; its Sharpe and DSR are undefined",
+      "fixed_sharpe": -3.5421378033763515,
+      "ppo_sharpe": null,
+      "ppo_return": 0.0,
+      "ppo_max_drawdown": 0.0,
+      "observations": 1096,
+      "zero_volatility_candidates": [
+        "ppo"
+      ],
+      "pbo_diagnostics": {
+        "pbo": 0.0,
+        "logits": [
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452,
+          0.6931471805599452
+        ],
+        "slope": -0.9571418314313149,
+        "is_oos_performance": [
+          [
+            -0.13085927458158347,
+            -0.10511722666205835
+          ],
+          [
+            -0.12966397448534037,
+            -0.10551844484680693
+          ],
+          [
+            -0.12696891310003877,
+            -0.11474815907527945
+          ],
+          [
+            -0.1322101771090877,
+            -0.10750195097146115
+          ],
+          [
+            -0.11247435017262818,
+            -0.12204217513031346
+          ],
+          [
+            -0.1038659560990238,
+            -0.12842247995858858
+          ],
+          [
+            -0.1115060162130413,
+            -0.12181196508833314
+          ],
+          [
+            -0.10312100677288079,
+            -0.12912851704812373
+          ],
+          [
+            -0.110814553617304,
+            -0.12257111041263563
+          ],
+          [
+            -0.10292454076922553,
+            -0.1296119246980179
+          ],
+          [
+            -0.1296119246980179,
+            -0.10292454076922553
+          ],
+          [
+            -0.12257111041263563,
+            -0.110814553617304
+          ],
+          [
+            -0.12912851704812373,
+            -0.10312100677288079
+          ],
+          [
+            -0.12181196508833314,
+            -0.1115060162130413
+          ],
+          [
+            -0.12842247995858858,
+            -0.1038659560990238
+          ],
+          [
+            -0.12204217513031346,
+            -0.11247435017262818
+          ],
+          [
+            -0.10750195097146115,
+            -0.1322101771090877
+          ],
+          [
+            -0.11474815907527945,
+            -0.12696891310003877
+          ],
+          [
+            -0.10551844484680693,
+            -0.12966397448534037
+          ],
+          [
+            -0.10511722666205835,
+            -0.13085927458158347
+          ]
+        ],
+        "n_combos": 20
+      },
+      "dsr_diagnostics": null
+    }
+  ],
+  "ppo_sharpe_distribution": {
+    "defined": 0,
+    "mean": null,
+    "median": null,
+    "min": null,
+    "max": null,
+    "p05": null,
+    "p95": null
+  },
+  "fixed_sharpe_distribution": {
+    "defined": 5,
+    "mean": -3.5113195287317986,
+    "median": -3.534565417822368,
+    "min": -3.9752992433487915,
+    "max": -3.0655058320110675,
+    "p05": -3.8886669553543034,
+    "p95": -3.140222535028937
+  },
+  "rejection_rule": "PBO > 0.5 or DSR < 0.95; undefined statistics cannot establish acceptance",
+  "verdict": "REJECTED",
+  "limitations": [
+    "Retrospective2022\u20132024 source; previously inspected validation is not a new holdout",
+    "Date-grouped purging is conservative relative to individual15minute event rows",
+    "Five reconstructed CPCV paths are dependent resamplings, not five independent datasets",
+    "PBO selection scope is exactly fixed2%versusPPO sizing; prior project search multiplicity is not fully counted"
+  ],
+  "fold_sharpes": [
+    {
+      "fold": 1,
+      "held_daily_observations": 366,
+      "fixed_fraction_2pct": -3.053681076414596,
+      "ppo": null
+    },
+    {
+      "fold": 2,
+      "held_daily_observations": 366,
+      "fixed_fraction_2pct": -3.505751990208701,
+      "ppo": null
+    },
+    {
+      "fold": 3,
+      "held_daily_observations": 366,
+      "fixed_fraction_2pct": -3.0450903534025024,
+      "ppo": null
+    },
+    {
+      "fold": 4,
+      "held_daily_observations": 365,
+      "fixed_fraction_2pct": -3.649740108671786,
+      "ppo": null
+    },
+    {
+      "fold": 5,
+      "held_daily_observations": 365,
+      "fixed_fraction_2pct": -3.0684093988767502,
+      "ppo": null
+    },
+    {
+      "fold": 6,
+      "held_daily_observations": 366,
+      "fixed_fraction_2pct": -3.7665595520633883,
+      "ppo": null
+    },
+    {
+      "fold": 7,
+      "held_daily_observations": 366,
+      "fixed_fraction_2pct": -3.373067816634572,
+      "ppo": null
+    },
+    {
+      "fold": 8,
+      "held_daily_observations": 365,
+      "fixed_fraction_2pct": -3.8067924813070473,
+      "ppo": null
+    },
+    {
+      "fold": 9,
+      "held_daily_observations": 365,
+      "fixed_fraction_2pct": -2.5369221884559274,
+      "ppo": null
+    },
+    {
+      "fold": 10,
+      "held_daily_observations": 366,
+      "fixed_fraction_2pct": -4.422254040195586,
+      "ppo": null
+    },
+    {
+      "fold": 11,
+      "held_daily_observations": 365,
+      "fixed_fraction_2pct": -4.587490652791199,
+      "ppo": null
+    },
+    {
+      "fold": 12,
+      "held_daily_observations": 365,
+      "fixed_fraction_2pct": -3.838063940843476,
+      "ppo": null
+    },
+    {
+      "fold": 13,
+      "held_daily_observations": 365,
+      "fixed_fraction_2pct": -4.232159244699169,
+      "ppo": null
+    },
+    {
+      "fold": 14,
+      "held_daily_observations": 365,
+      "fixed_fraction_2pct": -3.067307698399177,
+      "ppo": null
+    },
+    {
+      "fold": 15,
+      "held_daily_observations": 364,
+      "fixed_fraction_2pct": -4.040146262397977,
+      "ppo": null
+    }
+  ],
+  "fold_sharpe_distribution": {
+    "fixed_fraction_2pct": {
+      "defined": 15,
+      "mean": -3.59956245369079,
+      "median": -3.649740108671786,
+      "min": -4.587490652791199,
+      "max": -2.5369221884559274,
+      "p05": -4.47182502397427,
+      "p95": -2.8926399039185307
+    },
+    "ppo": {
+      "defined": 0,
+      "mean": null,
+      "median": null,
+      "min": null,
+      "max": null,
+      "p05": null,
+      "p95": null
+    }
+  },
+  "fold_score_definition": "Daily Sharpe across that fold's actual held dates; group episodes reset capital. Fold scores are descriptive and are not pooled into path PBO/DSR observations."
+}
