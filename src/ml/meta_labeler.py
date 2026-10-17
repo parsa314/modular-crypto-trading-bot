@@ -166,9 +166,14 @@ def ml_experiment(events,market=None,model_dir="models"):
     model=make_model()
     model.fit(x_train,train.label,eval_set=[(x_val,valid.label)],verbose=False)
     probabilities=model.predict_proba(x_val)[:,1]
-    threshold=float(np.quantile(probabilities,.9))
-    selected=probabilities>=threshold
-    top=np.argsort(probabilities)[-max(1,math.ceil(.1*len(probabilities))):]
+    # EXACT top decile. Quantile threshold alone would admit huge tie blocks
+    # (e.g. saturated XGBoost scores) and corrupt the filtered comparison.
+    n_top=max(1,math.ceil(.1*len(probabilities)))
+    top=np.argsort(-probabilities,kind="stable")[:n_top]
+    selected=np.zeros(len(probabilities),dtype=bool)
+    selected[top]=True
+    threshold=float(probabilities[top[-1]])
+    assert selected.sum()==n_top
     labels=valid.label.to_numpy()
     top_precision=float(labels[top].mean())
     modelpath=Path(model_dir)
