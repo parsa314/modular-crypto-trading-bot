@@ -95,7 +95,7 @@ jobs:
           print({'decision':gate['decision'],'countable_snapshot_count':gate['countable_snapshot_count'],'unique_slots':gate['core_gate']['unique_measurement_slots'],'expected':gate['core_gate']['expected_measurement_opportunities'],'ledger_sha256':gate['evidence_ledger_sha256']})
           PY
       - name: Upload Phase-Q report and ledger manifest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: v20-phase-q-${{ github.run_id }}
           path: |

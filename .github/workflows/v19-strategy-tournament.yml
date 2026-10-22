@@ -49,7 +49,7 @@ jobs:
             --output-dir artifacts/v19-multitimeframe
       - name: Upload tournament evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: v19-multitimeframe-tournament
           path: artifacts/v19-multitimeframe/

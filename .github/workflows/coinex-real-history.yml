@@ -39,7 +39,7 @@ jobs:
           PYTHONPATH=collector python collector/scripts/collect_coinex_history.py --output-dir data/coinex-4h
       - name: Keep data and manifest even if one market fails
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coinex-spot-4h-real-${{ github.run_id }}
           path: data/coinex-4h/
