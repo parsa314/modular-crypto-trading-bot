@@ -27,7 +27,7 @@ jobs:
           ref: f234a85028ed2d86cd3bc672e7491f72b0245b9b
           path: scientific
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
       - name: Install source and verify collector offline
