@@ -17,7 +17,7 @@ jobs:
     env:
       BASE_URL: https://thesis-trading-bot-v08-production.up.railway.app
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Health, research and persistence contract
         run: |

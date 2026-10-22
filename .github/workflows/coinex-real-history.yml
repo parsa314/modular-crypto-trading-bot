@@ -17,12 +17,12 @@ jobs:
     timeout-minutes: 75
     steps:
       - name: Read collector from reviewed main branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: collector
           persist-credentials: false
       - name: Check out frozen scientific source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: f234a85028ed2d86cd3bc672e7491f72b0245b9b
           path: scientific

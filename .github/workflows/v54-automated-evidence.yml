@@ -30,7 +30,7 @@ jobs:
       SOURCE_SHA: f234a85028ed2d86cd3bc672e7491f72b0245b9b
     steps:
       - name: Check out frozen v0.54 scientific source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: f234a85028ed2d86cd3bc672e7491f72b0245b9b
           persist-credentials: false
