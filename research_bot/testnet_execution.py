@@ -386,6 +386,11 @@ class TestnetExecutionGateway:
         requested = decimal_from(local.requested_quantity, "requested_quantity")
         if matched < 0 or matched > requested:
             raise TestnetSafetyError("INVALID_MATCHED_QUANTITY")
+        previous_matched = decimal_from(local.matched_quantity, "previous_matched_quantity")
+        if matched < previous_matched:
+            raise TestnetSafetyError("MATCHED_QUANTITY_REGRESSION")
+        if snapshot.state is OrderLifecycle.FILLED and matched != requested:
+            raise TestnetSafetyError("FILLED_QUANTITY_INCOMPLETE")
 
         allowed = {
             OrderLifecycle.SUBMITTING: {

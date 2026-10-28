@@ -2,14 +2,18 @@ name: v52-execution-integrity
 
 on:
   push:
-    branches: ["execution-hardening-v52"]
+    branches: ["execution-hardening-v52", "validation/next-gate-pg-oms-001-20261028"]
   pull_request:
     branches: ["main"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   execution-integrity:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16
@@ -26,6 +30,12 @@ jobs:
           --health-retries 5
     env:
       TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/execution_v52
+      NEXT_GATE_ISOLATED_DATABASE: "1"
+      NEXT_GATE_EVENT_LOG: artifacts/next_gate_pg_oms/events.jsonl
+      LIVE_EXECUTION: "false"
+      PAPER_EXECUTION: "false"
+      BOT_FORWARD_PAPER_ENABLED: "false"
+      BOT_PAPER_EXECUTION_ENABLED: "false"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -35,9 +45,24 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]" "psycopg[binary]"
-      - name: Run execution integrity tests
+      - name: Record isolated PostgreSQL identity
         run: |
-          pytest -q \
+          mkdir -p artifacts/next_gate_pg_oms
+          git rev-parse HEAD > artifacts/next_gate_pg_oms/source_sha.txt
+          python -m pip freeze > artifacts/next_gate_pg_oms/environment.txt
+          python - <<'PY'
+          import os, json, psycopg
+          from pathlib import Path
+          with psycopg.connect(os.environ["TEST_DATABASE_URL"]) as conn:
+              row = conn.execute("SELECT version(), current_database()").fetchone()
+          assert row[1] == "execution_v52"
+          Path("artifacts/next_gate_pg_oms/postgres.json").write_text(json.dumps({"version":row[0],"database":row[1],"isolated":True}))
+          PY
+      - name: Run execution integrity tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          pytest -q --junitxml=artifacts/next_gate_pg_oms/junit.xml \
             tests/test_execution_hardening_v52.py \
             tests/test_execution_hardening_postgres_v52.py \
             tests/test_order_reconciliation_v52.py \
@@ -45,8 +70,15 @@ jobs:
             tests/test_testnet_execution.py \
             tests/test_okx_demo_transport.py \
             tests/test_nobitex_testnet_transport.py \
-            tests/test_forward_paper_v14.py
+            tests/test_forward_paper_v14.py \
+            tests/test_v08_orchestrator.py \
+            tests/test_recovery_acceptance.py \
+            tests/test_operational_risk.py \
+            tests/test_release_control.py \
+            tests/test_next_gate_risk_validation.py \
+            tests/test_next_gate_postgres.py 2>&1 | tee artifacts/next_gate_pg_oms/pytest.log
       - name: Enforce no-LIVE contract
+        if: always()
         run: |
           python - <<'PY'
           from research_bot.forward_paper_v14 import ForwardPaperConfig
@@ -57,3 +89,32 @@ jobs:
           assert ForwardPaperConfig().max_quote_age_seconds > 0
           print("v0.52 execution safety contract validated")
           PY
+
+      - name: Summarize observed counts
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          path = Path('artifacts/next_gate_pg_oms/junit.xml')
+          if path.exists():
+              root = ET.parse(path).getroot()
+              suites = list(root.iter('testsuite'))
+              result = {k:sum(int(s.get(k,0)) for s in suites) for k in ['tests','failures','errors','skipped']}
+              result['passed'] = result['tests']-result['failures']-result['errors']-result['skipped']
+          else:
+              result = {'status':'BLOCKED','reason':'No JUnit result was produced; do not infer test counts'}
+          path.parent.mkdir(parents=True,exist_ok=True)
+          (path.parent/'counts.json').write_text(json.dumps(result,indent=2))
+          print(json.dumps(result))
+          PY
+
+      - name: Preserve validation evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-gate-pg-oms-001-${{ github.sha }}
+          path: artifacts/next_gate_pg_oms/
+          if-no-files-found: warn
+          retention-days: 30

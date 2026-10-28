@@ -7,6 +7,7 @@ from .contracts import Decision, EvidenceStamp, SignalEvidence
 from .decision import DecisionEngine
 from .execution import ExecutionFill, ExecutionRequest, OrderSide, PaperExecutionEngine
 from .risk import RiskDecision, RiskEngine, RiskSnapshot
+from .operational_risk import BrokerRiskContext, OperationalRiskEngine
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,11 @@ class ResearchTradingOrchestrator:
         self.risk_engine = risk_engine or RiskEngine()
         self.execution_engine = execution_engine or PaperExecutionEngine()
 
+    @classmethod
+    def for_recovery_spot_h4(cls) -> ResearchTradingOrchestrator:
+        """Opt-in engineering path; returns simulated fills, never broker orders."""
+        return cls(risk_engine=OperationalRiskEngine())
+
     def process_forecast(
         self,
         *,
@@ -54,6 +60,9 @@ class ResearchTradingOrchestrator:
         client_order_id: str,
         evidence: tuple[EvidenceStamp, ...] = (),
         metadata: dict | None = None,
+        operational_context: BrokerRiskContext | None = None,
+        stop_price: float | None = None,
+        roundtrip_cost_bps: float = 50.0,
     ) -> PipelineOutcome:
         signal = self.decision_engine.evaluate(
             asset=asset,
@@ -72,11 +81,18 @@ class ResearchTradingOrchestrator:
         if not actionable:
             return PipelineOutcome(signal=signal, risk=None, fill=None, status="ABSTAINED")
 
-        risk = self.risk_engine.evaluate(risk_snapshot)
+        side = OrderSide.BUY if signal.decision is Decision.BUY_CANDIDATE else OrderSide.SELL
+        if isinstance(self.risk_engine, OperationalRiskEngine):
+            risk = self.risk_engine.evaluate_order(
+                risk_snapshot, symbol=symbol, side=side.value, quantity=quantity,
+                price=reference_price, now=timestamp, context=operational_context,
+                stop_price=stop_price, roundtrip_cost_bps=roundtrip_cost_bps,
+            )
+        else:
+            risk = self.risk_engine.evaluate(risk_snapshot)
         if not risk.approved:
             return PipelineOutcome(signal=signal, risk=risk, fill=None, status="RISK_REJECTED")
 
-        side = OrderSide.BUY if signal.decision is Decision.BUY_CANDIDATE else OrderSide.SELL
         fill = self.execution_engine.execute(
             ExecutionRequest(
                 client_order_id=client_order_id,
