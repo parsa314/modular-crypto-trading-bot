@@ -105,6 +105,17 @@ class NextGateRiskValidation(unittest.TestCase):
         self.assertEqual(transport.calls, 1)
         self.assertEqual(gateway.reconcile('timeout').state, OrderLifecycle.ACKNOWLEDGED)
 
+    def test_risk_approval_cannot_be_reused_for_larger_intent(self):
+        approved_small = self.decide(OperationalRiskEngine(),quantity='1')
+        self.assertTrue(approved_small.approved)
+        gateway = self.gateway(SyntheticTransport())
+        # 10*100 is 100% of equity, outside the 35% asset / 70% gross caps.
+        with self.assertRaises(TestnetSafetyError):
+            gateway.submit_market(client_order_id='reused-approval',symbol='BTC/USDT',side=OrderSide.BUY,
+                quantity=Decimal('10'),reference_price=Decimal('100'),
+                precision=MarketPrecision(Decimal('0.001'),Decimal('0.001'),Decimal('5')),
+                risk_decision=approved_small,created_at=self.now)
+
     def test_overfill_identity_and_terminal_invariants(self):
         local = ReconciledOrder('identity', 'BTC/USDT', 'buy', 1.0,
             state=OrderLifecycle.PARTIAL, venue_order_id='venue', matched_quantity=0.8)
