@@ -22,7 +22,14 @@ from research_bot.execution import ExecutionFill, OrderSide
 from research_bot.execution_hardening_v52 import DuplicateSettlementError, commit_fill_atomic
 from research_bot.order_reconciliation_v52 import OrderLifecycle, ReconciledOrder
 from research_bot.persistence import PostgresPaperStore
-from research_bot.testnet_execution import PostgresTestnetOrderStore, TestnetOrderIntent, TestnetExecutionGateway, VenueOrderSnapshot
+from research_bot.testnet_execution import (
+    AmbiguousTestnetSubmission, AmbiguousTransportOutcome, MarketPrecision,
+    PostgresTestnetOrderStore, TestnetOrderIntent, TestnetExecutionGateway,
+    TestnetSafetyError, VenueOrderSnapshot,
+)
+from research_bot.live_readiness import LiveReadinessChecklist, evaluate_live_readiness
+from research_bot.operational_risk import BrokerRiskContext, OperationalRiskEngine
+from research_bot.risk import RiskSnapshot
 
 
 class NextGatePostgresValidation(unittest.TestCase):
@@ -155,6 +162,77 @@ with psycopg.connect(os.environ['NEXT_GATE_CRASH_DSN']) as conn:
             persisted = conn.execute('SELECT requested_quantity FROM testnet_orders').fetchone()[0]
         self.assertEqual(persisted,quantity)
         self.assertEqual(Decimal(str(self.orders.get('SYNTHETIC_ORDER').requested_quantity)),quantity)
+
+    def gateway(self, transport, store=None):
+        readiness = evaluate_live_readiness(LiveReadinessChecklist(
+            scientific_promotion_passed=True,forward_paper_reconciled=True,
+            order_reconciliation_validated=True,risk_constitution_unified=True))
+        return TestnetExecutionGateway(transport=transport,store=store or self.orders,readiness=readiness)
+
+    def test_ambiguous_submit_reopen_reconciles_without_resend(self):
+        class Transport:
+            sandbox = True
+            venue = 'SYNTHETIC_NO_BROKER'
+            calls = 0
+            def submit_market_order(inner,intent):
+                inner.calls += 1
+                raise AmbiguousTransportOutcome('synthetic timeout after send')
+            def fetch_order(inner,**kwargs):
+                return VenueOrderSnapshot(kwargs['client_order_id'],'synthetic-venue',OrderLifecycle.PARTIAL,Decimal('0.5'))
+        transport = Transport()
+        context = BrokerRiskContext('SYNTHETIC_ACCOUNT','BTCUSDT',self.now,self.now,Decimal('0'),
+            reconciled=True,unresolved_orders=False,day_start_equity=Decimal('1000'),day_start_date_utc=self.now.date().isoformat())
+        risk = OperationalRiskEngine().evaluate_order(RiskSnapshot(1000,1000,0,0,0,1,1),
+            symbol='BTC/USDT',side='BUY',quantity=1,price=100,now=self.now,context=context,stop_price=98,roundtrip_cost_bps=50)
+        args = dict(client_order_id='SYNTHETIC_TIMEOUT',symbol='BTC/USDT',side=OrderSide.BUY,
+            quantity=Decimal('1'),reference_price=Decimal('100'),precision=MarketPrecision(Decimal('0.001'),Decimal('0.001'),Decimal('5')),
+            risk_decision=risk,created_at=self.now)
+        with self.assertRaises(AmbiguousTestnetSubmission): self.gateway(transport).submit_market(**args)
+        reopened = self.gateway(transport,PostgresTestnetOrderStore(self.dsn))
+        with self.assertRaises(self.psycopg.errors.UniqueViolation): reopened.submit_market(**args)
+        self.assertEqual(transport.calls,1)
+        self.assertEqual(reopened.reconcile('SYNTHETIC_TIMEOUT').state,OrderLifecycle.PARTIAL)
+        self.assertEqual(reopened.reconcile('SYNTHETIC_TIMEOUT').matched_quantity,0.5)
+        self.record('AMBIGUOUS_SUBMIT_REOPEN_NO_RESEND',transport_calls=transport.calls)
+
+    def test_reductions_use_same_pg_intent_and_identity_under_entry_halts(self):
+        class Transport:
+            sandbox = True
+            venue = 'SYNTHETIC_NO_BROKER'
+            calls = 0
+            def submit_market_order(inner,intent):
+                inner.calls += 1
+                return VenueOrderSnapshot(intent.client_order_id,'synthetic-venue',OrderLifecycle.PARTIAL,Decimal('0.25'))
+            def fetch_order(inner,**kwargs):
+                return VenueOrderSnapshot(kwargs['client_order_id'],'synthetic-venue',OrderLifecycle.PARTIAL,Decimal('0.25'))
+        transport = Transport()
+        for scenario,equity,unknown in [('normal',1000,False),('daily',980,False),('drawdown',940,False),('recovery_unknown',940,True)]:
+            with self.subTest(scenario=scenario):
+                context = BrokerRiskContext('SYNTHETIC_ACCOUNT','BTCUSDT',self.now,self.now,Decimal('1'),
+                    reconciled=True,unresolved_orders=unknown,day_start_equity=Decimal('1000'),day_start_date_utc=self.now.date().isoformat())
+                snapshot = RiskSnapshot(equity,1000,0.1,0.1,0,1,1)
+                engine = OperationalRiskEngine()
+                common = dict(symbol='BTC/USDT',quantity=Decimal('0.5'),price=100,now=self.now,context=context,stop_price=98,roundtrip_cost_bps=50)
+                buy = engine.evaluate_order(snapshot,side='BUY',**common)
+                if scenario != 'normal': self.assertFalse(buy.approved)
+                sell = engine.evaluate_order(snapshot,side='SELL',**common)
+                args = dict(client_order_id='SYNTHETIC_EXIT_'+scenario,symbol='BTC/USDT',side=OrderSide.SELL,
+                    quantity=Decimal('0.5'),reference_price=Decimal('100'),precision=MarketPrecision(Decimal('0.001'),Decimal('0.001'),Decimal('5')),
+                    risk_decision=sell,created_at=self.now)
+                if unknown:
+                    before = transport.calls
+                    with self.assertRaises(TestnetSafetyError): self.gateway(transport).submit_market(**args)
+                    self.assertEqual(transport.calls,before)
+                    self.assertIsNone(self.orders.get(args['client_order_id']))
+                else:
+                    self.assertTrue(sell.approved)
+                    self.gateway(transport).submit_market(**args)
+                    stored = PostgresTestnetOrderStore(self.dsn).get(args['client_order_id'])
+                    self.assertEqual(stored.side,'sell')
+                    self.assertEqual(stored.state,OrderLifecycle.PARTIAL)
+                    with self.assertRaises(self.psycopg.errors.UniqueViolation): self.gateway(transport).submit_market(**args)
+                    self.assertEqual(self.gateway(transport).reconcile(args['client_order_id']).matched_quantity,0.25)
+        self.record('REDUCTION_PG_INTENT_SCENARIOS',transport_calls=transport.calls,actual_broker=False)
 
 
 if __name__ == '__main__': unittest.main()
