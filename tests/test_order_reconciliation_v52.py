@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pytest
+from decimal import Decimal
 
 from research_bot.order_reconciliation_v52 import (
     OrderLifecycle,
@@ -68,7 +69,7 @@ def test_nobitex_partial_and_cancelled_with_partial_fill_are_preserved():
     )
     assert partial.state is OrderLifecycle.PARTIAL
     assert partial.venue_order_id == "123"
-    assert partial.matched_quantity == 0.4
+    assert partial.matched_quantity == Decimal("0.4")
     assert partial.average_price == 100.5
 
     cancelled = reconcile_nobitex_order(
@@ -84,7 +85,7 @@ def test_nobitex_partial_and_cancelled_with_partial_fill_are_preserved():
         },
     )
     assert cancelled.state is OrderLifecycle.CANCELLED
-    assert cancelled.matched_quantity == 0.4
+    assert cancelled.matched_quantity == Decimal("0.4")
 
 
 def test_done_must_be_fully_matched_and_identity_must_match():
@@ -126,9 +127,9 @@ def test_realized_cost_uses_actual_trade_vwap_and_does_not_guess_fee_currency():
         fee_to_quote_rate=None,
     )
     assert out.filled_quantity == 1.0
-    assert abs(out.vwap - 101.6) < 1e-12
-    assert abs(out.implementation_shortfall_quote - 1.6) < 1e-12
-    assert abs(out.explicit_fee_reported - 0.05) < 1e-12
+    assert out.vwap == Decimal("101.6")
+    assert out.implementation_shortfall_quote == Decimal("1.6")
+    assert out.explicit_fee_reported == Decimal("0.05")
     assert out.explicit_fee_quote is None
     assert out.total_cost_quote is None
     assert out.complete_for_quote_cost is False
@@ -140,5 +141,6 @@ def test_realized_cost_uses_actual_trade_vwap_and_does_not_guess_fee_currency():
         fee_currency="USDT",
         fee_to_quote_rate=1.0,
     )
-    assert abs(converted.total_cost_quote - 1.65) < 1e-12
+    assert converted.total_cost_quote == Decimal("1.65")
     assert converted.complete_for_quote_cost is True
+

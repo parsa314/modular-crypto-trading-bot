@@ -17,6 +17,7 @@ import unittest
 from urllib.parse import urlparse
 from uuid import uuid4
 
+from p0_fixtures import seed, approve, governor, ACCOUNT, NOW, observation
 from research_bot.contracts import ExecutionMode
 from research_bot.execution import ExecutionFill, OrderSide
 from research_bot.execution_hardening_v52 import DuplicateSettlementError, commit_fill_atomic
@@ -59,7 +60,7 @@ class NextGatePostgresValidation(unittest.TestCase):
         self.store.ensure_schema()
         self.orders = PostgresTestnetOrderStore(self.dsn)
         self.orders.ensure_schema()
-        self.now = datetime.now(timezone.utc)
+        self.now = NOW
 
     def tearDown(self):
         from psycopg import sql
@@ -136,7 +137,7 @@ with psycopg.connect(os.environ['NEXT_GATE_CRASH_DSN']) as conn:
 
     def create_partial(self, quantity=Decimal('1')):
         intent = TestnetOrderIntent('SYNTHETIC_ORDER','BTC/USDT',OrderSide.BUY,quantity,Decimal('100'),self.now)
-        order = ReconciledOrder('SYNTHETIC_ORDER','BTC/USDT','buy',float(quantity),state=OrderLifecycle.PARTIAL,
+        order = ReconciledOrder('SYNTHETIC_ORDER','BTC/USDT','buy',quantity,state=OrderLifecycle.PARTIAL,
                                 venue_order_id='SYNTHETIC_VENUE',matched_quantity=0.2,updated_at=self.now)
         self.orders.create(venue='SYNTHETIC_NO_BROKER',intent=intent,order=order)
         return order
@@ -167,7 +168,7 @@ with psycopg.connect(os.environ['NEXT_GATE_CRASH_DSN']) as conn:
         readiness = evaluate_live_readiness(LiveReadinessChecklist(
             scientific_promotion_passed=True,forward_paper_reconciled=True,
             order_reconciliation_validated=True,risk_constitution_unified=True))
-        return TestnetExecutionGateway(transport=transport,store=store or self.orders,readiness=readiness)
+        return TestnetExecutionGateway(transport=transport,store=store or self.orders,readiness=readiness,risk_governor=governor(self.dsn),account_id=ACCOUNT,clock=lambda:self.now)
 
     def test_ambiguous_submit_reopen_reconciles_without_resend(self):
         class Transport:
@@ -182,14 +183,14 @@ with psycopg.connect(os.environ['NEXT_GATE_CRASH_DSN']) as conn:
         transport = Transport()
         context = BrokerRiskContext('SYNTHETIC_ACCOUNT','BTCUSDT',self.now,self.now,Decimal('0'),
             reconciled=True,unresolved_orders=False,day_start_equity=Decimal('1000'),day_start_date_utc=self.now.date().isoformat())
-        risk = OperationalRiskEngine().evaluate_order(RiskSnapshot(1000,1000,0,0,0,1,1),
-            symbol='BTC/USDT',side='BUY',quantity=1,price=100,now=self.now,context=context,stop_price=98,roundtrip_cost_bps=50)
+        g=seed(self.dsn)
+        risk=approve(g,cid='SYNTHETIC_TIMEOUT')
         args = dict(client_order_id='SYNTHETIC_TIMEOUT',symbol='BTC/USDT',side=OrderSide.BUY,
             quantity=Decimal('1'),reference_price=Decimal('100'),precision=MarketPrecision(Decimal('0.001'),Decimal('0.001'),Decimal('5')),
             risk_decision=risk,created_at=self.now)
         with self.assertRaises(AmbiguousTestnetSubmission): self.gateway(transport).submit_market(**args)
         reopened = self.gateway(transport,PostgresTestnetOrderStore(self.dsn))
-        with self.assertRaises(self.psycopg.errors.UniqueViolation): reopened.submit_market(**args)
+        with self.assertRaises(TestnetSafetyError): reopened.submit_market(**args)
         self.assertEqual(transport.calls,1)
         self.assertEqual(reopened.reconcile('SYNTHETIC_TIMEOUT').state,OrderLifecycle.PARTIAL)
         self.assertEqual(reopened.reconcile('SYNTHETIC_TIMEOUT').matched_quantity,0.5)
@@ -215,7 +216,14 @@ with psycopg.connect(os.environ['NEXT_GATE_CRASH_DSN']) as conn:
                 common = dict(symbol='BTC/USDT',quantity=Decimal('0.5'),price=100,now=self.now,context=context,stop_price=98,roundtrip_cost_bps=50)
                 buy = engine.evaluate_order(snapshot,side='BUY',**common)
                 if scenario != 'normal': self.assertFalse(buy.approved)
-                sell = engine.evaluate_order(snapshot,side='SELL',**common)
+                g=governor(self.dsn);g.ensure_schema()
+                if scenario=='normal':
+                    seed(self.dsn,held='1',cash='900')
+                else:
+                    from datetime import timedelta
+                    self.now += timedelta(seconds=1)
+                    g.observe(observation(now=self.now,equity=str(equity),cash=str(equity-100),held='1',unresolved=unknown),received_at=self.now)
+                sell = engine.evaluate_order(snapshot,side='SELL',**common) if unknown else approve(g,cid='SYNTHETIC_EXIT_'+scenario,side='SELL',quantity='0.5',now=self.now)
                 args = dict(client_order_id='SYNTHETIC_EXIT_'+scenario,symbol='BTC/USDT',side=OrderSide.SELL,
                     quantity=Decimal('0.5'),reference_price=Decimal('100'),precision=MarketPrecision(Decimal('0.001'),Decimal('0.001'),Decimal('5')),
                     risk_decision=sell,created_at=self.now)
@@ -230,7 +238,7 @@ with psycopg.connect(os.environ['NEXT_GATE_CRASH_DSN']) as conn:
                     stored = PostgresTestnetOrderStore(self.dsn).get(args['client_order_id'])
                     self.assertEqual(stored.side,'sell')
                     self.assertEqual(stored.state,OrderLifecycle.PARTIAL)
-                    with self.assertRaises(self.psycopg.errors.UniqueViolation): self.gateway(transport).submit_market(**args)
+                    with self.assertRaises(TestnetSafetyError): self.gateway(transport).submit_market(**args)
                     self.assertEqual(self.gateway(transport).reconcile(args['client_order_id']).matched_quantity,0.25)
         self.record('REDUCTION_PG_INTENT_SCENARIOS',transport_calls=transport.calls,actual_broker=False)
 
