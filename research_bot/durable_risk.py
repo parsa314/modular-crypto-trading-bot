@@ -12,7 +12,11 @@ from decimal import Decimal, localcontext
 import hashlib
 import json
 import logging
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from psycopg import Connection
+    from .testnet_execution import PostgresTestnetOrderStore, TestnetOrderIntent
 from uuid import uuid4
 
 from .financial_decimal import decimal_value as D
@@ -111,7 +115,7 @@ class PostgresRiskGovernor:
         self.database_url = database_url
         self.accepted_fixture_sources = accepted_fixture_sources
 
-    def _connect(self):
+    def _connect(self) -> Connection:
         import psycopg
         return psycopg.connect(self.database_url)
 
@@ -162,7 +166,7 @@ class PostgresRiskGovernor:
             """)
 
     @staticmethod
-    def _account(conn, account_id: str, venue_id: str):
+    def _account(conn: Connection, account_id: str, venue_id: str) -> dict[str, Any]:
         from psycopg.rows import dict_row
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute("SELECT * FROM risk_account_state WHERE account_id=%s AND venue_id=%s FOR UPDATE",
@@ -173,7 +177,7 @@ class PostgresRiskGovernor:
         return row
 
     @staticmethod
-    def _audit(conn, account: str, venue: str, event: str, now: datetime, payload: dict) -> None:
+    def _audit(conn: Connection, account: str, venue: str, event: str, now: datetime, payload: dict[str, Any]) -> None:
         conn.execute("INSERT INTO risk_audit(account_id,venue_id,event,observed_at,payload) VALUES (%s,%s,%s,%s,%s::jsonb)",
                      (account, venue, event, now, encoded(payload)))
 
@@ -270,7 +274,7 @@ class PostgresRiskGovernor:
         return digest
 
     @staticmethod
-    def _latch(conn, account: dict, now: datetime) -> None:
+    def _latch(conn: Connection, account: dict[str, Any], now: datetime) -> None:
         for kind, anchor, threshold in [("HARD",account['peak_equity'],D('.05')),("DAILY",account['day_equity'],D('.02'))]:
             if anchor <= 0 or (anchor-account['equity'])/anchor < threshold:
                 continue
@@ -281,7 +285,7 @@ class PostgresRiskGovernor:
               (account['account_id'],account['venue_id'],kind,POLICY_ID,account['equity'],threshold,now,account['snapshot_id'],account['day_utc']))
 
     @staticmethod
-    def _fresh(account: dict, now: datetime) -> None:
+    def _fresh(account: dict[str, Any], now: datetime) -> None:
         if account['anchor_status'] != 'RECONCILED_TEST_FIXTURE':
             raise RiskAdmissionError("ANCHOR_UNVERIFIED")
         if not account['reconciled'] or account['unresolved_orders']:
@@ -307,8 +311,10 @@ class PostgresRiskGovernor:
             LOG.warning("RISK_ADMISSION_REJECTED", exc_info=True)
             raise
 
-    def _approve(self, *, account_id, venue_id, client_order_id, symbol, side, quantity,
-                 reference_price, stop_price, cost_bps, now, quote_at, ttl_seconds) -> RiskApproval:
+    def _approve(self, *, account_id: str, venue_id: str, client_order_id: str,
+                 symbol: str, side: str, quantity: Decimal, reference_price: Decimal,
+                 stop_price: Decimal | None, cost_bps: Decimal, now: datetime,
+                 quote_at: datetime, ttl_seconds: int) -> RiskApproval:
         now, quote_at = utc(now), utc(quote_at)
         qty, ref, cost = D(quantity), D(reference_price), D(cost_bps)
         if not client_order_id or not 0 < ttl_seconds <= 30 or not timedelta(0) <= now-quote_at <= timedelta(seconds=30):
@@ -356,7 +362,8 @@ class PostgresRiskGovernor:
             self._audit(conn,account_id,venue_id,"APPROVAL_RESERVED",now,asdict(approval))
             return approval
 
-    def consume_with_intent(self, approval: RiskApproval, *, store, intent, order: ReconciledOrder,
+    def consume_with_intent(self, approval: RiskApproval, *, store: PostgresTestnetOrderStore,
+                            intent: TestnetOrderIntent, order: ReconciledOrder,
                             venue_id: str, account_id: str, now: datetime) -> None:
         """Approval state and durable intent commit together before send."""
         from .testnet_execution import PostgresTestnetOrderStore

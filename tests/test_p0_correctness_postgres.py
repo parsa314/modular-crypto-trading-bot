@@ -305,11 +305,15 @@ else: raise AssertionError('restart cleared halt')
         self.assertEqual(self.fetch('SELECT positions FROM risk_account_state')[0][0]['BTC/USDT'],'0.25')
 
     def test_migration_adds_version_without_rewriting_numeric_or_legacy_rows(self):
+        q=Decimal('0.123456789012345678')
+        intent=TestnetOrderIntent('legacy','BTC/USDT',OrderSide.BUY,q,Decimal('100'),self.now)
+        self.orders.create(venue=VENUE,intent=intent,order=ReconciledOrder('legacy','BTC/USDT','buy',q,state=OrderLifecycle.ACKNOWLEDGED,updated_at=self.now))
         with self.g._connect() as conn:
             conn.execute('ALTER TABLE testnet_orders DROP COLUMN state_version')
-        q=Decimal('0.123456789012345678')
         # Additive migration may run repeatedly; no reset of account or halt state.
         self.orders.ensure_schema();self.orders.ensure_schema();self.g.ensure_schema()
+        self.assertEqual(self.orders.get('legacy').requested_quantity,q)
+        self.assertEqual(self.orders.get('legacy').state_version,0)
         self.submit(approve(self.g,quantity=str(q)))
         self.assertEqual(self.orders.get('precision').requested_quantity,q)
         self.assertEqual(self.fetch('SELECT peak_equity FROM risk_account_state')[0][0],Decimal('1000'))
