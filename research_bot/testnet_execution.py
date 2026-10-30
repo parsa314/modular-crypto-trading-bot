@@ -73,9 +73,17 @@ class TestnetOrderIntent:
     reference_price: Decimal
     created_at: datetime
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self,"quantity",decimal_value(self.quantity,"quantity"))
+        object.__setattr__(self,"reference_price",decimal_value(self.reference_price,"reference_price"))
+        if self.quantity <= 0 or self.reference_price <= 0 or self.created_at.tzinfo is None:
+            raise ValueError("invalid order intent")
+
     @property
     def notional(self) -> Decimal:
-        return self.quantity * self.reference_price
+        with localcontext() as ctx:
+            ctx.prec = 120
+            return self.quantity * self.reference_price
 
 
 @dataclass(frozen=True)
@@ -217,6 +225,34 @@ class PostgresTestnetOrderStore:
             metadata JSONB NOT NULL DEFAULT '{}'::jsonb
         );
         ALTER TABLE testnet_orders ADD COLUMN IF NOT EXISTS state_version BIGINT NOT NULL DEFAULT 0;
+        CREATE OR REPLACE FUNCTION enforce_testnet_order_version() RETURNS trigger
+        LANGUAGE plpgsql AS $$
+        BEGIN
+          IF NEW.state_version != OLD.state_version + 1 THEN
+            RAISE EXCEPTION 'STALE_ORDER_VERSION_RECONCILE_REQUIRED';
+          END IF;
+          IF (NEW.client_order_id,NEW.venue,NEW.symbol,NEW.side,NEW.requested_quantity,NEW.reference_price)
+             IS DISTINCT FROM (OLD.client_order_id,OLD.venue,OLD.symbol,OLD.side,OLD.requested_quantity,OLD.reference_price) THEN
+            RAISE EXCEPTION 'IMMUTABLE_ORDER_IDENTITY';
+          END IF;
+          IF NEW.matched_quantity < OLD.matched_quantity OR NEW.matched_quantity > NEW.requested_quantity
+             OR NEW.fee_reported < OLD.fee_reported OR NEW.fee_reported < 0
+             OR (NEW.state='FILLED' AND NEW.matched_quantity != NEW.requested_quantity) THEN
+            RAISE EXCEPTION 'CUMULATIVE_ORDER_REGRESSION';
+          END IF;
+          IF OLD.venue_order_id IS NOT NULL AND NEW.venue_order_id IS DISTINCT FROM OLD.venue_order_id THEN
+            RAISE EXCEPTION 'VENUE_ORDER_ID_MISMATCH';
+          END IF;
+          IF OLD.state IN ('FILLED','CANCELLED','REJECTED') AND
+             (NEW.state,NEW.matched_quantity,NEW.average_price,NEW.fee_reported,NEW.fee_currency)
+             IS DISTINCT FROM (OLD.state,OLD.matched_quantity,OLD.average_price,OLD.fee_reported,OLD.fee_currency) THEN
+            RAISE EXCEPTION 'TERMINAL_ORDER_IMMUTABLE';
+          END IF;
+          RETURN NEW;
+        END $$;
+        DROP TRIGGER IF EXISTS testnet_order_version_guard ON testnet_orders;
+        CREATE TRIGGER testnet_order_version_guard BEFORE UPDATE ON testnet_orders
+          FOR EACH ROW EXECUTE FUNCTION enforce_testnet_order_version();
         """
         with self._connect() as conn:
             with conn.cursor() as cur:
@@ -382,7 +418,10 @@ class TestnetExecutionGateway:
             raise TestnetSafetyError("REFERENCE_PRICE_TICK_MISMATCH")
         if qty < precision.min_quantity:
             raise TestnetSafetyError("MIN_QUANTITY_BREACH")
-        if qty * ref < precision.min_notional:
+        with localcontext() as ctx:
+            ctx.prec = 120
+            notional = qty * ref
+        if notional < precision.min_notional:
             raise TestnetSafetyError("MIN_NOTIONAL_BREACH")
 
         now = self.clock()

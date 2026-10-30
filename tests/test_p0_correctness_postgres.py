@@ -110,6 +110,14 @@ class P0PostgresTests(unittest.TestCase):
             for f in futures: f.result(timeout=15)
         self.assertEqual(a.get('precision').matched_quantity,Decimal('.8'))
 
+    def test_legacy_unversioned_sql_writer_is_rejected_by_database(self):
+        import psycopg
+        self.submit(approve(self.g))
+        with self.assertRaisesRegex(psycopg.errors.RaiseException,'STALE_ORDER_VERSION'):
+            with self.g._connect() as conn:
+                conn.execute("UPDATE testnet_orders SET matched_quantity=0.4 WHERE client_order_id='precision'")
+        self.assertEqual(self.orders.get('precision').matched_quantity,Decimal('0'))
+
     def test_binding_fields_and_payload_tampering_are_rejected(self):
         a=approve(self.g)
         for changes in [dict(quantity=Decimal('10')),dict(client_order_id='OTHER'),dict(symbol='ETH/USDT'),
@@ -255,6 +263,18 @@ else: raise AssertionError('restart cleared halt')
         with ThreadPoolExecutor(2) as pool:list(pool.map(settle,range(2)))
         self.assertEqual(self.fetch('SELECT cash FROM risk_account_state')[0][0],Decimal('900'))
         self.assertEqual(self.fetch("SELECT count(*) FROM risk_audit WHERE event='CUMULATIVE_FILL_APPLIED'")[0][0],1)
+
+    def test_account_snapshot_cannot_double_count_an_unapplied_fill(self):
+        a=approve(self.g)
+        self.submit(a)
+        local=self.orders.get(a.client_order_id)
+        self.orders.update(replace(local,state=OrderLifecycle.FILLED,matched_quantity=Decimal('1'),average_price=Decimal('100')))
+        with self.assertRaisesRegex(RiskAdmissionError,'PENDING_FILL_ACCOUNTING_REQUIRED'):
+            self.observe(held='1',cash='900')
+        self.gateway.reconcile(a.client_order_id)
+        self.observe(held='1',cash='900')
+        self.gateway.reconcile(a.client_order_id)
+        self.assertEqual(self.fetch('SELECT cash,positions FROM risk_account_state')[0],(Decimal('900'),{'BTC/USDT':'1'}))
 
     def test_partial_fill_settlement_is_exact_idempotent_and_terminal_recoverable(self):
         a=approve(self.g)

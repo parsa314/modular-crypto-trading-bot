@@ -245,6 +245,15 @@ class PostgresRiskGovernor:
                 status = "ANCHOR_UNVERIFIED"
             unresolved = o.unresolved_orders
             if conn.execute("SELECT to_regclass('testnet_orders')").fetchone()[0] is not None:
+                # Broker balances may already include a fill. Apply its delta
+                # before replacing the local account projection, or a subsequent
+                # restart could count the same fill twice.
+                if conn.execute("""SELECT 1 FROM risk_reservations r
+                    JOIN testnet_orders t ON t.client_order_id=r.client_order_id AND t.venue=r.venue_id
+                    WHERE r.account_id=%s AND r.venue_id=%s
+                    AND (t.matched_quantity != r.matched_quantity OR t.fee_reported != r.cumulative_fee) LIMIT 1""",
+                    (o.account_id,o.venue_id)).fetchone():
+                    raise RiskAdmissionError("PENDING_FILL_ACCOUNTING_REQUIRED")
                 unresolved = unresolved or conn.execute("""SELECT 1 FROM risk_reservations r
                     JOIN testnet_orders t ON t.client_order_id=r.client_order_id AND t.venue=r.venue_id
                     WHERE r.account_id=%s AND r.venue_id=%s
