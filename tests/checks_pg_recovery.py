@@ -34,8 +34,8 @@ class PostgresRecoveryTests(unittest.TestCase):
         self.cid = 'SYNTHETIC_UNIT_' + uuid4().hex
         now = datetime.now(timezone.utc)
         self.intent = TestnetOrderIntent(self.cid, 'BTC/USDT', OrderSide.BUY, Decimal('1'), Decimal('100'), now)
-        self.order = ReconciledOrder(self.cid, 'BTC/USDT', 'buy', 1.0, state=OrderLifecycle.PARTIAL,
-                                     venue_order_id='SYNTHETIC_VENUE', matched_quantity=0.8, updated_at=now)
+        self.order = ReconciledOrder(self.cid, 'BTC/USDT', 'buy', Decimal('1'), state=OrderLifecycle.PARTIAL,
+                                     venue_order_id='SYNTHETIC_VENUE', matched_quantity=Decimal('0.8'), updated_at=now)
         self.store.create(venue='SYNTHETIC_TESTNET', intent=self.intent, order=self.order)
 
     def snapshot(self, quantity: str, state: OrderLifecycle) -> VenueOrderSnapshot:
@@ -47,7 +47,7 @@ class PostgresRecoveryTests(unittest.TestCase):
         self.assertEqual(loaded.state, OrderLifecycle.PARTIAL)
         with self.assertRaises(TestnetSafetyError):
             TestnetExecutionGateway._merge_snapshot(loaded, self.snapshot('0.2', OrderLifecycle.PARTIAL))
-        self.assertEqual(reopened.get(self.cid).matched_quantity, 0.8)
+        self.assertEqual(reopened.get(self.cid).matched_quantity, Decimal('0.8'))
 
     def test_invalid_complete_fill_cannot_change_persisted_order(self) -> None:
         with self.assertRaises(TestnetSafetyError):
