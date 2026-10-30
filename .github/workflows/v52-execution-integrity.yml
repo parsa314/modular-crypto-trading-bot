@@ -62,7 +62,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          pytest -q --junitxml=artifacts/next_gate_pg_oms/junit.xml \
+          pytest -vv --junitxml=artifacts/next_gate_pg_oms/junit.xml \
             tests/test_execution_hardening_v52.py \
             tests/test_execution_hardening_postgres_v52.py \
             tests/test_order_reconciliation_v52.py \
