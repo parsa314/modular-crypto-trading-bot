@@ -232,6 +232,30 @@ else: raise AssertionError('restart cleared halt')
         self.assertEqual(self.transport.calls,1)
         self.assertEqual(self.fetch('SELECT state FROM risk_reservations')[0][0],'SUBMITTED')
 
+    def test_account_observation_cannot_hide_an_unknown_submitted_order(self):
+        a=approve(self.g)
+        self.transport.timeout=True
+        with self.assertRaises(AmbiguousTestnetSubmission):self.submit(a)
+        # Even an otherwise trusted account snapshot cannot clear an OMS unknown.
+        self.observe()
+        with self.assertRaisesRegex(RiskAdmissionError,'ACCOUNT_NOT_RECONCILED'):
+            approve(self.g,cid='unsafe-new',now=self.now)
+        self.assertTrue(self.fetch('SELECT unresolved_orders FROM risk_account_state')[0][0])
+
+    def test_two_workers_apply_persisted_fill_financially_once(self):
+        a=approve(self.g)
+        self.submit(a)
+        local=self.orders.get(a.client_order_id)
+        self.orders.update(replace(local,state=OrderLifecycle.FILLED,matched_quantity=Decimal('1'),average_price=Decimal('100')))
+        barrier=Barrier(2,timeout=10)
+        def settle(_):
+            independent=governor(self.dsn)
+            barrier.wait()
+            independent.reconcile_accounting(account_id=ACCOUNT,venue_id=VENUE,client_order_id=a.client_order_id,now=self.now)
+        with ThreadPoolExecutor(2) as pool:list(pool.map(settle,range(2)))
+        self.assertEqual(self.fetch('SELECT cash FROM risk_account_state')[0][0],Decimal('900'))
+        self.assertEqual(self.fetch("SELECT count(*) FROM risk_audit WHERE event='CUMULATIVE_FILL_APPLIED'")[0][0],1)
+
     def test_partial_fill_settlement_is_exact_idempotent_and_terminal_recoverable(self):
         a=approve(self.g)
         self.submit(a)

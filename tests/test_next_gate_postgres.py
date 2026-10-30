@@ -61,6 +61,7 @@ class NextGatePostgresValidation(unittest.TestCase):
         self.orders = PostgresTestnetOrderStore(self.dsn)
         self.orders.ensure_schema()
         self.now = NOW
+        self.account_id = ACCOUNT
 
     def tearDown(self):
         from psycopg import sql
@@ -168,7 +169,7 @@ with psycopg.connect(os.environ['NEXT_GATE_CRASH_DSN']) as conn:
         readiness = evaluate_live_readiness(LiveReadinessChecklist(
             scientific_promotion_passed=True,forward_paper_reconciled=True,
             order_reconciliation_validated=True,risk_constitution_unified=True))
-        return TestnetExecutionGateway(transport=transport,store=store or self.orders,readiness=readiness,risk_governor=governor(self.dsn),account_id=ACCOUNT,clock=lambda:self.now)
+        return TestnetExecutionGateway(transport=transport,store=store or self.orders,readiness=readiness,risk_governor=governor(self.dsn),account_id=self.account_id,clock=lambda:self.now)
 
     def test_ambiguous_submit_reopen_reconciles_without_resend(self):
         class Transport:
@@ -216,14 +217,15 @@ with psycopg.connect(os.environ['NEXT_GATE_CRASH_DSN']) as conn:
                 common = dict(symbol='BTC/USDT',quantity=Decimal('0.5'),price=100,now=self.now,context=context,stop_price=98,roundtrip_cost_bps=50)
                 buy = engine.evaluate_order(snapshot,side='BUY',**common)
                 if scenario != 'normal': self.assertFalse(buy.approved)
-                g=governor(self.dsn);g.ensure_schema()
-                if scenario=='normal':
-                    seed(self.dsn,held='1',cash='900')
-                else:
+                # Independent account per scenario: unresolved partial orders from
+                # another scenario must never be erased to make room for an exit.
+                self.account_id=ACCOUNT+'_'+scenario
+                g=seed(self.dsn,held='1',cash='900',account=self.account_id)
+                if scenario!='normal':
                     from datetime import timedelta
                     self.now += timedelta(seconds=1)
-                    g.observe(observation(now=self.now,equity=str(equity),cash=str(equity-100),held='1',unresolved=unknown),received_at=self.now)
-                sell = engine.evaluate_order(snapshot,side='SELL',**common) if unknown else approve(g,cid='SYNTHETIC_EXIT_'+scenario,side='SELL',quantity='0.5',now=self.now)
+                    g.observe(observation(now=self.now,equity=str(equity),cash=str(equity-100),held='1',unresolved=unknown,account=self.account_id),received_at=self.now)
+                sell = engine.evaluate_order(snapshot,side='SELL',**common) if unknown else approve(g,cid='SYNTHETIC_EXIT_'+scenario,side='SELL',quantity='0.5',now=self.now,account=self.account_id)
                 args = dict(client_order_id='SYNTHETIC_EXIT_'+scenario,symbol='BTC/USDT',side=OrderSide.SELL,
                     quantity=Decimal('0.5'),reference_price=Decimal('100'),precision=MarketPrecision(Decimal('0.001'),Decimal('0.001'),Decimal('5')),
                     risk_decision=sell,created_at=self.now)

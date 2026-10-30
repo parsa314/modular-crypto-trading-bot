@@ -235,7 +235,7 @@ class PostgresRiskGovernor:
                 day_equity = old['day_equity']+flow
                 if old['day_utc'] != day:
                     day_equity = D(o.equity)
-                    if not valid_open or not o.reconciled or o.unresolved_orders:
+                    if not valid_open or not o.reconciled or o.unresolved_orders or o.source_id not in self.accepted_fixture_sources:
                         status = "ANCHOR_UNVERIFIED"
                     else:
                         status = "RECONCILED_TEST_FIXTURE" if o.source_id in self.accepted_fixture_sources else "ANCHOR_UNVERIFIED"
@@ -243,12 +243,19 @@ class PostgresRiskGovernor:
                                      (at,o.account_id,o.venue_id))
             if day_equity <= 0 or peak <= 0:
                 status = "ANCHOR_UNVERIFIED"
+            unresolved = o.unresolved_orders
+            if conn.execute("SELECT to_regclass('testnet_orders')").fetchone()[0] is not None:
+                unresolved = unresolved or conn.execute("""SELECT 1 FROM risk_reservations r
+                    JOIN testnet_orders t ON t.client_order_id=r.client_order_id AND t.venue=r.venue_id
+                    WHERE r.account_id=%s AND r.venue_id=%s
+                    AND t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION') LIMIT 1""",
+                    (o.account_id,o.venue_id)).fetchone() is not None
             conn.execute("INSERT INTO risk_account_observations VALUES (%s,%s,%s,%s,%s::jsonb)",
                          (o.account_id,o.venue_id,o.snapshot_id,digest,encoded(payload)))
             conn.execute("""INSERT INTO risk_account_state(account_id,venue_id,snapshot_id,snapshot_hash,source_id,anchor_status,observed_at,equity,cash,day_equity,day_utc,peak_equity,net_deposits,gross_notional,asset_notionals,positions,reconciled,unresolved_orders)
               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s)
               ON CONFLICT(account_id,venue_id) DO UPDATE SET snapshot_id=EXCLUDED.snapshot_id,snapshot_hash=EXCLUDED.snapshot_hash,source_id=EXCLUDED.source_id,anchor_status=EXCLUDED.anchor_status,observed_at=EXCLUDED.observed_at,equity=EXCLUDED.equity,cash=EXCLUDED.cash,day_equity=EXCLUDED.day_equity,day_utc=EXCLUDED.day_utc,peak_equity=EXCLUDED.peak_equity,net_deposits=EXCLUDED.net_deposits,gross_notional=EXCLUDED.gross_notional,asset_notionals=EXCLUDED.asset_notionals,positions=EXCLUDED.positions,reconciled=EXCLUDED.reconciled,unresolved_orders=EXCLUDED.unresolved_orders,state_version=risk_account_state.state_version+1""",
-              (o.account_id,o.venue_id,o.snapshot_id,digest,o.source_id,status,at,D(o.equity),D(o.cash),day_equity,day,peak,D(o.cumulative_net_deposits),D(o.gross_notional),encoded(o.asset_notionals),encoded(o.positions),o.reconciled,o.unresolved_orders))
+              (o.account_id,o.venue_id,o.snapshot_id,digest,o.source_id,status,at,D(o.equity),D(o.cash),day_equity,day,peak,D(o.cumulative_net_deposits),D(o.gross_notional),encoded(o.asset_notionals),encoded(o.positions),o.reconciled,unresolved))
             self._latch(conn,self._account(conn,o.account_id,o.venue_id),at)
             self._audit(conn,o.account_id,o.venue_id,"ACCOUNT_OBSERVED",now,{"snapshot_hash":digest,"anchor_status":status,"cash_flow_ids":o.cash_flow_ids})
         return digest
@@ -312,13 +319,16 @@ class PostgresRiskGovernor:
             pending_loss = sum((r[4] for r in reservations if r[1]=='BUY'),D(0))
             reserved_sell = sum((r[2]-r[5] for r in reservations if r[1]=='SELL' and r[0]==symbol),D(0))
             held = D(a['positions'].get(symbol,'0'))
+            last_entry = conn.execute("""SELECT max(p.consumed_at) FROM risk_approvals p
+                JOIN risk_reservations r ON r.reservation_id=p.reservation_id
+                WHERE r.account_id=%s AND r.venue_id=%s AND r.side='BUY'""",(account_id,venue_id)).fetchone()[0]
             snapshot = RiskSnapshot(a['equity'],a['peak_equity'],(a['gross_notional']+pending_gross)/a['equity'],
                 (D(a['asset_notionals'].get(symbol,'0'))+pending_asset)/a['equity'],0,0,0)
             context = BrokerRiskContext(account_id,symbol, a['observed_at'],quote_at,held,
                 reserved_sell_quantity=reserved_sell,reconciled=True,unresolved_orders=False,
                 day_start_equity=a['day_equity'],day_start_date_utc=a['day_utc'].isoformat(),
                 open_positions=len([v for v in a['positions'].values() if D(v)>0])+len(reservations),
-                same_direction_positions=len([v for v in a['positions'].values() if D(v)>0])+len(reservations))
+                same_direction_positions=len([v for v in a['positions'].values() if D(v)>0])+len(reservations),last_entry_at=last_entry)
             decision = OperationalRiskEngine().evaluate_order(snapshot,symbol=symbol,side=side,quantity=qty,price=ref,
                 now=now,context=context,stop_price=stop_price,roundtrip_cost_bps=cost)
             if not decision.approved:
@@ -363,6 +373,9 @@ class PostgresRiskGovernor:
             store.create_in_transaction(conn,venue=venue_id,intent=intent,order=order)
             conn.execute("UPDATE risk_approvals SET state='CONSUMED',consumed_at=%s WHERE approval_id=%s",(now,approval.approval_id))
             conn.execute("UPDATE risk_reservations SET state='SUBMITTED' WHERE reservation_id=%s",(approval.reservation_id,))
+            # Crash after the network send must never leave admission open.
+            # Only a fresh account/order reconciliation can clear this state.
+            conn.execute("UPDATE risk_account_state SET reconciled=FALSE,unresolved_orders=TRUE,state_version=state_version+1 WHERE account_id=%s AND venue_id=%s",(account_id,venue_id))
             self._audit(conn,account_id,venue_id,"INTENT_APPROVAL_CONSUMED",now,{"client_order_id":intent.client_order_id})
 
     def release_hard_halt(self, *, account_id: str, venue_id: str, authorization: str,
@@ -411,6 +424,8 @@ class PostgresRiskGovernor:
                 return
             quote = matched*avg if matched else D(0)
             delta, delta_fee, delta_quote = matched-previous, fee-previous_fee, quote-previous_quote
+            if delta > 0 and delta_quote <= 0:
+                raise RiskAdmissionError("INVALID_INCREMENTAL_FILL_NOTIONAL")
             if delta == 0 and delta_quote != 0:
                 raise RiskAdmissionError("UNCHANGED_FILL_NOTIONAL_CONFLICT")
             positions = {k:D(v) for k,v in a['positions'].items()}

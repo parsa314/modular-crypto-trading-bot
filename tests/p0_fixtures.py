@@ -57,9 +57,9 @@ def observation(*, now=NOW, equity='1000', cash='1000', held='0', account=ACCOUN
         {'BTC/USDT':gross},{'BTC/USDT':Decimal(held)},Decimal(net),True,unresolved,flows)
 
 
-def seed(dsn, *, venue=VENUE, held='0', equity='1000', cash='1000', now=NOW):
+def seed(dsn, *, venue=VENUE, held='0', equity='1000', cash='1000', now=NOW, account=ACCOUNT):
     g=governor(dsn);g.ensure_schema()
-    g.observe(observation(venue=venue,held=held,equity=equity,cash=cash,now=now),received_at=now)
+    g.observe(observation(venue=venue,held=held,equity=equity,cash=cash,now=now,account=account),received_at=now)
     return g
 
 
