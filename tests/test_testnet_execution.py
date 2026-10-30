@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytest
+from p0_fixtures import UnitApprovalAuthority, unit_approval, ACCOUNT
 
 from research_bot.contracts import ExecutionMode
 from research_bot.execution import OrderSide
@@ -33,8 +34,8 @@ def _readiness():
     )
 
 
-def _risk_ok():
-    return RiskDecision(approved=True, kill_switch=False, reasons=(), cvar_95=None)
+def _risk_ok(cid="cid-1", now=None):
+    return unit_approval(cid=cid, now=now)
 
 
 def _precision():
@@ -73,7 +74,7 @@ def _gateway(transport=None, store=None):
     return SandboxGateway(
         transport=transport or FakeSandboxTransport(),
         store=store or MemoryTestnetOrderStore(),
-        readiness=_readiness(),
+        readiness=_readiness(),risk_governor=UnitApprovalAuthority(),account_id=ACCOUNT,
     )
 
 
@@ -116,10 +117,10 @@ def test_decimal_quantity_is_floored_to_venue_step_before_submit():
         reference_price=Decimal("100000"),
         precision=_precision(),
         risk_decision=_risk_ok(),
-        created_at=datetime(2026, 10, 5, tzinfo=timezone.utc),
+        created_at=datetime.now(timezone.utc),
     )
     assert order.state is OrderLifecycle.ACKNOWLEDGED
-    assert order.requested_quantity == pytest.approx(0.010)
+    assert order.requested_quantity == Decimal("0.010")
     assert transport.calls == 1
 
 
@@ -158,7 +159,7 @@ def test_ambiguous_submit_is_persisted_and_blind_retry_is_blocked():
             quantity=Decimal("0.01"),
             reference_price=Decimal("100000"),
             precision=_precision(),
-            risk_decision=_risk_ok(),
+            risk_decision=_risk_ok("cid-ambiguous"),
         )
     saved = store.get("cid-ambiguous")
     assert saved is not None
@@ -173,7 +174,7 @@ def test_ambiguous_submit_is_persisted_and_blind_retry_is_blocked():
             quantity=Decimal("0.01"),
             reference_price=Decimal("100000"),
             precision=_precision(),
-            risk_decision=_risk_ok(),
+            risk_decision=_risk_ok("cid-ambiguous"),
         )
     assert transport.calls == 1
 
@@ -203,7 +204,7 @@ def test_reconcile_advances_partial_then_terminal_and_preserves_identity():
     )
     partial = gateway.reconcile("cid-1")
     assert partial.state is OrderLifecycle.PARTIAL
-    assert partial.matched_quantity == pytest.approx(0.004)
+    assert partial.matched_quantity == Decimal("0.004")
 
     transport.snapshot = replace(
         transport.snapshot,
@@ -215,3 +216,4 @@ def test_reconcile_advances_partial_then_terminal_and_preserves_identity():
     assert filled.state is OrderLifecycle.FILLED
     assert filled.venue_order_id == "venue-1"
     assert gateway.reconcile("cid-1").state is OrderLifecycle.FILLED
+

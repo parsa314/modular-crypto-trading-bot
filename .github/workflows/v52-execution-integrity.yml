@@ -2,7 +2,7 @@ name: v52-execution-integrity
 
 on:
   push:
-    branches: ["execution-hardening-v52", "validation/next-gate-pg-oms-001-20261028"]
+    branches: ["execution-hardening-v52", "validation/next-gate-pg-oms-001-20261028", "fix/next-gate-p0-correctness-003"]
   pull_request:
     branches: ["main"]
   workflow_dispatch:
@@ -62,7 +62,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          pytest -q --junitxml=artifacts/next_gate_pg_oms/junit.xml \
+          pytest -vv --junitxml=artifacts/next_gate_pg_oms/junit.xml \
             tests/test_execution_hardening_v52.py \
             tests/test_execution_hardening_postgres_v52.py \
             tests/test_order_reconciliation_v52.py \
@@ -76,7 +76,8 @@ jobs:
             tests/test_operational_risk.py \
             tests/test_release_control.py \
             tests/test_next_gate_risk_validation.py \
-            tests/test_next_gate_postgres.py 2>&1 | tee artifacts/next_gate_pg_oms/pytest.log
+            tests/test_next_gate_postgres.py \
+            tests/test_p0_correctness_postgres.py 2>&1 | tee artifacts/next_gate_pg_oms/pytest.log
       - name: Enforce no-LIVE contract
         if: always()
         run: |
@@ -114,7 +115,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: next-gate-pg-oms-001-${{ github.sha }}
+          name: next-gate-p0-correctness-003-${{ github.sha }}
           path: artifacts/next_gate_pg_oms/
           if-no-files-found: warn
           retention-days: 30
