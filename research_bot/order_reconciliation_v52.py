@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from enum import Enum
 import hashlib
 import math
+from decimal import Decimal, localcontext
+from .financial_decimal import decimal_value
 from typing import Any, Iterable
 
 
@@ -38,26 +40,40 @@ class ReconciledOrder:
     client_order_id: str
     symbol: str
     side: str
-    requested_quantity: float
+    requested_quantity: Decimal
     state: OrderLifecycle = OrderLifecycle.CREATED
     venue_order_id: str | None = None
-    matched_quantity: float = 0.0
-    average_price: float | None = None
-    fee_reported: float = 0.0
+    matched_quantity: Decimal = Decimal("0")
+    average_price: Decimal | None = None
+    fee_reported: Decimal = Decimal("0")
     fee_currency: str | None = None
     updated_at: datetime = datetime.min.replace(tzinfo=timezone.utc)
+    state_version: int = 0
+
+    def __post_init__(self) -> None:
+        for name in ("requested_quantity", "matched_quantity", "fee_reported"):
+            object.__setattr__(self, name, decimal_value(getattr(self, name), name))
+        if self.average_price is not None:
+            object.__setattr__(self, "average_price", decimal_value(self.average_price, "average_price"))
+        if self.requested_quantity <= 0 or not 0 <= self.matched_quantity <= self.requested_quantity or self.fee_reported < 0:
+            raise ValueError("invalid reconciled quantities / fee")
+        if self.state is OrderLifecycle.FILLED and self.matched_quantity != self.requested_quantity:
+            raise ValueError("FILLED requires exact requested quantity")
+        if self.state_version < 0:
+            raise ValueError("invalid state version")
+
 
 
 @dataclass(frozen=True)
 class RealizedCostBreakdown:
-    filled_quantity: float
-    vwap: float | None
-    gross_quote_notional: float
-    explicit_fee_reported: float
+    filled_quantity: Decimal
+    vwap: Decimal | None
+    gross_quote_notional: Decimal
+    explicit_fee_reported: Decimal
     explicit_fee_currency: str | None
-    explicit_fee_quote: float | None
-    implementation_shortfall_quote: float | None
-    total_cost_quote: float | None
+    explicit_fee_quote: Decimal | None
+    implementation_shortfall_quote: Decimal | None
+    total_cost_quote: Decimal | None
     complete_for_quote_cost: bool
 
 
@@ -128,11 +144,11 @@ def reconcile_nobitex_order(
     if local.venue_order_id and venue_id is not None and str(venue_id) != str(local.venue_order_id):
         raise ValueError("venue order id mismatch")
 
-    amount = _finite_nonnegative(venue_order.get("amount", local.requested_quantity), "amount")
-    matched = _finite_nonnegative(venue_order.get("matchedAmount", 0.0), "matchedAmount")
-    if amount <= 0.0 or matched > amount + 1e-12:
+    amount = decimal_value(venue_order.get("amount", local.requested_quantity), "amount")
+    matched = decimal_value(venue_order.get("matchedAmount", "0"), "matchedAmount")
+    if amount <= 0 or not local.matched_quantity <= matched <= amount:
         raise ValueError("invalid fill quantities")
-    if abs(amount - float(local.requested_quantity)) > max(1e-12, abs(local.requested_quantity) * 1e-9):
+    if amount != local.requested_quantity:
         raise ValueError("requested quantity mismatch")
 
     raw_status = str(venue_order.get("status", "")).strip().lower()
@@ -141,7 +157,7 @@ def reconcile_nobitex_order(
     elif raw_status == "active":
         state = OrderLifecycle.PARTIAL if matched > 0.0 else OrderLifecycle.ACKNOWLEDGED
     elif raw_status == "done":
-        if abs(matched - amount) > max(1e-12, amount * 1e-9):
+        if matched != amount:
             raise ValueError("Done order is not fully matched")
         state = OrderLifecycle.FILLED
     elif raw_status == "canceled":
@@ -154,7 +170,7 @@ def reconcile_nobitex_order(
     avg_raw = venue_order.get("averagePrice")
     avg_price = None
     if avg_raw not in (None, "", "0", 0, 0.0):
-        avg_price = _finite_nonnegative(avg_raw, "averagePrice")
+        avg_price = decimal_value(avg_raw, "averagePrice")
         if avg_price <= 0.0:
             avg_price = None
     if matched > 0.0 and avg_price is None:
@@ -162,7 +178,11 @@ def reconcile_nobitex_order(
         # must be queried before economic reconciliation is considered complete.
         avg_price = local.average_price
 
-    fee = _finite_nonnegative(venue_order.get("fee", local.fee_reported), "fee")
+    fee = decimal_value(venue_order.get("fee", local.fee_reported), "fee")
+    if local.state in TERMINAL_STATES and state != local.state:
+        raise ValueError("terminal state regression")
+    if fee < local.fee_reported:
+        raise ValueError("cumulative fee regression")
     return ReconciledOrder(
         client_order_id=local.client_order_id,
         symbol=local.symbol,
@@ -177,65 +197,40 @@ def reconcile_nobitex_order(
         # schema does not make fee denomination explicit. Do not guess it.
         fee_currency=local.fee_currency,
         updated_at=now or datetime.now(timezone.utc),
+        state_version=local.state_version,
     )
 
 
 def realized_cost_from_trades(
-    trades: Iterable[dict[str, Any]],
-    *,
-    side: str,
-    decision_reference_price: float,
+    trades: Iterable[dict[str, Any]], *, side: str,
+    decision_reference_price: Decimal | str | float,
     fee_currency: str | None = None,
-    fee_to_quote_rate: float | None = None,
+    fee_to_quote_rate: Decimal | str | float | None = None,
 ) -> RealizedCostBreakdown:
-    """Compute execution shortfall from actual venue trades without guessing fee FX."""
-    ref = float(decision_reference_price)
-    if not math.isfinite(ref) or ref <= 0.0:
-        raise ValueError("invalid decision reference price")
-    side_norm = str(side).lower()
-    if side_norm not in {"buy", "sell"}:
-        raise ValueError("side must be buy or sell")
-
-    qty = 0.0
-    gross = 0.0
-    fee_total = 0.0
-    for trade in trades:
-        if not isinstance(trade, dict):
-            raise ValueError("trade must be an object")
-        t_qty = _finite_nonnegative(trade.get("amount", 0.0), "trade amount")
-        px = _finite_nonnegative(trade.get("price", 0.0), "trade price")
-        if t_qty <= 0.0 or px <= 0.0:
-            raise ValueError("trade amount/price must be positive")
-        qty += t_qty
-        gross += t_qty * px
-        fee_total += _finite_nonnegative(trade.get("fee", 0.0), "trade fee")
-
-    vwap = gross / qty if qty > 0.0 else None
-    if qty <= 0.0:
-        return RealizedCostBreakdown(0.0, None, 0.0, fee_total, fee_currency, None, None, None, False)
-
-    direction = 1.0 if side_norm == "buy" else -1.0
-    shortfall = direction * (float(vwap) - ref) * qty
-
-    fee_quote = None
-    if fee_total == 0.0:
-        fee_quote = 0.0
-    elif fee_to_quote_rate is not None:
-        rate = float(fee_to_quote_rate)
-        if not math.isfinite(rate) or rate <= 0.0:
-            raise ValueError("invalid fee_to_quote_rate")
-        fee_quote = fee_total * rate
-
-    complete = fee_quote is not None
-    total = shortfall + fee_quote if complete else None
-    return RealizedCostBreakdown(
-        filled_quantity=qty,
-        vwap=float(vwap),
-        gross_quote_notional=gross,
-        explicit_fee_reported=fee_total,
-        explicit_fee_currency=fee_currency,
-        explicit_fee_quote=fee_quote,
-        implementation_shortfall_quote=shortfall,
-        total_cost_quote=total,
-        complete_for_quote_cost=complete,
-    )
+    """Exact trade-ledger economics. Unknown fee FX stays unresolved."""
+    ref = decimal_value(decision_reference_price, "reference_price")
+    if ref <= 0 or side.lower() not in {"buy", "sell"}:
+        raise ValueError("invalid side / reference")
+    with localcontext() as ctx:
+        ctx.prec = 120
+        qty, gross, fees = Decimal(0), Decimal(0), Decimal(0)
+        for trade in trades:
+            amount = decimal_value(trade.get("amount", "0"), "amount")
+            price = decimal_value(trade.get("price", "0"), "price")
+            fee = decimal_value(trade.get("fee", "0"), "fee")
+            if amount <= 0 or price <= 0 or fee < 0:
+                raise ValueError("invalid trade economics")
+            qty += amount
+            gross += amount * price
+            fees += fee
+        if qty == 0:
+            return RealizedCostBreakdown(qty,None,gross,fees,fee_currency,None,None,None,False)
+        vwap = gross/qty
+        shortfall = (Decimal(1) if side.lower()=="buy" else Decimal(-1))*(gross-ref*qty)
+        quote_fee = Decimal(0) if fees==0 else None
+        if fee_to_quote_rate is not None:
+            rate=decimal_value(fee_to_quote_rate,"fee FX")
+            if rate<=0: raise ValueError("invalid fee FX")
+            quote_fee=fees*rate
+        return RealizedCostBreakdown(qty,vwap,gross,fees,fee_currency,quote_fee,shortfall,
+            None if quote_fee is None else shortfall+quote_fee,quote_fee is not None)
