@@ -472,6 +472,6 @@ class PostgresRiskGovernor:
                     (cash,encoded(positions),fee_unresolved,account_id,venue_id))
             conn.execute("UPDATE risk_reservations SET matched_quantity=%s,cumulative_fee=%s,cumulative_quote=%s,state=%s WHERE reservation_id=%s",
                 (matched,fee,quote,'CLOSED' if terminal and not fee_unresolved else 'PARTIAL' if matched else reservation_state,rid))
-            if delta or delta_fee or (terminal and reservation_state != 'CLOSED'):
+            if delta or delta_fee or (terminal and not fee_unresolved and reservation_state != 'CLOSED'):
                 self._audit(conn,account_id,venue_id,"CUMULATIVE_FILL_APPLIED",utc(now),
                     {"client_order_id":client_order_id,"quantity_delta":delta,"fee_delta":delta_fee,"quote_delta":delta_quote,"terminal":terminal,"fee_unresolved":fee_unresolved})
