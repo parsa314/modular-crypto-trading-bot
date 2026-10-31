@@ -273,6 +273,11 @@ class PostgresRiskGovernor:
                 unresolved_fee = conn.execute("""SELECT 1 FROM risk_fee_liabilities
                     WHERE account_id=%s AND venue_id=%s AND state='UNRESOLVED' LIMIT 1""",
                     (o.account_id,o.venue_id)).fetchone() is not None
+                if unresolved_fee and old is not None:
+                    observed_positions = {k:D(v) for k,v in o.positions.items() if D(v) != 0}
+                    ledger_positions = {k:D(v) for k,v in old['positions'].items() if D(v) != 0}
+                    if D(o.cash) != old['cash'] or observed_positions != ledger_positions:
+                        raise RiskAdmissionError("UNRESOLVED_FEE_ACCOUNT_MISMATCH")
                 unresolved = unresolved or unresolved_fee or conn.execute("""SELECT 1 FROM risk_reservations r
                     JOIN testnet_orders t ON t.client_order_id=r.client_order_id AND t.venue=r.venue_id
                     WHERE r.account_id=%s AND r.venue_id=%s
