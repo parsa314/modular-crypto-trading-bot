@@ -51,5 +51,15 @@ class LedgerTests(unittest.TestCase):
         restarted=PaperLedger(self.path)
         self.assertEqual(restarted.mark(Decimal("100"))["peak"],high["peak"])
 
+    def test_sell_reports_realized_profit_after_both_fees(self):
+        buy={**self.args,"quantity":Decimal("1"),"spread_bps":Decimal("0"),"slippage_bps":Decimal("0")}
+        self.ledger.fill(**buy)
+        sell={**buy,"order_id":"fixture-sell","side":"SELL","reference_price":Decimal("110"),
+              "decision_at":self.now+timedelta(hours=1),"fill_at":self.now+timedelta(hours=2)}
+        result=self.ledger.fill(**sell)
+        self.assertEqual(Decimal(result["realized"]),Decimal("9.79"))
+        self.assertEqual(Decimal(result["cash"]),Decimal("10009.79"))
+        self.assertEqual(Decimal(result["position"]),Decimal("0"))
+
 
 if __name__ == "__main__": unittest.main()
