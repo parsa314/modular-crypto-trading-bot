@@ -91,6 +91,20 @@ class ReplayTests(unittest.TestCase):
         self.assertEqual(first["cash"], second["cash"])
         self.assertGreater(Decimal(first["position"]), Decimal("0"))
 
+    def test_cached_replay_separates_historical_result_from_current_fee_adjusted_account(self):
+        class SyntheticDecision:
+            def evaluate(self, **kwargs): return SimpleNamespace(decision=Decision.BUY_CANDIDATE)
+        with patch("research_bot.paper_replay_008.DecisionEngine", return_value=SyntheticDecision()):
+            first=self.run_replay()
+        ledger=PaperLedger(self.state)
+        ledger.settle_additional_fee(event_id="late",order_id=first["fill"]["order_id"],
+            amount=Decimal("0.25"),currency="USDT",source="SYNTHETIC",
+            observed_at=self.as_of+timedelta(hours=1))
+        resumed=self.run_replay()
+        self.assertEqual(Decimal(resumed["current_account"]["cash"]),Decimal(first["cash"])-Decimal("0.25"))
+        self.assertEqual(resumed["cash"],first["cash"])
+        self.assertFalse(resumed["new_record"])
+
     def test_older_replay_cannot_consume_future_account_state(self):
         ledger=PaperLedger(self.state)
         later=self.as_of+timedelta(hours=2)
