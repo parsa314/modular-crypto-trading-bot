@@ -4,6 +4,11 @@ on:
   pull_request:
     paths:
       - research_bot/operational_risk.py
+      - research_bot/durable_risk.py
+      - research_bot/okx_demo_transport.py
+      - research_bot/nobitex_testnet_transport.py
+      - tests/test_r12_unknown_fee.py
+      - tests/test_r12_nobitex_decimal.py
       - research_bot/orchestrator.py
       - research_bot/testnet_execution.py
       - research_bot/release_control.py
