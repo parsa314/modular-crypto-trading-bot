@@ -2,6 +2,8 @@ name: r12-isolated-engineering-validation
 on:
   push:
     branches: ["fix/r1-financial-boundary-006"]
+  pull_request:
+    branches: ["fix/r1-recovery-decimal-20261030"]
   workflow_dispatch:
 
 permissions:
