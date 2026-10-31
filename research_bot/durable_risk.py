@@ -434,7 +434,9 @@ class PostgresRiskGovernor:
             rid,symbol,side,requested,previous,previous_fee,previous_quote,reservation_state = row
             if matched < previous or fee < previous_fee or matched > requested:
                 raise RiskAdmissionError("CUMULATIVE_ACCOUNTING_REGRESSION")
-            if matched and (avg is None or (fee and currency != 'USDT')):
+            # A zero numeric placeholder without a known denomination is not
+            # evidence that the exchange charged zero. Keep risk reserved.
+            if matched and (avg is None or currency != 'USDT'):
                 conn.execute("UPDATE risk_account_state SET reconciled=FALSE WHERE account_id=%s AND venue_id=%s",(account_id,venue_id))
                 self._audit(conn,account_id,venue_id,"FILL_ECONOMICS_UNRESOLVED",utc(now),{"client_order_id":client_order_id})
                 return
