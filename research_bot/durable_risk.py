@@ -7,6 +7,7 @@ certified by this module. All account mutations serialize on one account row.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, localcontext
 import hashlib
@@ -431,15 +432,34 @@ class PostgresRiskGovernor:
                 raise RiskAdmissionError("STALE_HALT_VERSION")
             self._audit(conn,account_id,venue_id,"HARD_HALT_RELEASED",now,{"authorization":authorization})
 
+    def persist_snapshot_and_account(self, *, store: PostgresTestnetOrderStore,
+                                     order: ReconciledOrder, account_id: str,
+                                     venue_id: str, now: datetime) -> ReconciledOrder:
+        """Atomically persist a gateway snapshot and its recoverable accounting."""
+        from .testnet_execution import PostgresTestnetOrderStore
+        if not isinstance(store, PostgresTestnetOrderStore) or store.database_url != self.database_url:
+            raise RiskAdmissionError("SHARED_TRANSACTION_STORE_REQUIRED")
+        with self._connect() as conn:
+            self._account(conn,account_id,venue_id)
+            row = conn.execute("""SELECT reservation_id FROM risk_reservations
+                WHERE account_id=%s AND venue_id=%s AND client_order_id=%s FOR UPDATE""",
+                (account_id,venue_id,order.client_order_id)).fetchone()
+            if row is None:
+                raise RiskAdmissionError("RESERVATION_NOT_FOUND")
+            saved = store.update(order,connection=conn)
+            self.reconcile_accounting(account_id=account_id,venue_id=venue_id,
+                client_order_id=order.client_order_id,now=now,_connection=conn)
+            return saved
+
     def reconcile_accounting(self, *, account_id: str, venue_id: str,
-                             client_order_id: str, now: datetime) -> None:
+                             client_order_id: str, now: datetime, _connection=None) -> None:
         """Apply persisted cumulative fills once; unknown economics retain risk.
 
         This runs even for an already terminal OMS row after restart. A crash
         between OMS persistence and this transaction is recovered by invoking
         reconcile again. Entries remain closed until account reconciliation.
         """
-        with localcontext() as ctx, self._connect() as conn:
+        with localcontext() as ctx, (self._connect() if _connection is None else nullcontext(_connection)) as conn:
             ctx.prec = 120
             a = self._account(conn,account_id,venue_id)
             row = conn.execute("SELECT reservation_id,symbol,side,quantity,matched_quantity,cumulative_fee,cumulative_quote,state FROM risk_reservations WHERE account_id=%s AND venue_id=%s AND client_order_id=%s FOR UPDATE",
