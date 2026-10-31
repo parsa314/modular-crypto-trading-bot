@@ -12,6 +12,8 @@ import pandas as pd
 
 from research_bot.paper_replay_008 import replay
 from research_bot.contracts import Decision
+from research_bot.paper_ledger_008 import PaperLedger
+from datetime import timedelta
 
 
 class ReplayTests(unittest.TestCase):
@@ -78,9 +80,18 @@ class ReplayTests(unittest.TestCase):
             first=self.run_replay()
             second=self.run_replay()
         self.assertEqual(first["fills"], 1)
-        self.assertEqual(second["fills"], 0)
+        self.assertFalse(second["new_record"])
         self.assertEqual(first["cash"], second["cash"])
         self.assertGreater(Decimal(first["position"]), Decimal("0"))
+
+    def test_older_replay_cannot_consume_future_account_state(self):
+        ledger=PaperLedger(self.state)
+        later=self.as_of+timedelta(hours=2)
+        ledger.fill(order_id="future",side="BUY",quantity=Decimal("1"),reference_price=Decimal("100"),
+                    decision_at=self.as_of,fill_at=later,fee_bps=Decimal("10"),
+                    spread_bps=Decimal("3"),slippage_bps=Decimal("2"))
+        with self.assertRaisesRegex(ValueError,"PAPER_STATE_FROM_FUTURE"):
+            self.run_replay()
 
 
 if __name__ == "__main__":
