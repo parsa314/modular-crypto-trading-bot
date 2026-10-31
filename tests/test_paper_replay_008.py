@@ -13,6 +13,8 @@ import pandas as pd
 from research_bot.paper_replay_008 import replay
 from research_bot.contracts import Decision
 from research_bot.paper_ledger_008 import PaperLedger
+from research_bot.decision import DecisionEngine
+from research_bot.risk import RiskEngine, RiskLimits, RiskSnapshot
 from datetime import timedelta
 
 
@@ -85,6 +87,20 @@ class ReplayTests(unittest.TestCase):
         result=self.run_replay()
         self.assertEqual(Decimal(result["equity"]), Decimal("10000.000000000000000000123456789012345678"))
         self.assertEqual(self.run_replay()["equity"], result["equity"])
+
+    def test_decision_and_risk_keep_decimal_at_thresholds(self):
+        decision=DecisionEngine().evaluate(asset="BTC",timestamp=self.as_of,
+            expected_return=Decimal("0.000500000000000001"),
+            expected_cost=Decimal("0.000000000000000001"),risk_penalty=Decimal("0"),
+            uncertainty_penalty=Decimal("0"),confidence=0.9)
+        self.assertIsInstance(decision.expected_cost,Decimal)
+        self.assertEqual(decision.net_alpha,Decimal("0.000500000000000000"))
+        self.assertIs(decision.decision,Decision.BUY_CANDIDATE)
+        risk=RiskEngine(RiskLimits(max_gross_exposure=Decimal("0.70")))
+        values=dict(equity=Decimal("1000"),peak_equity=Decimal("1000"),
+            asset_weight=Decimal("0"),turnover=Decimal("0"),spread_bps=Decimal("0"),slippage_bps=Decimal("0"))
+        self.assertTrue(risk.evaluate(RiskSnapshot(gross_exposure=Decimal("0.70"),**values)).approved)
+        self.assertFalse(risk.evaluate(RiskSnapshot(gross_exposure=Decimal("0.700000000000000001"),**values)).approved)
 
     def test_cached_replay_rejects_tampered_account(self):
         self.run_replay()
