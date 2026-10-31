@@ -402,6 +402,11 @@ class TestnetExecutionGateway:
         risk_decision: RiskDecision | RiskApproval,
         created_at: datetime | None = None,
     ) -> ReconciledOrder:
+        # Reject a locally known unsupported transport before consuming a
+        # durable approval or recording an ambiguous submission.
+        block_reason = getattr(self.transport, "submission_block_reason", None)
+        if block_reason:
+            raise TestnetSafetyError(str(block_reason))
         if not risk_decision.approved or risk_decision.kill_switch:
             raise TestnetSafetyError("RISK_GATE_REJECTED")
         if not isinstance(risk_decision, RiskApproval) or self.risk_governor is None or not self.account_id:
