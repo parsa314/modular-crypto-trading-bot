@@ -72,6 +72,13 @@ class ReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"INVALID_INITIAL_CASH"):
             self.run_replay(cash=Decimal("0"))
 
+    def test_cached_replay_rejects_tampered_account(self):
+        self.run_replay()
+        with sqlite3.connect(self.state) as db:
+            db.execute("UPDATE paper_account SET cash='1' WHERE id=1")
+        with self.assertRaisesRegex(ValueError,"PAPER_ACCOUNTING_MISMATCH"):
+            self.run_replay()
+
     def test_injected_candidate_flows_to_later_paper_fill_and_restart(self):
         class SyntheticDecision:
             def evaluate(self, **kwargs):
@@ -107,6 +114,26 @@ class ReplayTests(unittest.TestCase):
             second=self.run_replay()
         self.assertEqual(first["fill"]["quantity"],second["fill"]["quantity"])
         self.assertNotEqual(first["fill"]["fill_price"],second["fill"]["fill_price"])
+
+    def test_runner_allows_reducing_exit_while_hard_halted(self):
+        ledger=PaperLedger(self.state)
+        t=datetime(2024,1,1,tzinfo=timezone.utc)
+        ledger.fill(order_id="entry",side="BUY",quantity=Decimal("30"),reference_price=Decimal("100"),
+                    decision_at=t,fill_at=t+timedelta(hours=1),fee_bps=Decimal("0"),
+                    spread_bps=Decimal("0"),slippage_bps=Decimal("0"))
+        ledger.mark(Decimal("80"),observed_at=t+timedelta(hours=2))
+        data=pd.read_csv(self.path)
+        data.loc[:,"open"]=80; data.loc[:,"high"]=81
+        data.loc[:,"low"]=79; data.loc[:,"close"]=80
+        data.to_csv(self.path,index=False)
+        class SyntheticExit:
+            def evaluate(self, **kwargs): return SimpleNamespace(decision=Decision.EXIT)
+        with patch("research_bot.paper_replay_008.DecisionEngine",return_value=SyntheticExit()):
+            result=self.run_replay()
+        self.assertFalse(result["risk_approved"])
+        self.assertTrue(result["persistent_risk_status"]["hard_halt"])
+        self.assertEqual(result["fills"],1)
+        self.assertEqual(Decimal(result["position"]),Decimal("0"))
 
 
 if __name__ == "__main__":
