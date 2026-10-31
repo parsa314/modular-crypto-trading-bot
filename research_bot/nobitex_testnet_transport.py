@@ -120,7 +120,7 @@ def snapshot_from_nobitex_order(
         client_order_id=fallback_client_order_id,
         symbol=symbol,
         side=side.value.lower(),
-        requested_quantity=float(requested_quantity),
+        requested_quantity=requested_quantity,
         state=OrderLifecycle.SUBMITTING,
     )
     reconciled = reconcile_nobitex_order(local, dict(order))
