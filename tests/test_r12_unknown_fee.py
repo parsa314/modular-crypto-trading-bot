@@ -64,7 +64,13 @@ class UnknownFeeTests(unittest.TestCase):
                                       client_order_id="synthetic", now=datetime.now(timezone.utc))
         sql = [query for query, _ in governor.connection.queries]
         self.assertTrue(any("reconciled=FALSE" in query for query in sql))
-        self.assertFalse(any(query.startswith("UPDATE risk_reservations") for query in sql))
+        reservation = next(params for query, params in governor.connection.queries
+                           if query.startswith("UPDATE risk_reservations"))
+        self.assertEqual(reservation[:4], (Decimal("1"), Decimal("0"), Decimal("100"), "PARTIAL"))
+        account = next(params for query, params in governor.connection.queries
+                       if query.startswith("UPDATE risk_account_state SET cash"))
+        self.assertEqual(account[0], Decimal("900"))
+        self.assertTrue(account[2])
 
     def test_partial_fill_with_unknown_fee_does_not_release_reservation(self):
         governor = FixtureGovernor()
@@ -73,7 +79,9 @@ class UnknownFeeTests(unittest.TestCase):
                                       client_order_id="synthetic", now=datetime.now(timezone.utc))
         sql = [query for query, _ in governor.connection.queries]
         self.assertTrue(any("reconciled=FALSE" in query for query in sql))
-        self.assertFalse(any(query.startswith("UPDATE risk_reservations") for query in sql))
+        reservation = next(params for query, params in governor.connection.queries
+                           if query.startswith("UPDATE risk_reservations"))
+        self.assertEqual(reservation[:4], (Decimal("0.4"), Decimal("0"), Decimal("40.0"), "PARTIAL"))
 
 
 if __name__ == "__main__":
