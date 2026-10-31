@@ -29,6 +29,28 @@ STRATEGY_SOURCE_SHA = "ae65f99e092aa0f631675f02626003438d2f5dfe"
 BASELINE_VERSION = "CASH_BASELINE_V1"
 
 
+def _finish_pending(state_path: Path, run_id: str, pending: dict) -> dict:
+    """Complete an immutable paper intent after restart, without a second fill."""
+    ledger = PaperLedger(state_path)
+    args = pending["intent"]
+    for name in ("quantity", "reference_price", "fee_bps", "spread_bps", "slippage_bps"):
+        args[name] = Decimal(args[name])
+    for name in ("decision_at", "fill_at"):
+        args[name] = datetime.fromisoformat(args[name])
+    fill = ledger.fill(**args)
+    account = ledger.snapshot()
+    event = pending["event"]
+    event.update(cash=account["cash"], position=account["quantity"], fees=account["fees"],
+                 equity=fill["equity"], fills=1, fill=fill)
+    encoded = json.dumps(event,sort_keys=True,separators=(",", ":"),allow_nan=False)
+    with sqlite3.connect(state_path) as db:
+        db.execute("BEGIN IMMEDIATE")
+        inserted = db.execute("INSERT OR IGNORE INTO replay_evidence VALUES (?,?)",(run_id,encoded)).rowcount == 1
+        saved = db.execute("SELECT result FROM replay_evidence WHERE run_id=?",(run_id,)).fetchone()[0]
+        db.execute("DELETE FROM paper_pending_replay WHERE run_id=?",(run_id,))
+    return {**json.loads(saved),"run_id":run_id,"new_record":inserted}
+
+
 def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
            fee_bps: Decimal, spread_bps: Decimal, slippage_bps: Decimal,
            initial_cash: Decimal = Decimal("10000")) -> dict:
@@ -64,12 +86,19 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
     state_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(state_path) as db:
         db.execute("CREATE TABLE IF NOT EXISTS replay_evidence (run_id TEXT PRIMARY KEY, result TEXT NOT NULL)")
+        db.execute("CREATE TABLE IF NOT EXISTS paper_pending_replay (run_id TEXT PRIMARY KEY, payload TEXT NOT NULL)")
         cached = db.execute("SELECT result FROM replay_evidence WHERE run_id=?", (run_id,)).fetchone()
         if cached:
+            PaperLedger(state_path,initial_cash=initial_cash).reconcile()
             return {**json.loads(cached[0]), "run_id":run_id, "new_record":False}
+        pending = db.execute("SELECT payload FROM paper_pending_replay WHERE run_id=?",(run_id,)).fetchone()
+        if db.execute("SELECT 1 FROM paper_pending_replay WHERE run_id != ? LIMIT 1",(run_id,)).fetchone():
+            raise ValueError("PAPER_PENDING_RECONCILIATION_REQUIRED")
         for (result,) in db.execute("SELECT result FROM replay_evidence"):
             if datetime.fromisoformat(json.loads(result)["as_of"]) > as_of:
                 raise ValueError("REPLAY_TIME_REGRESSION")
+    if pending:
+        return _finish_pending(state_path,run_id,json.loads(pending[0]))
     # The most recent closed bar is reserved for a later simulated fill.
     decision_time = closed["available_at"].iloc[-2].to_pydatetime()
     arms = {"ICHIMOKU": ichimoku_strategy.evaluate(closed, as_of=decision_time),
@@ -83,7 +112,7 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
     if last_fill is not None and last_fill > decision_time:
         raise ValueError("PAPER_STATE_FROM_FUTURE")
     mark = Decimal(str(closed["close"].iloc[-2]))
-    account = ledger.mark(mark)
+    account = ledger.mark(mark, observed_at=decision_time)
     cash, position, peak = Decimal(account["cash"]), Decimal(account["quantity"]), Decimal(account["peak"])
     equity = cash + position * mark
     if not equity.is_finite() or equity <= 0:
@@ -96,21 +125,21 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
         RiskSnapshot(equity=float(equity), peak_equity=float(peak), gross_exposure=float(position*mark/equity),
                      asset_weight=float(position*mark/equity), turnover=0.0, spread_bps=float(spread_bps),
                      slippage_bps=float(slippage_bps)))
-    fill_result = None
-    if risk.approved and decision.decision in {Decision.BUY_CANDIDATE, Decision.EXIT}:
+    intent = None
+    risk_status = ledger.risk_status()
+    may_enter = risk.approved and risk_status["anchor_valid"] and not risk_status["daily_halt"] and not risk_status["hard_halt"]
+    may_exit = decision.decision is Decision.EXIT and position > 0
+    if (decision.decision is Decision.BUY_CANDIDATE and may_enter) or may_exit:
         next_mark = Decimal(str(closed["close"].iloc[-1]))
         with localcontext() as ctx:
             ctx.prec = 60
             # Sizing is fixed at decision time; the later bar may only set fill price.
             quantity = equity * Decimal("0.10") / mark if decision.decision is Decision.BUY_CANDIDATE else position
         order_key = hashlib.sha256(f"{source}|BTC/USDT|{decision_time.isoformat()}|{decision.decision.value}|{BASELINE_VERSION}".encode()).hexdigest()
-        fill_result = ledger.fill(order_id=order_key, side="BUY" if decision.decision is Decision.BUY_CANDIDATE else "SELL",
-            quantity=quantity, reference_price=next_mark, decision_at=decision_time,
-            fill_at=closed["available_at"].iloc[-1].to_pydatetime(), fee_bps=fee_bps,
-            spread_bps=spread_bps, slippage_bps=slippage_bps)
-        account = ledger.snapshot()
-        cash, position = Decimal(account["cash"]), Decimal(account["quantity"])
-        equity = cash + position * next_mark
+        intent = dict(order_id=order_key, side="BUY" if decision.decision is Decision.BUY_CANDIDATE else "SELL",
+            quantity=str(quantity), reference_price=str(next_mark), decision_at=decision_time.isoformat(),
+            fill_at=closed["available_at"].iloc[-1].isoformat(), fee_bps=str(fee_bps),
+            spread_bps=str(spread_bps), slippage_bps=str(slippage_bps))
     event = {"execution_mode": "HISTORICAL_REPLAY_CASH_BASELINE", "evidence_state": "HISTORICAL_NON_PROSPECTIVE",
              "source": source, "data_sha256": digest, "symbol": "BTC/USDT", "timeframe": "1h",
              "first_seen_at": None, "availability_assumption": "historical candle close; first-seen not evidenced",
@@ -118,14 +147,22 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
              "last_closed_open": closed["timestamp"].iloc[-1].isoformat(),
              "strategy_source_sha": STRATEGY_SOURCE_SHA, "signals": {k: asdict(v) for k,v in arms.items()},
              "confluence": asdict(aggregate), "baseline": BASELINE_VERSION, "model_available": False,
-             "decision": decision.decision.value, "risk_approved": risk.approved,
-             "risk_reasons": list(risk.reasons), "cash": str(cash), "position": str(position),
+             "decision": decision.decision.value, "risk_approved": bool(may_enter),
+             "risk_reasons": list(risk.reasons), "persistent_risk_status": risk_status, "cash": str(cash), "position": str(position),
              "equity": str(equity), "fees": account["fees"],
-             "fills": int(fill_result is not None and not fill_result["duplicate"]), "fill": fill_result,
+             "fills": 0, "fill": None,
              "cost_assumptions_bps": {"fee_per_fill": str(fee_bps), "full_bid_ask_spread": str(spread_bps), "slippage_per_fill": str(slippage_bps)},
              "limitations": ["cash-only baseline: no orders produced without an evidenced forecast", "historical replay is not prospective", "four strategy arms are research prototypes", "daily loss anchor and risk-reducing exits under halt are unverified"]}
     encoded = json.dumps(event, default=lambda x: x.isoformat() if isinstance(x, datetime) else str(x),
                          sort_keys=True, separators=(",", ":"), allow_nan=False)
+    if intent:
+        payload = json.dumps({"intent":intent,"event":json.loads(encoded)},sort_keys=True,separators=(",", ":"))
+        with sqlite3.connect(state_path) as db:
+            db.execute("INSERT OR IGNORE INTO paper_pending_replay VALUES (?,?)",(run_id,payload))
+            persisted=db.execute("SELECT payload FROM paper_pending_replay WHERE run_id=?",(run_id,)).fetchone()[0]
+            if persisted != payload:
+                raise ValueError("PENDING_REPLAY_CONFLICT")
+        return _finish_pending(state_path,run_id,json.loads(payload))
     with sqlite3.connect(state_path) as db:
         inserted = db.execute("INSERT OR IGNORE INTO replay_evidence VALUES (?, ?)", (run_id, encoded)).rowcount == 1
         saved = db.execute("SELECT result FROM replay_evidence WHERE run_id=?", (run_id,)).fetchone()[0]
