@@ -9,6 +9,7 @@ retry that duplicates exposure.
 """
 
 from dataclasses import dataclass, replace
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation, ROUND_DOWN, localcontext
 import json
@@ -326,8 +327,8 @@ class PostgresTestnetOrderStore:
             state_version=int(row[11]),
         )
 
-    def update(self, order: ReconciledOrder) -> ReconciledOrder:
-        with self._connect() as conn:
+    def update(self, order: ReconciledOrder, *, connection=None) -> ReconciledOrder:
+        with (self._connect() if connection is None else nullcontext(connection)) as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT client_order_id,symbol,side,requested_quantity,state,venue_order_id,matched_quantity,average_price,fee_reported,fee_currency,updated_at,state_version FROM testnet_orders WHERE client_order_id=%s FOR UPDATE", (order.client_order_id,))
                 row = cur.fetchone()
@@ -356,7 +357,8 @@ class PostgresTestnetOrderStore:
                 )
                 if cur.rowcount != 1:
                     raise RuntimeError("order intent must be persisted before update")
-            conn.commit()
+            if connection is None:
+                conn.commit()
         return replace(order, state_version=order.state_version + 1)
 
 
@@ -469,8 +471,7 @@ class TestnetExecutionGateway:
             raise AmbiguousTestnetSubmission(client_order_id) from exc
 
         acknowledged = self._merge_snapshot(local, snapshot)
-        saved = self.store.update(acknowledged)
-        self._account_for(saved)
+        saved = self._persist_and_account(acknowledged)
         return saved
 
     def reconcile(self, client_order_id: str) -> ReconciledOrder:
@@ -489,7 +490,17 @@ class TestnetExecutionGateway:
             self._account_for(local)
             return local
         merged = self._merge_snapshot(local, snapshot)
-        saved = self.store.update(merged)
+        saved = self._persist_and_account(merged)
+        return saved
+
+    def _persist_and_account(self, order: ReconciledOrder) -> ReconciledOrder:
+        if isinstance(self.store, PostgresTestnetOrderStore) and isinstance(self.risk_governor, PostgresRiskGovernor):
+            if not self.account_id:
+                raise TestnetSafetyError("ACCOUNT_ID_REQUIRED")
+            return self.risk_governor.persist_snapshot_and_account(
+                store=self.store, order=order, account_id=self.account_id,
+                venue_id=self.transport.venue, now=datetime.now(timezone.utc))
+        saved = self.store.update(order)
         self._account_for(saved)
         return saved
 
@@ -577,3 +588,4 @@ class TestnetExecutionGateway:
             updated_at=datetime.now(timezone.utc),
             state_version=local.state_version,
         )
+
