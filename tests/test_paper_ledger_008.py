@@ -44,5 +44,12 @@ class LedgerTests(unittest.TestCase):
             self.ledger.fill(**{**self.args,"side":"SELL"})
         self.assertEqual(self.ledger.snapshot()["quantity"],"0")
 
+    def test_marked_peak_persists_across_restart(self):
+        self.ledger.fill(**{**self.args,"quantity":Decimal("10")})
+        high=self.ledger.mark(Decimal("200"))
+        self.assertGreater(Decimal(high["peak"]),Decimal("10000"))
+        restarted=PaperLedger(self.path)
+        self.assertEqual(restarted.mark(Decimal("100"))["peak"],high["peak"])
+
 
 if __name__ == "__main__": unittest.main()
