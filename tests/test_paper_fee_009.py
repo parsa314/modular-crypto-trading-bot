@@ -49,6 +49,14 @@ class PaperFeeTests(unittest.TestCase):
             self.l.settle_additional_fee(**{**self.fee,"currency":"BTC"})
         self.assertEqual(before,self.l.snapshot())
 
+    def test_unknown_fill_fee_does_not_create_a_zero_fee_fill(self):
+        before=self.l.snapshot()
+        with self.assertRaisesRegex(ValueError,"UNKNOWN_FEE"):
+            self.l.fill(order_id="unknown",side="BUY",quantity=Decimal("1"),reference_price=Decimal("100"),
+                        decision_at=self.t+timedelta(hours=1),fill_at=self.t+timedelta(hours=2),
+                        fee_bps=None,spread_bps=Decimal("0"),slippage_bps=Decimal("0"))
+        self.assertEqual(before,self.l.snapshot())
+
     def test_journal_detects_cash_tampering_before_duplicate_or_new_fill(self):
         self.l.settle_additional_fee(**self.fee)
         self.assertEqual(Decimal(self.l.reconcile()["cash"]),Decimal("9899.75"))
