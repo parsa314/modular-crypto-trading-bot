@@ -120,16 +120,18 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
     with localcontext() as ctx:
         ctx.prec = 80
         equity = cash + position * mark
+        exposure = position * mark / equity if equity > 0 else Decimal(0)
+        expected_cost = (fee_bps + spread_bps / Decimal(2) + slippage_bps) / Decimal("10000")
     if not equity.is_finite() or equity <= 0:
         raise ValueError("INVALID_MARKED_EQUITY")
     decision = DecisionEngine().evaluate(asset="BTC", timestamp=decision_time,
-        expected_return=0.0, expected_cost=float((fee_bps + spread_bps / 2 + slippage_bps) / Decimal("10000")),
-        risk_penalty=0.0, uncertainty_penalty=0.0, confidence=0.0,
+        expected_return=Decimal(0), expected_cost=expected_cost,
+        risk_penalty=Decimal(0), uncertainty_penalty=Decimal(0), confidence=0.0,
         currently_long=position > 0, metadata={"baseline": BASELINE_VERSION, "model_available": False})
-    risk = RiskEngine(RiskLimits(max_drawdown=0.05, max_gross_exposure=0.70)).evaluate(
-        RiskSnapshot(equity=float(equity), peak_equity=float(peak), gross_exposure=float(position*mark/equity),
-                     asset_weight=float(position*mark/equity), turnover=0.0, spread_bps=float(spread_bps),
-                     slippage_bps=float(slippage_bps)))
+    risk = RiskEngine(RiskLimits(max_drawdown=Decimal("0.05"), max_gross_exposure=Decimal("0.70"))).evaluate(
+        RiskSnapshot(equity=equity, peak_equity=peak, gross_exposure=exposure,
+                     asset_weight=exposure, turnover=Decimal(0), spread_bps=spread_bps,
+                     slippage_bps=slippage_bps))
     intent = None
     risk_status = ledger.risk_status()
     may_enter = risk.approved and risk_status["anchor_valid"] and not risk_status["daily_halt"] and not risk_status["hard_halt"]
