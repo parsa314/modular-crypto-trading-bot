@@ -16,8 +16,10 @@ class Cursor:
 
 
 class Connection:
-    def __init__(self):
+    def __init__(self, state="FILLED", matched=Decimal("1")):
         self.queries = []
+        self.state = state
+        self.matched = matched
 
     def __enter__(self):
         return self
@@ -31,7 +33,7 @@ class Connection:
             return Cursor(("r", "BTC/USDT", "BUY", Decimal("1"), Decimal("0"),
                            Decimal("0"), Decimal("0"), "RESERVED"))
         if sql.startswith("SELECT state,matched_quantity"):
-            return Cursor(("FILLED", Decimal("1"), Decimal("100"), Decimal("0"), None))
+            return Cursor((self.state, self.matched, Decimal("100"), Decimal("0"), None))
         return Cursor(None)
 
 
@@ -52,8 +54,21 @@ class UnknownFeeTests(unittest.TestCase):
         self.assertEqual(_fee_from_order({"fee": {"currency": "USDT"}}),
                          (Decimal("0"), None))
 
+    def test_explicit_zero_fee_retains_reported_currency(self):
+        self.assertEqual(_fee_from_order({"fee": {"cost": "0", "currency": "USDT"}}),
+                         (Decimal("0"), "USDT"))
+
     def test_filled_order_with_unknown_fee_does_not_release_reservation(self):
         governor = FixtureGovernor()
+        governor.reconcile_accounting(account_id="synthetic", venue_id="synthetic",
+                                      client_order_id="synthetic", now=datetime.now(timezone.utc))
+        sql = [query for query, _ in governor.connection.queries]
+        self.assertTrue(any("reconciled=FALSE" in query for query in sql))
+        self.assertFalse(any(query.startswith("UPDATE risk_reservations") for query in sql))
+
+    def test_partial_fill_with_unknown_fee_does_not_release_reservation(self):
+        governor = FixtureGovernor()
+        governor.connection = Connection(state="PARTIAL", matched=Decimal("0.4"))
         governor.reconcile_accounting(account_id="synthetic", venue_id="synthetic",
                                       client_order_id="synthetic", now=datetime.now(timezone.utc))
         sql = [query for query, _ in governor.connection.queries]
