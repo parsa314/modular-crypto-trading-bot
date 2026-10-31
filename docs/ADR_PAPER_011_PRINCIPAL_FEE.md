@@ -18,14 +18,15 @@ Neither the numeric fee placeholder nor a successful account observation proves
 the fee was zero. This projection is not a final spendable balance or PnL. New risk
 admission remains blocked until verified reconciliation.
 
-This limited change does not make initial OMS snapshot persistence and principal
-posting one transaction: the gap is recoverable only through reconciliation and
-is still a release blocker. Existing historical rows are not backfilled into the
+The PostgreSQL gateway persists a received snapshot and posts its principal in a
+single transaction; the separate low-level store update API remains usable and
+can leave a persisted snapshot pending reconciliation. That unguarded route is
+still a release blocker. Existing historical rows are not backfilled into the
 new posting table; their cumulative reservation watermark remains authoritative.
 No source supplies immutable per-execution or fee-event identifiers here. Late
 terminal fee corrections, append-only signed fee events, non-quote fees, rebates,
-lot allocation, fee provenance and fully atomic OMS + posting persistence remain
-unimplemented. Complete Decimal boundary verification is outstanding. These cases remain blocked.
+lot allocation, fee provenance and enforcement across all low-level store paths
+remain unimplemented. Complete Decimal boundary verification is outstanding. These cases remain blocked.
 Account observations with unresolved liabilities must never mark the account
 reconciled. This ADR does not establish broker, Demo, or scientific evidence.
 
