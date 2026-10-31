@@ -5,10 +5,13 @@ import unittest
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pandas as pd
 
 from research_bot.paper_replay_008 import replay
+from research_bot.contracts import Decision
 
 
 class ReplayTests(unittest.TestCase):
@@ -66,6 +69,18 @@ class ReplayTests(unittest.TestCase):
         self.assertFalse(self.run_replay(spread=Decimal("36"))["risk_approved"])
         with self.assertRaisesRegex(ValueError,"INVALID_INITIAL_CASH"):
             self.run_replay(cash=Decimal("0"))
+
+    def test_injected_candidate_flows_to_later_paper_fill_and_restart(self):
+        class SyntheticDecision:
+            def evaluate(self, **kwargs):
+                return SimpleNamespace(decision=Decision.HOLD if kwargs["currently_long"] else Decision.BUY_CANDIDATE)
+        with patch("research_bot.paper_replay_008.DecisionEngine", return_value=SyntheticDecision()):
+            first=self.run_replay()
+            second=self.run_replay()
+        self.assertEqual(first["fills"], 1)
+        self.assertEqual(second["fills"], 0)
+        self.assertEqual(first["cash"], second["cash"])
+        self.assertGreater(Decimal(first["position"]), Decimal("0"))
 
 
 if __name__ == "__main__":
