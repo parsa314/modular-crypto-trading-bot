@@ -33,6 +33,16 @@ def process_reserve(dsn, start, result, index):
         result.put('REJECTED')
 
 
+def process_post_principal(dsn, start, result, client_order_id):
+    start.wait(10)
+    try:
+        governor(dsn).reconcile_accounting(account_id=ACCOUNT,venue_id=VENUE,
+            client_order_id=client_order_id,now=NOW)
+        result.put('OK')
+    except Exception as exc:
+        result.put(type(exc).__name__ + ':' + str(exc))
+
+
 class Transport:
     sandbox=True
     venue=VENUE
@@ -264,6 +274,29 @@ else: raise AssertionError('restart cleared halt')
         self.assertEqual(self.fetch('SELECT cash FROM risk_account_state')[0][0],Decimal('900'))
         self.assertEqual(self.fetch("SELECT count(*) FROM risk_audit WHERE event='CUMULATIVE_FILL_APPLIED'")[0][0],1)
 
+    def test_unknown_fee_principal_posted_once_by_independent_processes(self):
+        a=approve(self.g)
+        self.submit(a)
+        local=self.orders.get(a.client_order_id)
+        self.orders.update(replace(local,state=OrderLifecycle.FILLED,matched_quantity=Decimal('1'),average_price=Decimal('100')))
+        ctx=multiprocessing.get_context('spawn')
+        start=ctx.Barrier(2,timeout=20)
+        result=ctx.Queue()
+        workers=[ctx.Process(target=process_post_principal,args=(self.dsn,start,result,a.client_order_id)) for _ in range(2)]
+        for worker in workers: worker.start()
+        for worker in workers:
+            worker.join(30)
+            self.assertEqual(worker.exitcode,0)
+        self.assertEqual(sorted(result.get(timeout=5) for _ in workers),['OK','OK'])
+        self.assertEqual(self.fetch('SELECT cash,positions,reconciled FROM risk_account_state')[0],
+                         (Decimal('900'),{'BTC/USDT':'1'},False))
+        self.assertEqual(self.fetch('SELECT count(*) FROM risk_principal_postings')[0][0],1)
+        self.assertEqual(self.fetch('SELECT state FROM risk_fee_liabilities')[0][0],'UNRESOLVED')
+        self.observe(held='1',cash='900')
+        self.assertEqual(self.fetch('SELECT reconciled,unresolved_orders FROM risk_account_state')[0],(False,True))
+        with self.assertRaisesRegex(RiskAdmissionError,'ACCOUNT_NOT_RECONCILED'):
+            approve(self.g,cid='unresolved-fee-entry',now=self.now)
+
     def test_account_snapshot_cannot_double_count_an_unapplied_fill(self):
         a=approve(self.g)
         self.submit(a)
@@ -325,3 +358,4 @@ else: raise AssertionError('restart cleared halt')
                 quantity=Decimal('10'),reference_price=Decimal('100'),precision=self.precision,
                 risk_decision=RiskDecision(True,False,(),None),created_at=self.now)
         self.assertEqual(self.transport.calls,0)
+
