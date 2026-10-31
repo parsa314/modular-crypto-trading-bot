@@ -1,0 +1,39 @@
+# PAPER-011: provisional cumulative principal and fee liabilities
+
+Status: PROTOTYPE / BLOCKED. Scope: synthetic engineering validation only.
+
+The current OMS receives cumulative snapshots, not independently identified
+executions. The tuple (account, venue, client order, previous cumulative quantity,
+new cumulative quantity) identifies a **posting interval**, not an exchange
+execution. It must not be presented as a venue trade ID. A primary key rejects
+duplicate interval records. The account row, reservation and order are locked in
+that order. The principal posting, account projection and reservation update are
+committed in the same database transaction. A crash before commit rolls them all
+back. Reconciliation after commit sees the persisted cumulative watermark.
+
+When fill quantity and average price are known but fee denomination is not USDT,
+the gross cash and position effect is provisional; the fee liability is explicitly
+UNRESOLVED, the account remains unreconciled, and the reservation remains open.
+Neither the numeric fee placeholder nor a successful account observation proves
+the fee was zero. This projection is not a final spendable balance or PnL. New risk
+admission remains blocked until verified reconciliation.
+
+The PostgreSQL gateway persists a received snapshot and posts its principal in a
+single transaction; the separate low-level store update API remains usable and
+can leave a persisted snapshot pending reconciliation. That unguarded route is
+still a release blocker. Existing historical rows are not backfilled into the
+new posting table; their cumulative reservation watermark remains authoritative.
+No source supplies immutable per-execution or fee-event identifiers here. Late
+terminal fee corrections, append-only signed fee events, non-quote fees, rebates,
+lot allocation, fee provenance and enforcement across all low-level store paths
+remain unimplemented. Complete Decimal boundary verification is outstanding. These cases remain blocked.
+Account observations with unresolved liabilities must never mark the account
+reconciled. This ADR does not establish broker, Demo, or scientific evidence.
+
+Decimal boundary: paper cash, quantity, price, equity, exposures and cost
+assumptions use Decimal through replay risk evaluation. The legacy floating-point
+research path remains supported. Confidence and model outputs may be floats;
+when combined with a Decimal cost, finite model outputs are explicitly converted
+using their decimal string representation, not treated as recovered precision.
+The statistical CVaR path remains float-based and is not used as Paper-011
+financial-posting evidence. Complete downstream audit is still outstanding.

@@ -7,6 +7,7 @@ certified by this module. All account mutations serialize on one account row.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, localcontext
 import hashlib
@@ -163,6 +164,18 @@ class PostgresRiskGovernor:
             CREATE TABLE IF NOT EXISTS risk_cash_flow_receipts (
               account_id TEXT NOT NULL, venue_id TEXT NOT NULL, receipt_id TEXT NOT NULL,
               snapshot_id TEXT NOT NULL, PRIMARY KEY(account_id,venue_id,receipt_id));
+            -- This is a cumulative order interval, not a venue execution ID.
+            CREATE TABLE IF NOT EXISTS risk_principal_postings (
+              account_id TEXT NOT NULL, venue_id TEXT NOT NULL, client_order_id TEXT NOT NULL,
+              quantity_from NUMERIC NOT NULL, quantity_to NUMERIC NOT NULL,
+              quote_delta NUMERIC NOT NULL, posted_at TIMESTAMPTZ NOT NULL,
+              PRIMARY KEY(account_id,venue_id,client_order_id,quantity_from,quantity_to),
+              CHECK(quantity_from >= 0 AND quantity_to > quantity_from AND quote_delta > 0));
+            CREATE TABLE IF NOT EXISTS risk_fee_liabilities (
+              account_id TEXT NOT NULL, venue_id TEXT NOT NULL, client_order_id TEXT NOT NULL,
+              state TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL,
+              PRIMARY KEY(account_id,venue_id,client_order_id),
+              CHECK(state IN ('UNRESOLVED','QUOTE_REPORTED')));
             """)
 
     @staticmethod
@@ -258,7 +271,15 @@ class PostgresRiskGovernor:
                     AND (t.matched_quantity != r.matched_quantity OR t.fee_reported != r.cumulative_fee) LIMIT 1""",
                     (o.account_id,o.venue_id)).fetchone():
                     raise RiskAdmissionError("PENDING_FILL_ACCOUNTING_REQUIRED")
-                unresolved = unresolved or conn.execute("""SELECT 1 FROM risk_reservations r
+                unresolved_fee = conn.execute("""SELECT 1 FROM risk_fee_liabilities
+                    WHERE account_id=%s AND venue_id=%s AND state='UNRESOLVED' LIMIT 1""",
+                    (o.account_id,o.venue_id)).fetchone() is not None
+                if unresolved_fee and old is not None:
+                    observed_positions = {k:D(v) for k,v in o.positions.items() if D(v) != 0}
+                    ledger_positions = {k:D(v) for k,v in old['positions'].items() if D(v) != 0}
+                    if D(o.cash) != old['cash'] or observed_positions != ledger_positions:
+                        raise RiskAdmissionError("UNRESOLVED_FEE_ACCOUNT_MISMATCH")
+                unresolved = unresolved or unresolved_fee or conn.execute("""SELECT 1 FROM risk_reservations r
                     JOIN testnet_orders t ON t.client_order_id=r.client_order_id AND t.venue=r.venue_id
                     WHERE r.account_id=%s AND r.venue_id=%s
                     AND t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION') LIMIT 1""",
@@ -268,7 +289,7 @@ class PostgresRiskGovernor:
             conn.execute("""INSERT INTO risk_account_state(account_id,venue_id,snapshot_id,snapshot_hash,source_id,anchor_status,observed_at,equity,cash,day_equity,day_utc,peak_equity,net_deposits,gross_notional,asset_notionals,positions,reconciled,unresolved_orders)
               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s)
               ON CONFLICT(account_id,venue_id) DO UPDATE SET snapshot_id=EXCLUDED.snapshot_id,snapshot_hash=EXCLUDED.snapshot_hash,source_id=EXCLUDED.source_id,anchor_status=EXCLUDED.anchor_status,observed_at=EXCLUDED.observed_at,equity=EXCLUDED.equity,cash=EXCLUDED.cash,day_equity=EXCLUDED.day_equity,day_utc=EXCLUDED.day_utc,peak_equity=EXCLUDED.peak_equity,net_deposits=EXCLUDED.net_deposits,gross_notional=EXCLUDED.gross_notional,asset_notionals=EXCLUDED.asset_notionals,positions=EXCLUDED.positions,reconciled=EXCLUDED.reconciled,unresolved_orders=EXCLUDED.unresolved_orders,state_version=risk_account_state.state_version+1""",
-              (o.account_id,o.venue_id,o.snapshot_id,digest,o.source_id,status,at,D(o.equity),D(o.cash),day_equity,day,peak,D(o.cumulative_net_deposits),D(o.gross_notional),encoded(o.asset_notionals),encoded(o.positions),o.reconciled,unresolved))
+              (o.account_id,o.venue_id,o.snapshot_id,digest,o.source_id,status,at,D(o.equity),D(o.cash),day_equity,day,peak,D(o.cumulative_net_deposits),D(o.gross_notional),encoded(o.asset_notionals),encoded(o.positions),o.reconciled and not unresolved,unresolved))
             self._latch(conn,self._account(conn,o.account_id,o.venue_id),at)
             self._audit(conn,o.account_id,o.venue_id,"ACCOUNT_OBSERVED",now,{"snapshot_hash":digest,"anchor_status":status,"cash_flow_ids":o.cash_flow_ids})
         return digest
@@ -411,15 +432,34 @@ class PostgresRiskGovernor:
                 raise RiskAdmissionError("STALE_HALT_VERSION")
             self._audit(conn,account_id,venue_id,"HARD_HALT_RELEASED",now,{"authorization":authorization})
 
+    def persist_snapshot_and_account(self, *, store: PostgresTestnetOrderStore,
+                                     order: ReconciledOrder, account_id: str,
+                                     venue_id: str, now: datetime) -> ReconciledOrder:
+        """Atomically persist a gateway snapshot and its recoverable accounting."""
+        from .testnet_execution import PostgresTestnetOrderStore
+        if not isinstance(store, PostgresTestnetOrderStore) or store.database_url != self.database_url:
+            raise RiskAdmissionError("SHARED_TRANSACTION_STORE_REQUIRED")
+        with self._connect() as conn:
+            self._account(conn,account_id,venue_id)
+            row = conn.execute("""SELECT reservation_id FROM risk_reservations
+                WHERE account_id=%s AND venue_id=%s AND client_order_id=%s FOR UPDATE""",
+                (account_id,venue_id,order.client_order_id)).fetchone()
+            if row is None:
+                raise RiskAdmissionError("RESERVATION_NOT_FOUND")
+            saved = store.update(order,connection=conn)
+            self.reconcile_accounting(account_id=account_id,venue_id=venue_id,
+                client_order_id=order.client_order_id,now=now,_connection=conn)
+            return saved
+
     def reconcile_accounting(self, *, account_id: str, venue_id: str,
-                             client_order_id: str, now: datetime) -> None:
+                             client_order_id: str, now: datetime, _connection=None) -> None:
         """Apply persisted cumulative fills once; unknown economics retain risk.
 
         This runs even for an already terminal OMS row after restart. A crash
         between OMS persistence and this transaction is recovered by invoking
         reconcile again. Entries remain closed until account reconciliation.
         """
-        with localcontext() as ctx, self._connect() as conn:
+        with localcontext() as ctx, (self._connect() if _connection is None else nullcontext(_connection)) as conn:
             ctx.prec = 120
             a = self._account(conn,account_id,venue_id)
             row = conn.execute("SELECT reservation_id,symbol,side,quantity,matched_quantity,cumulative_fee,cumulative_quote,state FROM risk_reservations WHERE account_id=%s AND venue_id=%s AND client_order_id=%s FOR UPDATE",
@@ -434,18 +474,31 @@ class PostgresRiskGovernor:
             rid,symbol,side,requested,previous,previous_fee,previous_quote,reservation_state = row
             if matched < previous or fee < previous_fee or matched > requested:
                 raise RiskAdmissionError("CUMULATIVE_ACCOUNTING_REGRESSION")
-            # A zero numeric placeholder without a known denomination is not
-            # evidence that the exchange charged zero. Keep risk reserved.
-            if matched and (avg is None or currency != 'USDT'):
+            # A zero placeholder without denomination is not a confirmed fee.
+            # Principal can be posted only when cumulative price is known.
+            if matched and avg is None:
                 conn.execute("UPDATE risk_account_state SET reconciled=FALSE WHERE account_id=%s AND venue_id=%s",(account_id,venue_id))
                 self._audit(conn,account_id,venue_id,"FILL_ECONOMICS_UNRESOLVED",utc(now),{"client_order_id":client_order_id})
                 return
+            unresolved_fee = bool(matched and currency != 'USDT')
             quote = matched*avg if matched else D(0)
-            delta, delta_fee, delta_quote = matched-previous, fee-previous_fee, quote-previous_quote
+            delta, delta_fee, delta_quote = matched-previous, (D(0) if unresolved_fee else fee-previous_fee), quote-previous_quote
             if delta > 0 and delta_quote <= 0:
                 raise RiskAdmissionError("INVALID_INCREMENTAL_FILL_NOTIONAL")
             if delta == 0 and delta_quote != 0:
                 raise RiskAdmissionError("UNCHANGED_FILL_NOTIONAL_CONFLICT")
+            if delta:
+                inserted = conn.execute("""INSERT INTO risk_principal_postings
+                    (account_id,venue_id,client_order_id,quantity_from,quantity_to,quote_delta,posted_at)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING RETURNING 1""",
+                    (account_id,venue_id,client_order_id,previous,matched,delta_quote,utc(now))).fetchone()
+                if inserted is None:
+                    raise RiskAdmissionError("PRINCIPAL_POSTING_CONFLICT")
+            if matched:
+                conn.execute("""INSERT INTO risk_fee_liabilities(account_id,venue_id,client_order_id,state,updated_at)
+                    VALUES (%s,%s,%s,%s,%s) ON CONFLICT(account_id,venue_id,client_order_id)
+                    DO UPDATE SET state=EXCLUDED.state,updated_at=EXCLUDED.updated_at""",
+                    (account_id,venue_id,client_order_id,'UNRESOLVED' if unresolved_fee else 'QUOTE_REPORTED',utc(now)))
             positions = {k:D(v) for k,v in a['positions'].items()}
             held = positions.get(symbol,D(0))
             cash = a['cash']
@@ -460,11 +513,12 @@ class PostgresRiskGovernor:
             if cash < 0:
                 raise RiskAdmissionError("NEGATIVE_CASH_AFTER_SETTLEMENT")
             terminal = OrderLifecycle(state) in TERMINAL_STATES
-            if delta or delta_fee:
-                conn.execute("UPDATE risk_account_state SET cash=%s,positions=%s::jsonb,reconciled=FALSE,state_version=state_version+1 WHERE account_id=%s AND venue_id=%s",
-                    (cash,encoded(positions),account_id,venue_id))
+            if delta or delta_fee or unresolved_fee:
+                conn.execute("UPDATE risk_account_state SET cash=%s,positions=%s::jsonb,reconciled=FALSE,unresolved_orders=unresolved_orders OR %s,state_version=state_version+1 WHERE account_id=%s AND venue_id=%s",
+                    (cash,encoded(positions),unresolved_fee,account_id,venue_id))
             conn.execute("UPDATE risk_reservations SET matched_quantity=%s,cumulative_fee=%s,cumulative_quote=%s,state=%s WHERE reservation_id=%s",
-                (matched,fee,quote,'CLOSED' if terminal else 'PARTIAL' if matched else reservation_state,rid))
-            if delta or delta_fee or (terminal and reservation_state != 'CLOSED'):
+                (matched,previous_fee if unresolved_fee else fee,quote,'UNRESOLVED_FEE' if unresolved_fee else 'CLOSED' if terminal else 'PARTIAL' if matched else reservation_state,rid))
+            if delta or delta_fee or (terminal and not unresolved_fee and reservation_state != 'CLOSED'):
                 self._audit(conn,account_id,venue_id,"CUMULATIVE_FILL_APPLIED",utc(now),
                     {"client_order_id":client_order_id,"quantity_delta":delta,"fee_delta":delta_fee,"quote_delta":delta_quote,"terminal":terminal})
+

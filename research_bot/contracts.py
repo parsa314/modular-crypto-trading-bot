@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from decimal import Decimal, localcontext
 from enum import Enum
 from typing import Any, Mapping
 
@@ -67,10 +68,10 @@ class EvidenceStamp:
 class SignalEvidence:
     asset: str
     timestamp: datetime
-    expected_return: float
-    expected_cost: float
-    risk_penalty: float
-    uncertainty_penalty: float
+    expected_return: float | Decimal
+    expected_cost: float | Decimal
+    risk_penalty: float | Decimal
+    uncertainty_penalty: float | Decimal
     confidence: float
     decision: Decision
     reasons: tuple[str, ...] = ()
@@ -78,7 +79,13 @@ class SignalEvidence:
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     @property
-    def net_alpha(self) -> float:
+    def net_alpha(self) -> float | Decimal:
+        values = (self.expected_return,self.expected_cost,self.risk_penalty,self.uncertainty_penalty)
+        if any(isinstance(value, Decimal) for value in values):
+            with localcontext() as ctx:
+                ctx.prec = 80
+                values = tuple(value if isinstance(value, Decimal) else Decimal(str(value)) for value in values)
+                return values[0] - values[1] - values[2] - values[3]
         return (
             float(self.expected_return)
             - float(self.expected_cost)
@@ -131,3 +138,4 @@ class ExperimentManifest:
             slippage_bps=slippage_bps,
             notes=notes,
         )
+

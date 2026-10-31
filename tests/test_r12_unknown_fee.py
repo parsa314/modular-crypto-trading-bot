@@ -34,6 +34,8 @@ class Connection:
                            Decimal("0"), Decimal("0"), "RESERVED"))
         if sql.startswith("SELECT state,matched_quantity"):
             return Cursor((self.state, self.matched, Decimal("100"), Decimal("0"), None))
+        if "INSERT INTO risk_principal_postings" in sql:
+            return Cursor((1,))
         return Cursor(None)
 
 
@@ -64,7 +66,10 @@ class UnknownFeeTests(unittest.TestCase):
                                       client_order_id="synthetic", now=datetime.now(timezone.utc))
         sql = [query for query, _ in governor.connection.queries]
         self.assertTrue(any("reconciled=FALSE" in query for query in sql))
-        self.assertFalse(any(query.startswith("UPDATE risk_reservations") for query in sql))
+        updates = [params for query,params in governor.connection.queries if query.startswith("UPDATE risk_reservations")]
+        self.assertEqual(len(updates),1)
+        self.assertEqual((updates[0][0],updates[0][3]),(Decimal("1"),"UNRESOLVED_FEE"))
+        self.assertTrue(any("INSERT INTO risk_principal_postings" in query for query in sql))
 
     def test_partial_fill_with_unknown_fee_does_not_release_reservation(self):
         governor = FixtureGovernor()
@@ -73,8 +78,12 @@ class UnknownFeeTests(unittest.TestCase):
                                       client_order_id="synthetic", now=datetime.now(timezone.utc))
         sql = [query for query, _ in governor.connection.queries]
         self.assertTrue(any("reconciled=FALSE" in query for query in sql))
-        self.assertFalse(any(query.startswith("UPDATE risk_reservations") for query in sql))
+        updates = [params for query,params in governor.connection.queries if query.startswith("UPDATE risk_reservations")]
+        self.assertEqual(len(updates),1)
+        self.assertEqual((updates[0][0],updates[0][3]),(Decimal("0.4"),"UNRESOLVED_FEE"))
+        self.assertTrue(any("INSERT INTO risk_principal_postings" in query for query in sql))
 
 
 if __name__ == "__main__":
     unittest.main()
+
