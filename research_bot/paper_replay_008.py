@@ -115,7 +115,11 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
     mark = Decimal(str(closed["close"].iloc[-2]))
     account = ledger.mark(mark, observed_at=decision_time)
     cash, position, peak = Decimal(account["cash"]), Decimal(account["quantity"]), Decimal(account["peak"])
-    equity = cash + position * mark
+    # Match the ledger's precision when deriving a financial value from its
+    # persisted Decimal balances; the process-global context defaults to 28.
+    with localcontext() as ctx:
+        ctx.prec = 80
+        equity = cash + position * mark
     if not equity.is_finite() or equity <= 0:
         raise ValueError("INVALID_MARKED_EQUITY")
     decision = DecisionEngine().evaluate(asset="BTC", timestamp=decision_time,
