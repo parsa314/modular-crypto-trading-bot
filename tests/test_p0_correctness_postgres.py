@@ -43,6 +43,16 @@ def process_post_principal(dsn, start, result, client_order_id):
         result.put(type(exc).__name__ + ':' + str(exc))
 
 
+def process_crash_after_snapshot_before_post(dsn, client_order_id):
+    store=PostgresTestnetOrderStore(dsn)
+    local=store.get(client_order_id)
+    filled=replace(local,state=OrderLifecycle.FILLED,matched_quantity=Decimal('1'),average_price=Decimal('100'))
+    g=governor(dsn)
+    g.reconcile_accounting=lambda **kwargs: os._exit(77)
+    g.persist_snapshot_and_account(store=store,order=filled,account_id=ACCOUNT,venue_id=VENUE,now=NOW)
+    os._exit(78)
+
+
 class Transport:
     sandbox=True
     venue=VENUE
@@ -298,6 +308,23 @@ else: raise AssertionError('restart cleared halt')
         self.assertEqual(self.fetch('SELECT reconciled,unresolved_orders FROM risk_account_state')[0],(False,True))
         with self.assertRaisesRegex(RiskAdmissionError,'ACCOUNT_NOT_RECONCILED'):
             approve(self.g,cid='unresolved-fee-entry',now=self.now)
+
+    def test_crash_after_snapshot_before_post_rolls_back_both(self):
+        a=approve(self.g)
+        self.submit(a)
+        ctx=multiprocessing.get_context('spawn')
+        worker=ctx.Process(target=process_crash_after_snapshot_before_post,args=(self.dsn,a.client_order_id))
+        worker.start()
+        worker.join(30)
+        self.assertEqual(worker.exitcode,77)
+        local=self.orders.get(a.client_order_id)
+        self.assertEqual(local.matched_quantity,Decimal('0'))
+        self.assertEqual(self.fetch('SELECT cash FROM risk_account_state')[0][0],Decimal('1000'))
+        self.assertEqual(self.fetch('SELECT count(*) FROM risk_principal_postings')[0][0],0)
+        filled=replace(local,state=OrderLifecycle.FILLED,matched_quantity=Decimal('1'),average_price=Decimal('100'))
+        self.g.persist_snapshot_and_account(store=self.orders,order=filled,account_id=ACCOUNT,venue_id=VENUE,now=self.now)
+        self.assertEqual(self.fetch('SELECT cash FROM risk_account_state')[0][0],Decimal('900'))
+        self.assertEqual(self.fetch('SELECT count(*) FROM risk_principal_postings')[0][0],1)
 
     def test_account_snapshot_cannot_double_count_an_unapplied_fill(self):
         a=approve(self.g)
