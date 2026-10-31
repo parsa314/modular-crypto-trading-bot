@@ -261,7 +261,8 @@ class PostgresRiskGovernor:
                 unresolved = unresolved or conn.execute("""SELECT 1 FROM risk_reservations r
                     JOIN testnet_orders t ON t.client_order_id=r.client_order_id AND t.venue=r.venue_id
                     WHERE r.account_id=%s AND r.venue_id=%s
-                    AND t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION') LIMIT 1""",
+                    AND (t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION')
+                         OR (t.matched_quantity > 0 AND t.fee_currency IS DISTINCT FROM 'USDT')) LIMIT 1""",
                     (o.account_id,o.venue_id)).fetchone() is not None
             conn.execute("INSERT INTO risk_account_observations VALUES (%s,%s,%s,%s,%s::jsonb)",
                          (o.account_id,o.venue_id,o.snapshot_id,digest,encoded(payload)))
@@ -432,14 +433,20 @@ class PostgresRiskGovernor:
                 raise RiskAdmissionError("PERSISTED_ORDER_NOT_FOUND")
             state, matched, avg, fee, currency = order
             rid,symbol,side,requested,previous,previous_fee,previous_quote,reservation_state = row
-            if matched < previous or fee < previous_fee or matched > requested:
+            if matched < previous or matched > requested:
                 raise RiskAdmissionError("CUMULATIVE_ACCOUNTING_REGRESSION")
-            # A zero numeric placeholder without a known denomination is not
-            # evidence that the exchange charged zero. Keep risk reserved.
-            if matched and (avg is None or currency != 'USDT'):
+            if matched and avg is None:
                 conn.execute("UPDATE risk_account_state SET reconciled=FALSE WHERE account_id=%s AND venue_id=%s",(account_id,venue_id))
                 self._audit(conn,account_id,venue_id,"FILL_ECONOMICS_UNRESOLVED",utc(now),{"client_order_id":client_order_id})
                 return
+            # A fill with an unknown or non-quote fee still changes the actual
+            # position and gross cash. Apply those effects provisionally once;
+            # do not invent a fee or release the reservation.
+            fee_unresolved = bool(matched and currency != 'USDT')
+            if fee_unresolved:
+                fee = previous_fee
+            elif fee < previous_fee:
+                raise RiskAdmissionError("CUMULATIVE_ACCOUNTING_REGRESSION")
             quote = matched*avg if matched else D(0)
             delta, delta_fee, delta_quote = matched-previous, fee-previous_fee, quote-previous_quote
             if delta > 0 and delta_quote <= 0:
@@ -460,11 +467,11 @@ class PostgresRiskGovernor:
             if cash < 0:
                 raise RiskAdmissionError("NEGATIVE_CASH_AFTER_SETTLEMENT")
             terminal = OrderLifecycle(state) in TERMINAL_STATES
-            if delta or delta_fee:
-                conn.execute("UPDATE risk_account_state SET cash=%s,positions=%s::jsonb,reconciled=FALSE,state_version=state_version+1 WHERE account_id=%s AND venue_id=%s",
-                    (cash,encoded(positions),account_id,venue_id))
+            if delta or delta_fee or fee_unresolved:
+                conn.execute("UPDATE risk_account_state SET cash=%s,positions=%s::jsonb,reconciled=FALSE,unresolved_orders=unresolved_orders OR %s,state_version=state_version+1 WHERE account_id=%s AND venue_id=%s",
+                    (cash,encoded(positions),fee_unresolved,account_id,venue_id))
             conn.execute("UPDATE risk_reservations SET matched_quantity=%s,cumulative_fee=%s,cumulative_quote=%s,state=%s WHERE reservation_id=%s",
-                (matched,fee,quote,'CLOSED' if terminal else 'PARTIAL' if matched else reservation_state,rid))
+                (matched,fee,quote,'CLOSED' if terminal and not fee_unresolved else 'PARTIAL' if matched else reservation_state,rid))
             if delta or delta_fee or (terminal and reservation_state != 'CLOSED'):
                 self._audit(conn,account_id,venue_id,"CUMULATIVE_FILL_APPLIED",utc(now),
-                    {"client_order_id":client_order_id,"quantity_delta":delta,"fee_delta":delta_fee,"quote_delta":delta_quote,"terminal":terminal})
+                    {"client_order_id":client_order_id,"quantity_delta":delta,"fee_delta":delta_fee,"quote_delta":delta_quote,"terminal":terminal,"fee_unresolved":fee_unresolved})
