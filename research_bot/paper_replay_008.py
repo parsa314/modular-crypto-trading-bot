@@ -57,6 +57,19 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
         raise ValueError("INSUFFICIENT_CLOSED_BARS")
     if not closed["timestamp"].diff().dropna().eq(pd.Timedelta(hours=1)).all():
         raise ValueError("HOURLY_COVERAGE_GAP")
+    key_fields = {"data_sha256":digest, "as_of":as_of.astimezone(timezone.utc).isoformat(), "source":source,
+                  "fee_bps":str(fee_bps), "spread_bps":str(spread_bps), "slippage_bps":str(slippage_bps),
+                  "initial_cash":str(initial_cash), "strategy_sha":STRATEGY_SOURCE_SHA, "baseline":BASELINE_VERSION}
+    run_id = hashlib.sha256(json.dumps(key_fields,sort_keys=True).encode()).hexdigest()
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(state_path) as db:
+        db.execute("CREATE TABLE IF NOT EXISTS replay_evidence (run_id TEXT PRIMARY KEY, result TEXT NOT NULL)")
+        cached = db.execute("SELECT result FROM replay_evidence WHERE run_id=?", (run_id,)).fetchone()
+        if cached:
+            return {**json.loads(cached[0]), "run_id":run_id, "new_record":False}
+        for (result,) in db.execute("SELECT result FROM replay_evidence"):
+            if datetime.fromisoformat(json.loads(result)["as_of"]) > as_of:
+                raise ValueError("REPLAY_TIME_REGRESSION")
     # The most recent closed bar is reserved for a later simulated fill.
     decision_time = closed["available_at"].iloc[-2].to_pydatetime()
     arms = {"ICHIMOKU": ichimoku_strategy.evaluate(closed, as_of=decision_time),
@@ -66,14 +79,17 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
     aggregate = combine(arms, as_of=decision_time)
     # Cash is a non-predictive baseline, not an ML-derived estimate.
     ledger = PaperLedger(state_path, initial_cash=initial_cash)
-    account = ledger.snapshot()
-    cash, position, peak = Decimal(account["cash"]), Decimal(account["quantity"]), Decimal(account["peak"])
+    last_fill = ledger.latest_fill_time()
+    if last_fill is not None and last_fill > decision_time:
+        raise ValueError("PAPER_STATE_FROM_FUTURE")
     mark = Decimal(str(closed["close"].iloc[-2]))
+    account = ledger.mark(mark)
+    cash, position, peak = Decimal(account["cash"]), Decimal(account["quantity"]), Decimal(account["peak"])
     equity = cash + position * mark
     if not equity.is_finite() or equity <= 0:
         raise ValueError("INVALID_MARKED_EQUITY")
     decision = DecisionEngine().evaluate(asset="BTC", timestamp=decision_time,
-        expected_return=0.0, expected_cost=float((fee_bps + spread_bps + slippage_bps) / Decimal("10000")),
+        expected_return=0.0, expected_cost=float((fee_bps + spread_bps / 2 + slippage_bps) / Decimal("10000")),
         risk_penalty=0.0, uncertainty_penalty=0.0, confidence=0.0,
         currently_long=position > 0, metadata={"baseline": BASELINE_VERSION, "model_available": False})
     risk = RiskEngine(RiskLimits(max_drawdown=0.05, max_gross_exposure=0.70)).evaluate(
@@ -105,16 +121,14 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
              "risk_reasons": list(risk.reasons), "cash": str(cash), "position": str(position),
              "equity": str(equity), "fees": account["fees"],
              "fills": int(fill_result is not None and not fill_result["duplicate"]), "fill": fill_result,
-             "cost_assumptions_bps_per_side": {"fee": str(fee_bps), "spread": str(spread_bps), "slippage": str(slippage_bps)},
-             "limitations": ["cash-only baseline: no orders produced without an evidenced forecast", "historical replay is not prospective", "four strategy arms are research prototypes"]}
+             "cost_assumptions_bps": {"fee_per_fill": str(fee_bps), "full_bid_ask_spread": str(spread_bps), "slippage_per_fill": str(slippage_bps)},
+             "limitations": ["cash-only baseline: no orders produced without an evidenced forecast", "historical replay is not prospective", "four strategy arms are research prototypes", "daily loss anchor and risk-reducing exits under halt are unverified"]}
     encoded = json.dumps(event, default=lambda x: x.isoformat() if isinstance(x, datetime) else str(x),
                          sort_keys=True, separators=(",", ":"), allow_nan=False)
-    run_id = hashlib.sha256(encoded.encode()).hexdigest()
-    state_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(state_path) as db:
-        db.execute("CREATE TABLE IF NOT EXISTS replay_evidence (run_id TEXT PRIMARY KEY, result TEXT NOT NULL)")
         inserted = db.execute("INSERT OR IGNORE INTO replay_evidence VALUES (?, ?)", (run_id, encoded)).rowcount == 1
-    return {**json.loads(encoded), "run_id": run_id, "new_record": inserted}
+        saved = db.execute("SELECT result FROM replay_evidence WHERE run_id=?", (run_id,)).fetchone()[0]
+    return {**json.loads(saved), "run_id": run_id, "new_record": inserted}
 
 
 def main() -> None:
