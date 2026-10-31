@@ -6,7 +6,9 @@ on:
     branches: [feat/executable-paper-bot-008]
     paths:
       - research_bot/strategy_research_012.py
+      - research_bot/strategy_labels_012.py
       - tests/test_strategy_research_012.py
+      - tests/test_strategy_labels_012.py
       - scripts/strategy_012_probe.py
       - .github/workflows/strategy-research-012.yml
 permissions:
@@ -39,7 +41,7 @@ jobs:
           git -C source-data rev-parse HEAD > artifacts/strategy-012/source-sha.txt
           python --version > artifacts/strategy-012/python-version.txt
           python -m pip freeze > artifacts/strategy-012/environment.txt
-          pytest -q tests/test_strategy_research_012.py tests/test_strategy_data_contract.py tests/test_four_independent_strategies.py --junitxml=artifacts/strategy-012/junit.xml 2>&1 | tee artifacts/strategy-012/tests.log
+          pytest -q tests/test_strategy_research_012.py tests/test_strategy_labels_012.py tests/test_strategy_data_contract.py tests/test_four_independent_strategies.py --junitxml=artifacts/strategy-012/junit.xml 2>&1 | tee artifacts/strategy-012/tests.log
           python scripts/strategy_012_probe.py source-data/data/btc_usdt_m15_2022_2024.parquet source-data/data/btc_usdt_m15_2022_2024.manifest.json artifacts/strategy-012/historical-smoke.json | tee artifacts/strategy-012/smoke.log
       - name: Hash evidence
         if: always()
