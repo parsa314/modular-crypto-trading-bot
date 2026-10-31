@@ -35,7 +35,11 @@ Events have no verified expiry or invalidation, and are always
 `eligible_for_execution=false`. No trade selector, calibrated probability, MTF
 feature join, advanced four-style lifecycle, learned regime, meta-label, broker
 connection or performance computation is claimed. The adapter has no access to
-an OMS or order API. Order book, order flow, funding and open interest are
+an OMS or order API. An isolated triple-barrier label primitive reports TP, SL,
+TIMEOUT, PENDING or AMBIGUOUS from completed bars; same-bar dual touches are
+never assigned an invented ordering. Barriers and entry are caller assumptions,
+no data-derived volatility calibration or fitted meta-label model is provided.
+Order book, order flow, funding and open interest are
 DATA_UNAVAILABLE until separately sourced with provenance.
 
 The optional 96-bar BTCUSDT historical probe uses data already inspected in a
