@@ -94,6 +94,10 @@ def _status_to_lifecycle(*, status: Any, filled: Decimal, amount: Decimal) -> Or
 def _fee_from_order(order: Mapping[str, Any]) -> tuple[Decimal, str | None]:
     fee = order.get("fee")
     if isinstance(fee, Mapping):
+        # Retain an unresolved denomination when the venue supplied no fee
+        # amount; a currency alone is not proof of an explicit zero fee.
+        if fee.get("cost") in (None, ""):
+            return Decimal("0"), None
         cost = _decimal_or_zero(fee.get("cost"), "fee.cost")
         currency = fee.get("currency")
         if cost < 0:
