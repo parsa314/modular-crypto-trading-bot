@@ -101,7 +101,8 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
         next_mark = Decimal(str(closed["close"].iloc[-1]))
         with localcontext() as ctx:
             ctx.prec = 60
-            quantity = equity * Decimal("0.10") / next_mark if decision.decision is Decision.BUY_CANDIDATE else position
+            # Sizing is fixed at decision time; the later bar may only set fill price.
+            quantity = equity * Decimal("0.10") / mark if decision.decision is Decision.BUY_CANDIDATE else position
         order_key = hashlib.sha256(f"{source}|BTC/USDT|{decision_time.isoformat()}|{decision.decision.value}|{BASELINE_VERSION}".encode()).hexdigest()
         fill_result = ledger.fill(order_id=order_key, side="BUY" if decision.decision is Decision.BUY_CANDIDATE else "SELL",
             quantity=quantity, reference_price=next_mark, decision_at=decision_time,
