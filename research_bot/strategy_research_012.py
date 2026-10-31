@@ -61,21 +61,10 @@ def _aware(value: Any) -> pd.Timestamp:
     return t.tz_convert("UTC")
 
 
-def baseline_candidates(frame: pd.DataFrame, *, symbol: str, timeframe: str,
-                        as_of: datetime, source_id: str, source_sha256: str,
-                        availability_kind: str) -> tuple[SignalCandidate, ...]:
-    """Produce baseline research events from completed, contiguous PIT bars.
-
-    Only rows available by as_of are supplied to strategy engines. The provided
-    data hash identifies the caller's raw file, while input_hash identifies the
-    exact consumed closed-bar subset. Neither proves external provenance.
-    """
-    if not symbol or not source_id or timeframe not in _DURATIONS:
-        raise ValueError("INVALID_SOURCE_SYMBOL_OR_TIMEFRAME")
-    if len(source_sha256) != 64 or any(c not in "0123456789abcdef" for c in source_sha256):
-        raise ValueError("SOURCE_SHA256_REQUIRED")
-    if availability_kind not in {"FIRST_SEEN_OBSERVED", "HISTORICAL_CLOSE_ASSUMED"}:
-        raise ValueError("AVAILABILITY_PROVENANCE_REQUIRED")
+def validated_prefix(frame: pd.DataFrame, *, timeframe: str, as_of: datetime) -> pd.DataFrame:
+    """Return only completed, contiguous, UTC-aligned observations available as-of."""
+    if timeframe not in _DURATIONS:
+        raise ValueError("INVALID_TIMEFRAME")
     cutoff = _aware(as_of)
     if not {"timestamp", "available_at"}.issubset(frame.columns):
         raise ValueError("MISSING_EVENT_TIME")
@@ -92,6 +81,26 @@ def baseline_candidates(frame: pd.DataFrame, *, symbol: str, timeframe: str,
     x = closed_bars(x, as_of=cutoff.to_pydatetime(), min_rows=90)
     if not x["timestamp"].diff().dropna().eq(pd.Timedelta(_DURATIONS[timeframe])).all():
         raise ValueError("NONCONTIGUOUS_BARS")
+    return x
+
+
+def baseline_candidates(frame: pd.DataFrame, *, symbol: str, timeframe: str,
+                        as_of: datetime, source_id: str, source_sha256: str,
+                        availability_kind: str) -> tuple[SignalCandidate, ...]:
+    """Produce baseline research events from completed, contiguous PIT bars.
+
+    Only rows available by as_of are supplied to strategy engines. The provided
+    data hash identifies the caller's raw file, while input_hash identifies the
+    exact consumed closed-bar subset. Neither proves external provenance.
+    """
+    if not symbol or not source_id or timeframe not in _DURATIONS:
+        raise ValueError("INVALID_SOURCE_SYMBOL_OR_TIMEFRAME")
+    if len(source_sha256) != 64 or any(c not in "0123456789abcdef" for c in source_sha256):
+        raise ValueError("SOURCE_SHA256_REQUIRED")
+    if availability_kind not in {"FIRST_SEEN_OBSERVED", "HISTORICAL_CLOSE_ASSUMED"}:
+        raise ValueError("AVAILABILITY_PROVENANCE_REQUIRED")
+    cutoff = _aware(as_of)
+    x = validated_prefix(frame,timeframe=timeframe,as_of=cutoff.to_pydatetime())
     columns = ["timestamp", "available_at", "open", "high", "low", "close", "volume"]
     # Hash canonical textual representations of the normalized values rather
     # than rounded JSON floats; the source-file digest remains a separate field.
