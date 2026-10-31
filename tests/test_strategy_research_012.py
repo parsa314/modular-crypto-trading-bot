@@ -59,6 +59,12 @@ class CausalResearchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"DUPLICATE"):
             self.run_events()
 
+    def test_misaligned_hourly_open_is_rejected(self):
+        self.frame["timestamp"] = self.frame["timestamp"] + timedelta(minutes=5)
+        self.frame["available_at"] = self.frame["available_at"] + timedelta(minutes=5)
+        with self.assertRaisesRegex(ValueError,"BAR_OPEN_MISALIGNED"):
+            self.run_events()
+
     def test_naive_as_of_and_unlabeled_source_are_rejected(self):
         self.args["as_of"]=datetime(2024,1,5)
         with self.assertRaisesRegex(ValueError,"TIMEZONE_AWARE"):
