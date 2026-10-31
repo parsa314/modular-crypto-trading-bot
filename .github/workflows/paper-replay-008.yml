@@ -33,7 +33,7 @@ jobs:
           git -C source-data rev-parse HEAD > artifacts/paper-008/data-source-sha.txt
           python --version > artifacts/paper-008/python-version.txt
           python -m pip freeze > artifacts/paper-008/environment.txt
-          pytest -q tests/test_paper_replay_008.py tests/test_strategy_data_contract.py tests/test_four_independent_strategies.py --junitxml=artifacts/paper-008/junit.xml 2>&1 | tee artifacts/paper-008/tests.log
+          pytest -q tests/test_paper_replay_008.py tests/test_paper_ledger_008.py tests/test_strategy_data_contract.py tests/test_four_independent_strategies.py --junitxml=artifacts/paper-008/junit.xml 2>&1 | tee artifacts/paper-008/tests.log
           python - <<'PY'
           import hashlib, json
           from pathlib import Path
