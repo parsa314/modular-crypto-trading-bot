@@ -24,7 +24,15 @@ is still a release blocker. Existing historical rows are not backfilled into the
 new posting table; their cumulative reservation watermark remains authoritative.
 No source supplies immutable per-execution or fee-event identifiers here. Late
 terminal fee corrections, append-only signed fee events, non-quote fees, rebates,
-lot allocation, fee provenance, fully atomic OMS + posting persistence and all
-Decimal decision boundaries remain unimplemented. These cases remain blocked.
+lot allocation, fee provenance and fully atomic OMS + posting persistence remain
+unimplemented. Complete Decimal boundary verification is outstanding. These cases remain blocked.
 Account observations with unresolved liabilities must never mark the account
 reconciled. This ADR does not establish broker, Demo, or scientific evidence.
+
+Decimal boundary: paper cash, quantity, price, equity, exposures and cost
+assumptions use Decimal through replay risk evaluation. The legacy floating-point
+research path remains supported. Confidence and model outputs may be floats;
+when combined with a Decimal cost, finite model outputs are explicitly converted
+using their decimal string representation, not treated as recovered precision.
+The statistical CVaR path remains float-based and is not used as Paper-011
+financial-posting evidence. Complete downstream audit is still outstanding.
