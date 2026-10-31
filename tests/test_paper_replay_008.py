@@ -72,6 +72,20 @@ class ReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"INVALID_INITIAL_CASH"):
             self.run_replay(cash=Decimal("0"))
 
+    def test_marked_equity_preserves_decimal_precision_across_replay_and_restart(self):
+        ledger=PaperLedger(self.state)
+        t=datetime(2024,1,1,tzinfo=timezone.utc)
+        ledger.fill(order_id="precision",side="BUY",quantity=Decimal("0.123456789012345678"),
+                    reference_price=Decimal("100.123456789012345678"),decision_at=t,
+                    fill_at=t+timedelta(hours=1),fee_bps=Decimal("0"),
+                    spread_bps=Decimal("0"),slippage_bps=Decimal("0"))
+        data=pd.read_csv(self.path)
+        data["close"]="100.123456789012345679"
+        data.to_csv(self.path,index=False)
+        result=self.run_replay()
+        self.assertEqual(Decimal(result["equity"]), Decimal("10000.000000000000000000123456789012345678"))
+        self.assertEqual(self.run_replay()["equity"], result["equity"])
+
     def test_cached_replay_rejects_tampered_account(self):
         self.run_replay()
         with sqlite3.connect(self.state) as db:
