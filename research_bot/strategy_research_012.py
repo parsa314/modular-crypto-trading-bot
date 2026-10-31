@@ -27,6 +27,7 @@ BASELINE_BLOBS = {
 _ENGINES = {"ICHIMOKU": ichimoku_strategy, "ICT": ict_strategy,
             "SMC": smc_strategy, "AL_BROOKS": al_brooks_strategy}
 _DURATIONS = {"M15": timedelta(minutes=15), "H1": timedelta(hours=1), "H4": timedelta(hours=4)}
+_UTC_ALIGNMENT = {"M15": "15min", "H1": "h", "H4": "4h"}
 
 
 @dataclass(frozen=True)
@@ -84,6 +85,8 @@ def baseline_candidates(frame: pd.DataFrame, *, symbol: str, timeframe: str,
     x = x.loc[(x["timestamp"] <= cutoff) & (x["available_at"] <= cutoff)].copy()
     if x.empty:
         raise ValueError("NO_AVAILABLE_BARS")
+    if not x["timestamp"].dt.floor(_UTC_ALIGNMENT[timeframe]).equals(x["timestamp"]):
+        raise ValueError("BAR_OPEN_MISALIGNED")
     if (x["available_at"] < x["timestamp"] + _DURATIONS[timeframe]).any():
         raise ValueError("BAR_NOT_CLOSED_WHEN_AVAILABLE")
     x = closed_bars(x, as_of=cutoff.to_pydatetime(), min_rows=90)
