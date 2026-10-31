@@ -89,8 +89,9 @@ def replay(csv_path: Path, state_path: Path, *, as_of: datetime, source: str,
         db.execute("CREATE TABLE IF NOT EXISTS paper_pending_replay (run_id TEXT PRIMARY KEY, payload TEXT NOT NULL)")
         cached = db.execute("SELECT result FROM replay_evidence WHERE run_id=?", (run_id,)).fetchone()
         if cached:
-            PaperLedger(state_path,initial_cash=initial_cash).reconcile()
-            return {**json.loads(cached[0]), "run_id":run_id, "new_record":False}
+            current = PaperLedger(state_path,initial_cash=initial_cash).reconcile()
+            return {**json.loads(cached[0]), "run_id":run_id, "new_record":False,
+                    "current_account":current}
         pending = db.execute("SELECT payload FROM paper_pending_replay WHERE run_id=?",(run_id,)).fetchone()
         if db.execute("SELECT 1 FROM paper_pending_replay WHERE run_id != ? LIMIT 1",(run_id,)).fetchone():
             raise ValueError("PAPER_PENDING_RECONCILIATION_REQUIRED")
