@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal, localcontext
 import math
 from typing import Iterable
 
@@ -33,6 +34,12 @@ class RiskSnapshot:
 
     @property
     def drawdown(self) -> float:
+        if isinstance(self.equity, Decimal) and isinstance(self.peak_equity, Decimal):
+            if self.peak_equity <= 0:
+                return Decimal(0)
+            with localcontext() as ctx:
+                ctx.prec = 80
+                return max(Decimal(0), Decimal(1) - self.equity / self.peak_equity)
         if self.peak_equity <= 0:
             return 0.0
         return max(0.0, 1.0 - self.equity / self.peak_equity)
@@ -89,7 +96,7 @@ class RiskEngine:
             snapshot.slippage_bps,
         )
         invalid = (
-            not all(math.isfinite(float(value)) for value in scalar_values)
+            not all(value.is_finite() if isinstance(value, Decimal) else math.isfinite(float(value)) for value in scalar_values)
             or snapshot.equity <= 0.0
             or snapshot.peak_equity <= 0.0
             or snapshot.gross_exposure < 0.0
@@ -106,19 +113,24 @@ class RiskEngine:
                 cvar_95=None,
             )
 
-        if snapshot.drawdown >= self.limits.max_drawdown:
+        # Existing float policies are decimal constants for Decimal snapshots;
+        # the float research path retains its historical comparison semantics.
+        def limit(value):
+            return Decimal(str(value)) if isinstance(snapshot.equity, Decimal) else value
+
+        if snapshot.drawdown >= limit(self.limits.max_drawdown):
             reasons.append("MAX_DRAWDOWN_BREACH")
             hard = True
-        if snapshot.gross_exposure > self.limits.max_gross_exposure:
+        if snapshot.gross_exposure > limit(self.limits.max_gross_exposure):
             reasons.append("MAX_GROSS_EXPOSURE_BREACH")
             hard = True
-        if snapshot.asset_weight > self.limits.max_asset_weight:
+        if snapshot.asset_weight > limit(self.limits.max_asset_weight):
             reasons.append("MAX_ASSET_WEIGHT_BREACH")
-        if snapshot.turnover > self.limits.max_turnover_per_step:
+        if snapshot.turnover > limit(self.limits.max_turnover_per_step):
             reasons.append("TURNOVER_BUDGET_BREACH")
-        if snapshot.spread_bps > self.limits.max_spread_bps:
+        if snapshot.spread_bps > limit(self.limits.max_spread_bps):
             reasons.append("SPREAD_TOO_WIDE")
-        if snapshot.slippage_bps > self.limits.max_slippage_bps:
+        if snapshot.slippage_bps > limit(self.limits.max_slippage_bps):
             reasons.append("SLIPPAGE_TOO_HIGH")
 
         cvar = historical_cvar(snapshot.recent_returns, alpha=0.95)
@@ -161,3 +173,4 @@ class RiskEngine:
         raw = equity * risk_fraction / stop_distance_fraction * scale
         cap = equity * min(self.limits.max_asset_weight, self.limits.max_gross_exposure)
         return float(max(0.0, min(raw, cap)))
+
