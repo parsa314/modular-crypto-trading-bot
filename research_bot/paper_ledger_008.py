@@ -30,6 +30,29 @@ class PaperLedger:
             r = db.execute("SELECT cash,quantity,basis,realized,fees,peak FROM paper_account WHERE id=1").fetchone()
         return dict(zip(("cash","quantity","basis","realized","fees","peak"),r))
 
+    def latest_fill_time(self) -> datetime | None:
+        with sqlite3.connect(self.path) as db:
+            rows = db.execute("SELECT result FROM paper_fills").fetchall()
+        times = []
+        for (result,) in rows:
+            value = json.loads(result).get("fill_at")
+            if not value:
+                raise ValueError("UNTRUSTED_LEDGER_HISTORY")
+            times.append(datetime.fromisoformat(value))
+        return max(times) if times else None
+
+    def mark(self, price: Decimal) -> dict[str, str]:
+        if not price.is_finite() or price <= 0:
+            raise ValueError("INVALID_MARK_PRICE")
+        with localcontext() as ctx, sqlite3.connect(self.path) as db:
+            ctx.prec = 80
+            db.execute("BEGIN IMMEDIATE")
+            cash, quantity, peak = map(Decimal, db.execute(
+                "SELECT cash,quantity,peak FROM paper_account WHERE id=1").fetchone())
+            peak = max(peak, cash + quantity * price)
+            db.execute("UPDATE paper_account SET peak=? WHERE id=1", (str(peak),))
+        return self.snapshot()
+
     def fill(self, *, order_id: str, side: str, quantity: Decimal, reference_price: Decimal,
              decision_at: datetime, fill_at: datetime, fee_bps: Decimal, spread_bps: Decimal,
              slippage_bps: Decimal) -> dict:
@@ -89,7 +112,8 @@ class PaperLedger:
                 raise ValueError("RISK_REJECTED:"+"|".join(risk.reasons))
             result = {"order_id":order_id,"side":side,"quantity":str(quantity),"fill_price":str(price),
                       "fee":str(fee),"cash":str(cash),"position":str(held),"equity":str(equity),
-                      "realized":str(realized),"duplicate":False}
+                      "realized":str(realized),"decision_at":decision_at.isoformat(),
+                      "fill_at":fill_at.isoformat(),"duplicate":False}
             db.execute("UPDATE paper_account SET cash=?,quantity=?,basis=?,realized=?,fees=?,peak=? WHERE id=1",
                        tuple(map(str,(cash,held,basis,realized,fees,peak))))
             db.execute("INSERT INTO paper_fills VALUES (?,?,?)",(order_id,fingerprint,json.dumps(result,sort_keys=True)))
