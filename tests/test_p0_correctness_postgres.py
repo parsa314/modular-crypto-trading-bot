@@ -292,6 +292,8 @@ else: raise AssertionError('restart cleared halt')
                          (Decimal('900'),{'BTC/USDT':'1'},False))
         self.assertEqual(self.fetch('SELECT count(*) FROM risk_principal_postings')[0][0],1)
         self.assertEqual(self.fetch('SELECT state FROM risk_fee_liabilities')[0][0],'UNRESOLVED')
+        with self.assertRaisesRegex(RiskAdmissionError,'UNRESOLVED_FEE_ACCOUNT_MISMATCH'):
+            self.observe(held='1',cash='899')
         self.observe(held='1',cash='900')
         self.assertEqual(self.fetch('SELECT reconciled,unresolved_orders FROM risk_account_state')[0],(False,True))
         with self.assertRaisesRegex(RiskAdmissionError,'ACCOUNT_NOT_RECONCILED'):
