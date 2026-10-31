@@ -66,6 +66,17 @@ class PaperFeeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"LATE_FEE_REQUIRES_LOT_RECONCILIATION"):
             self.l.settle_additional_fee(**self.fee)
 
+    def test_late_sell_fee_updates_realized_pnl_once(self):
+        self.l.fill(order_id="sell",side="SELL",quantity=Decimal("1"),reference_price=Decimal("110"),
+                    decision_at=self.t+timedelta(hours=1),fill_at=self.t+timedelta(hours=2),
+                    fee_bps=Decimal("0"),spread_bps=Decimal("0"),slippage_bps=Decimal("0"))
+        fee={**self.fee,"event_id":"sell-fee","order_id":"sell",
+             "observed_at":self.t+timedelta(hours=3)}
+        first=self.l.settle_additional_fee(**fee)
+        self.assertEqual(Decimal(first["realized"]),Decimal("9.75"))
+        self.assertTrue(PaperLedger(self.path).settle_additional_fee(**fee)["duplicate"])
+        self.assertEqual(Decimal(PaperLedger(self.path).reconcile()["cash"]),Decimal("10009.75"))
+
     def test_legacy_nonempty_ledger_remains_unverified(self):
         with sqlite3.connect(self.path) as db:
             db.execute("DROP TABLE paper_events")
