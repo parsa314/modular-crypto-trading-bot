@@ -93,6 +93,21 @@ class ReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"PAPER_STATE_FROM_FUTURE"):
             self.run_replay()
 
+    def test_next_bar_price_cannot_change_prior_order_quantity(self):
+        class SyntheticDecision:
+            def evaluate(self, **kwargs):
+                return SimpleNamespace(decision=Decision.BUY_CANDIDATE)
+        with patch("research_bot.paper_replay_008.DecisionEngine", return_value=SyntheticDecision()):
+            first=self.run_replay()
+            data=pd.read_csv(self.path)
+            data.loc[data.index[-1],"close"]=150
+            data.loc[data.index[-1],"high"]=151
+            data.to_csv(self.path,index=False)
+            self.state=self.root/"second.sqlite"
+            second=self.run_replay()
+        self.assertEqual(first["fill"]["quantity"],second["fill"]["quantity"])
+        self.assertNotEqual(first["fill"]["fill_price"],second["fill"]["fill_price"])
+
 
 if __name__ == "__main__":
     unittest.main()
