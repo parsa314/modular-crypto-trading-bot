@@ -158,6 +158,8 @@ def snapshot_from_ccxt_order(
 class OKXDemoTransport:
     """CCXT-backed OKX Demo transport locked to simulated trading."""
 
+    submission_block_reason = "OKX_PRECISION_UNVERIFIED"
+
     sandbox = True
     venue = "OKX_DEMO"
 
@@ -291,25 +293,9 @@ class OKXDemoTransport:
         }
 
     def submit_market_order(self, intent: TestnetOrderIntent) -> VenueOrderSnapshot:
-        params = {"clientOrderId": intent.client_order_id}
-        try:
-            order = self._exchange.create_order(
-                intent.symbol,
-                "market",
-                intent.side.value.lower(),
-                float(intent.quantity),
-                None,
-                params,
-            )
-        except ccxt.NetworkError as exc:
-            # We cannot prove whether the request reached OKX. Never blind-retry.
-            raise AmbiguousTransportOutcome("OKX_DEMO_SUBMIT_NETWORK_OUTCOME_UNKNOWN") from exc
-
-        return snapshot_from_ccxt_order(
-            order,
-            fallback_client_order_id=intent.client_order_id,
-            fallback_requested_quantity=intent.quantity,
-        )
+        # The pinned CCXT version's final wire representation has not yet
+        # been verified against the precise approved Decimal quantity.
+        raise TestnetSafetyError(self.submission_block_reason)
 
     def fetch_order(
         self,
