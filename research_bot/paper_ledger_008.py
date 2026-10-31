@@ -193,8 +193,10 @@ class PaperLedger:
                 if previous and at == datetime.fromisoformat(previous) and previous_price is not None and price != Decimal(previous_price):
                     raise ValueError("CONFLICTING_PRICE_SAME_TIME")
                 if day != at.date().isoformat():
-                    # A carried position needs a mark exactly at UTC open.
-                    valid = int(quantity == 0 or (at.hour == 0 and at.minute == 0 and at.second == 0))
+                    # A new ledger starting flat has a known opening balance;
+                    # later rollovers require a mark at the exact UTC open.
+                    pristine = day is None and quantity == 0 and not db.execute("SELECT 1 FROM paper_events LIMIT 1").fetchone()
+                    valid = int(pristine or (at.hour == 0 and at.minute == 0 and at.second == 0 and at.microsecond == 0))
                     opening, daily = str(equity), 0
                     day = at.date().isoformat()
                 if valid and equity <= Decimal(opening)*Decimal("0.98"):
