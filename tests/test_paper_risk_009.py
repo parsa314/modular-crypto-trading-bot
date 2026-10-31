@@ -64,5 +64,16 @@ class PaperRiskTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"CONFLICTING_PRICE_SAME_TIME"):
             self.l.mark(Decimal("101"),observed_at=self.t)
 
+    def test_flat_account_does_not_invent_next_day_open(self):
+        self.l.fill(order_id="entry",**self.base)
+        self.l.fill(order_id="exit",**{**self.base,"side":"SELL",
+                    "decision_at":self.t+timedelta(hours=1),"fill_at":self.t+timedelta(hours=2)})
+        later=self.t+timedelta(days=1,hours=3)
+        self.l.mark(Decimal("100"),observed_at=later)
+        self.assertFalse(self.l.risk_status()["anchor_valid"])
+        with self.assertRaisesRegex(ValueError,"PAPER_RISK_HALTED"):
+            self.l.fill(order_id="next-day-entry",**{**self.base,"quantity":Decimal("1"),
+                "decision_at":later,"fill_at":later+timedelta(hours=1)})
+
 
 if __name__ == "__main__": unittest.main()
