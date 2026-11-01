@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal, InvalidOperation, ROUND_DOWN, localcontext
+from decimal import Decimal, InvalidOperation, ROUND_CEILING, ROUND_DOWN, localcontext
 import hashlib
 import json
 from typing import Any
@@ -312,20 +312,23 @@ class L1Simulator:
                 # A sell limit cannot fill below its limit. Under the optimistic
                 # bound, require enough raw move to leave the limit after the
                 # model's adverse price adjustment. This is still not proof of fill.
-                target_raw_required = target / (Decimal(1)-price_rate)
-                target_assumed = self.config["mode"] == "target_touch_assumed" and high >= target_raw_required
+                target_assumed = self.config["mode"] == "target_touch_assumed" and high*(Decimal(1)-price_rate) >= target
+                with localcontext() as reporting:
+                    reporting.prec=80
+                    reporting.rounding=ROUND_CEILING
+                    target_raw_reference=target/(Decimal(1)-price_rate)
                 if stop_hit and target_hit:
                     self._event("AMBIGUOUS",stamp+timedelta(hours=1),available,key=key,reason="STOP_AND_TARGET_SAME_BAR")
                     reason = "AMBIGUOUS_TARGET_BOUND" if target_assumed else "AMBIGUOUS_STOP_BOUND"
-                    raw_exit = target_raw_required if target_assumed else stop
+                    raw_exit = target_raw_reference if target_assumed else stop
                 elif stop_hit:
                     reason,raw_exit="STOP_SCENARIO",stop
                 elif target_hit:
                     self._event("TARGET_TOUCH_UNMODELED",stamp+timedelta(hours=1),available,key=key,price=target)
                     if target_assumed:
-                        reason,raw_exit="TARGET_TOUCH_ASSUMED",target_raw_required
+                        reason,raw_exit="TARGET_TOUCH_ASSUMED",target_raw_reference
             if raw_exit is not None:
-                exit_price=raw_exit*(Decimal(1)-price_rate)
+                exit_price=target if reason in {"TARGET_TOUCH_ASSUMED","AMBIGUOUS_TARGET_BOUND"} else raw_exit*(Decimal(1)-price_rate)
                 fee=exit_price*qty*fee_rate
                 cash=_d(self.state["cash"])+exit_price*qty-fee
                 pnl=(exit_price-_d(position["entry"]))*qty-_d(position["entry_fee"])-fee
@@ -351,9 +354,13 @@ class L1Simulator:
         current=self.state["position"]
         nav=_d(self.state["cash"])+(_d(current["quantity"])*close if current else Decimal(0))
         self._latch(nav)
+        # This rounded ratio is reporting-only; it is never fed back into risk.
+        with localcontext() as reporting:
+            reporting.prec=34
+            exposure=(_d(current["quantity"])*close/nav) if current and nav > 0 else Decimal(0)
         self.state["nav_history"].append({"bar_open":stamp.isoformat(),"available_at":available.isoformat(),
             "nav":str(nav),"cash":self.state["cash"],
-            "gross_exposure":str((_d(current["quantity"])*close/nav) if current and nav > 0 else Decimal(0)),
+            "gross_exposure":str(exposure),
             "daily_halt":self.state["daily_halt"],"hard_halt":self.state["hard_halt"]})
         self.state["bars"][b["timestamp"]]=_hash(b)
         self.state["last_bar"]=b
