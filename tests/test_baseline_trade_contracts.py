@@ -104,6 +104,22 @@ class BaselineContractTests(unittest.TestCase):
         for style in ("ICT","SMC","AL_BROOKS"):
             self.assertEqual(self.evaluate(style,frame=later).reason,"STALE_SOURCE")
 
+    def test_candidate_availability_includes_delayed_consumed_sweep(self):
+        self.structure_fixture()
+        delayed=self.frame.copy()
+        delayed.loc[93,"available_at"]=self.now+timedelta(minutes=5)
+        out=self.evaluate("ICT",frame=delayed,now=self.now+timedelta(minutes=10))
+        self.assertEqual(out.status,"CANDIDATE",out.reason)
+        self.assertEqual(out.candidate["available_at"],(self.now+timedelta(minutes=5)).isoformat())
+        self.assertEqual(out.candidate["timeframe_context"]["bar_available_at"],self.now.isoformat())
+
+    def test_candidate_availability_includes_later_policy_freeze(self):
+        self.structure_fixture()
+        later_policy=ResearchExitPolicy("LATER_POLICY",self.now+timedelta(minutes=7),Decimal("2"),2,8)
+        out=self.evaluate("ICT",now=self.now+timedelta(minutes=10),policy=later_policy)
+        self.assertEqual(out.status,"CANDIDATE",out.reason)
+        self.assertEqual(out.candidate["available_at"],(self.now+timedelta(minutes=7)).isoformat())
+
     def test_spot_sell_never_becomes_short(self):
         signal=StrategySignal("ICT","SELL",2,self.now)
         with patch.dict("research_bot.baseline_trade_contracts._DETECTORS",{"ICT":SimpleNamespace(evaluate=lambda *args,**kwargs:signal)}):
