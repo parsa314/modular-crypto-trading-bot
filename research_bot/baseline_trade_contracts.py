@@ -119,6 +119,8 @@ def evaluate_baseline_contract(*, style: str, frame: pd.DataFrame, as_of: dateti
     except (ValueError,TypeError,KeyError):
         return ResearchDecision("NO_TRADE","DATA_UNAVAILABLE_OR_INVALID",None)
     available=_aware(x.available_at.iloc[-1])
+    prefix_available=_aware(x.available_at.max())
+    candidate_available=max(prefix_available,_aware(policy.frozen_at))
     if now-available > timedelta(minutes=15):
         return ResearchDecision("NO_TRADE","STALE_SOURCE",None)
     signal=_DETECTORS[style].evaluate(x,as_of=now.to_pydatetime())
@@ -143,7 +145,7 @@ def evaluate_baseline_contract(*, style: str, frame: pd.DataFrame, as_of: dateti
             return ResearchDecision("NO_TRADE","ORDER_BLOCK_PROXY_UNAVAILABLE",None)
         stop=float(stop)
         stop_source="PRIOR_OPPOSING_CANDLE_LOW_PROXY"
-        reference_at=available.isoformat()
+        reference_at=prefix_available.isoformat()
     else:
         stop=float(last.low)
         stop_source="SIGNAL_BAR_LOW_PROXY"
@@ -157,9 +159,10 @@ def evaluate_baseline_contract(*, style: str, frame: pd.DataFrame, as_of: dateti
     entry_expiry=now+policy.entry_deadline_bars*_DURATIONS[source.timeframe]
     baseline_evidence=dict(signal.evidence)
     body={"version":"BASELINE_TRADE_CONTRACT_V1","symbol":source.instrument,"style":style,"direction":"LONG",
-        "timeframe":source.timeframe,"decision_at":now.isoformat(),"available_at":available.isoformat(),
+        "timeframe":source.timeframe,"decision_at":now.isoformat(),"available_at":candidate_available.isoformat(),
         "setup_type":"BASELINE_"+style+"_LONG",
         "features":{"baseline_evidence":baseline_evidence,"baseline_score_ordinal":signal.score,
+                    "available_at":prefix_available.isoformat(),
                     "score_is_probability":False},
         "expiry":entry_expiry.isoformat(),
         "strategy_blob_sha":_BLOBS[style],"evidence_at":now.isoformat(),
