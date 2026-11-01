@@ -497,7 +497,8 @@ class PostgresRiskGovernor:
             if matched:
                 conn.execute("""INSERT INTO risk_fee_liabilities(account_id,venue_id,client_order_id,state,updated_at)
                     VALUES (%s,%s,%s,%s,%s) ON CONFLICT(account_id,venue_id,client_order_id)
-                    DO UPDATE SET state=EXCLUDED.state,updated_at=EXCLUDED.updated_at""",
+                    DO UPDATE SET state=EXCLUDED.state,updated_at=EXCLUDED.updated_at
+                    WHERE risk_fee_liabilities.state IS DISTINCT FROM EXCLUDED.state""",
                     (account_id,venue_id,client_order_id,'UNRESOLVED' if unresolved_fee else 'QUOTE_REPORTED',utc(now)))
             positions = {k:D(v) for k,v in a['positions'].items()}
             held = positions.get(symbol,D(0))
@@ -513,12 +514,16 @@ class PostgresRiskGovernor:
             if cash < 0:
                 raise RiskAdmissionError("NEGATIVE_CASH_AFTER_SETTLEMENT")
             terminal = OrderLifecycle(state) in TERMINAL_STATES
-            if delta or delta_fee or unresolved_fee:
+            if delta or delta_fee or (unresolved_fee and (a['reconciled'] or not a['unresolved_orders'])):
                 conn.execute("UPDATE risk_account_state SET cash=%s,positions=%s::jsonb,reconciled=FALSE,unresolved_orders=unresolved_orders OR %s,state_version=state_version+1 WHERE account_id=%s AND venue_id=%s",
                     (cash,encoded(positions),unresolved_fee,account_id,venue_id))
-            conn.execute("UPDATE risk_reservations SET matched_quantity=%s,cumulative_fee=%s,cumulative_quote=%s,state=%s WHERE reservation_id=%s",
-                (matched,previous_fee if unresolved_fee else fee,quote,'UNRESOLVED_FEE' if unresolved_fee else 'CLOSED' if terminal else 'PARTIAL' if matched else reservation_state,rid))
+            next_fee = previous_fee if unresolved_fee else fee
+            next_state = 'UNRESOLVED_FEE' if unresolved_fee else 'CLOSED' if terminal else 'PARTIAL' if matched else reservation_state
+            if (matched, next_fee, quote, next_state) != (previous, previous_fee, previous_quote, reservation_state):
+                conn.execute("UPDATE risk_reservations SET matched_quantity=%s,cumulative_fee=%s,cumulative_quote=%s,state=%s WHERE reservation_id=%s",
+                    (matched,next_fee,quote,next_state,rid))
             if delta or delta_fee or (terminal and not unresolved_fee and reservation_state != 'CLOSED'):
                 self._audit(conn,account_id,venue_id,"CUMULATIVE_FILL_APPLIED",utc(now),
                     {"client_order_id":client_order_id,"quantity_delta":delta,"fee_delta":delta_fee,"quote_delta":delta_quote,"terminal":terminal})
+
 
