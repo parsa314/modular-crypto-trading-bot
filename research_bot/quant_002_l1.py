@@ -312,10 +312,6 @@ class L1Simulator:
             elif op <= stop:
                 reason,raw_exit="GAP_THROUGH_STOP",op
             else:
-                # Only evaluate extremes when exposure survives the bar open.
-                # High-before-low remains a conservative, unobserved path.
-                self._latch(_d(self.state["cash"])+qty*high)
-                self._latch(_d(self.state["cash"])+qty*low)
                 stop_hit, target_hit = low <= stop, high >= target
                 # A sell limit cannot fill below its limit. Under the optimistic
                 # bound, require enough raw move to leave the limit after the
@@ -328,6 +324,17 @@ class L1Simulator:
                 # A rounded reference outside the observed range cannot support
                 # even the optimistic touch assumption.
                 target_assumed = target_assumed and target_raw_reference <= high
+                # A selected target-first scenario exits no later than reaching
+                # the target reference. Later bar extremes cannot affect it.
+                # For the unobserved pre-exit path, use the conservative range
+                # between the opening price, stop and target reference.
+                if target_assumed:
+                    risk_high = op if op >= target_raw_reference else target_raw_reference
+                    risk_low = op if op >= target_raw_reference else max(low,stop)
+                else:
+                    risk_high,risk_low = high,low
+                self._latch(_d(self.state["cash"])+qty*risk_high)
+                self._latch(_d(self.state["cash"])+qty*risk_low)
                 if stop_hit and target_hit:
                     self._event("AMBIGUOUS",stamp+timedelta(hours=1),available,key=key,reason="STOP_AND_TARGET_SAME_BAR")
                     reason = "AMBIGUOUS_TARGET_BOUND" if target_assumed else "AMBIGUOUS_STOP_BOUND"
