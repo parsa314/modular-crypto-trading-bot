@@ -253,7 +253,9 @@ class PostgresRiskGovernor:
                 day_equity = old['day_equity']+flow
                 if old['day_utc'] != day:
                     day_equity = D(o.equity)
-                    if not valid_open or not o.reconciled or o.unresolved_orders or o.source_id not in self.accepted_fixture_sources:
+                    if (not valid_open or not o.reconciled or o.unresolved_orders
+                        or o.source_id not in self.accepted_fixture_sources
+                        or old['anchor_status'] != 'RECONCILED_TEST_FIXTURE'):
                         status = "ANCHOR_UNVERIFIED"
                     else:
                         status = "RECONCILED_TEST_FIXTURE" if o.source_id in self.accepted_fixture_sources else "ANCHOR_UNVERIFIED"
@@ -285,6 +287,19 @@ class PostgresRiskGovernor:
                     WHERE r.account_id=%s AND r.venue_id=%s
                     AND t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION') LIMIT 1""",
                     (o.account_id,o.venue_id)).fetchone() is not None
+                if rollover_ready and not unresolved:
+                    # Orders have no account_id: an unowned open/filled order
+                    # at this venue cannot safely be assigned to one account.
+                    orphan_order = conn.execute("""SELECT 1 FROM testnet_orders t
+                        LEFT JOIN risk_reservations r ON r.client_order_id=t.client_order_id AND r.venue_id=t.venue
+                        WHERE t.venue=%s AND r.reservation_id IS NULL
+                        AND (t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION','ACKNOWLEDGED','PARTIAL')
+                             OR t.matched_quantity > 0) LIMIT 1""", (o.venue_id,)).fetchone() is not None
+                    orphan_reservation = conn.execute("""SELECT 1 FROM risk_reservations r
+                        LEFT JOIN testnet_orders t ON t.client_order_id=r.client_order_id AND t.venue=r.venue_id
+                        WHERE r.account_id=%s AND r.venue_id=%s AND t.client_order_id IS NULL
+                        AND r.state != 'CLOSED' LIMIT 1""", (o.account_id,o.venue_id)).fetchone() is not None
+                    unresolved = orphan_order or orphan_reservation
             # Caller-provided reconciliation cannot override persisted OMS or fee
             # evidence. Keep the day anchor unverified and the halt active if
             # either check identifies unresolved account state at the rollover.
