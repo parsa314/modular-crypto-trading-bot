@@ -68,6 +68,7 @@ def main():
         if source_sha != DATA_SHA or source_sha != manifest["output_sha256"]:
             raise ValueError("DATA_DIGEST_MISMATCH")
         raw=pd.read_parquet(path)
+        source_dtypes={name:str(raw[name].dtype) for name in ("timestamp","open","high","low","close","volume")}
         raw["timestamp"]=pd.to_datetime(raw.timestamp,utc=True)
         if raw.timestamp.duplicated().any() or not raw.timestamp.is_monotonic_increasing:
             raise ValueError("DUPLICATE_OR_UNSORTED_SOURCE")
@@ -121,13 +122,14 @@ def main():
                 reports.append(result)
         report={"status":"INSUFFICIENT_EVIDENCE","evidence":"HISTORICAL_NON_PROSPECTIVE_DEVELOPMENT",
             "source_sha256":source_sha,"code_sha":code_sha,"source_commit":"cda9e5ff47d0f40cb62b6734c784317d2f15e405",
-            "source_rows":len(raw),"missing_m15":[x.isoformat() for x in missing],
+            "source_rows":len(raw),"source_dtypes":source_dtypes,"missing_m15":[x.isoformat() for x in missing],
             "rejected_h1":list(rejected1),"rejected_h4":list(rejected4),
             "start":"2023-01-01T00:00:00Z","end_exclusive":"2023-02-01T00:00:00Z","bars":len(period),
             "candidates":sum(x is not None for x in candidates),"costs":"ALL_COMPONENTS_ASSUMED",
             "limitations":["PREVIOUSLY_OBSERVED_NOT_INDEPENDENT_OOS","FIRST_SEEN_UNVERIFIED",
                 "NO_REAL_BID_ASK_OR_QUEUE","L1_EXECUTION_IS_HYPOTHETICAL","TARGET_TOUCH_NOT_GUARANTEED",
                 "SCENARIOS_ARE_NOT_GLOBAL_MATHEMATICAL_BOUNDS","EXCHANGE_PRECISION_UNVERIFIED",
+                "DECIMAL_STRING_CONVERSION_CANNOT_RECOVER_FLOAT_SOURCE_PRECISION",
                 "INTRABAR_HALT_IS_CONSERVATIVE","STOP_GAPS_CAN_EXCEED_RISK_TARGET",
                 "BINANCE_VISION_DATA_TERMS_APPLY"],"results":reports}
         (out/"report.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
