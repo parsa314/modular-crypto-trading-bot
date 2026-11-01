@@ -32,6 +32,7 @@ class SetupTests(unittest.TestCase):
         self.assertIsNotNone(result)
         out=result.as_dict()
         self.assertEqual(out["version"],VERSION)
+        self.assertEqual(out["direction"],"LONG")
         self.assertEqual(len(out["setup_id"]),64)
         self.assertFalse(out["execution_eligible"])
         self.assertEqual(out["evidence_at"],self.now.isoformat())
