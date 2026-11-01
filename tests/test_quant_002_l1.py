@@ -76,6 +76,12 @@ class L1Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"MISSING_OR_OUT_OF_ORDER_BAR"): s.bar(bar(2))
         self.assertEqual(before,s.snapshot())
 
+    def test_extreme_decimal_failure_rolls_back_all_state(self):
+        s=sim();s.bar(bar(0,lo="98"));s.signal(setup());s.bar(bar(1));before=s.snapshot()
+        with self.assertRaises(ArithmeticError):
+            s.bar(bar(2,"9e999999","9e999999","100","9e999999"))
+        self.assertEqual(before,s.snapshot())
+
     def test_duplicate_bar_is_idempotent_conflict_fails(self):
         s=sim();self.assertTrue(s.bar(bar(0)));before=s.snapshot()
         self.assertFalse(s.bar(bar(0)))
