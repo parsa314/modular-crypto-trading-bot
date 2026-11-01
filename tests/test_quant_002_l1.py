@@ -63,6 +63,13 @@ class L1Tests(unittest.TestCase):
         self.assertTrue(any(e["kind"]=="TARGET_TOUCH_UNMODELED" for e in s.state["events"]))
         self.assertEqual(s.state["trades"],[])
 
+    def test_assumed_limit_fill_never_executes_below_limit_after_cost(self):
+        s=L1Simulator(CostScenario("24",Decimal(10),Decimal(6),Decimal(8)),
+            mode="target_touch_assumed",source_id="SYNTHETIC_FIXTURE",source_sha256=SHA)
+        to_entry(s,entry=bar(2,"100","110","99","100"))
+        event=next(e for e in s.state["events"] if e["kind"]=="TARGET_TOUCH_UNMODELED")
+        self.assertEqual(Decimal(s.state["trades"][0]["exit"]),Decimal(event["price"]))
+
     def test_ambiguous_stop_and_target_remain_labeled_and_separate(self):
         a,b=sim(),sim(mode="target_touch_assumed")
         for s in (a,b): to_entry(s,entry=bar(2,"100","110","97","100"))
