@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal, InvalidOperation, localcontext
+from decimal import Decimal, InvalidOperation, ROUND_DOWN, localcontext
 import hashlib
 import json
 from typing import Any
@@ -209,7 +209,8 @@ class L1Simulator:
 
     def bar(self, bar: L1Bar) -> bool:
         with localcontext() as ctx:
-            ctx.prec = 80
+            values=(_d(bar.open),_d(bar.high),_d(bar.low),_d(bar.close),_d(self.state["cash"]))
+            ctx.prec=max(320,5*sum(len(v.as_tuple().digits) for v in values)+100)
             return self._bar(bar)
 
     def _bar(self, bar: L1Bar) -> bool:
@@ -247,18 +248,29 @@ class L1Simulator:
                 self._event("CANCELLED",stamp,available,key=key,reason="HALT_OR_OPEN_BELOW_STOP")
             else:
                 entry=op*(Decimal(1)+price_rate)
-                per_unit=entry*(Decimal(1)+fee_rate)-stop*(Decimal(1)-price_rate)*(Decimal(1)-fee_rate)
                 cash=_d(self.state["cash"])
+                # Compute a conservative sizing bound using enough precision
+                # to multiply the original exact Decimal inputs without loss.
+                precision=max(320,3*sum(len(v.as_tuple().digits) for v in (entry,stop,fee_rate,price_rate,cash))+100)
+                with localcontext() as sizing:
+                    sizing.prec=precision
+                    per_unit=entry*(Decimal(1)+fee_rate)-stop*(Decimal(1)-price_rate)*(Decimal(1)-fee_rate)
                 if per_unit <= 0 or cash <= 0:
                     self._event("CANCELLED",stamp,available,key=key,reason="INVALID_RISK_OR_CAPITAL")
                 else:
-                    quantity=min(cash*Decimal("0.0025")/per_unit,cash*Decimal("0.35")/entry,cash/(entry*(Decimal(1)+fee_rate)))
-                    # Division rounding must never push the modeled loss,
-                    # exposure, or purchase cost past an authorized bound.
-                    while quantity > 0 and (quantity*per_unit > cash*Decimal("0.0025")
-                            or quantity*entry > cash*Decimal("0.35")
-                            or quantity*entry*(Decimal(1)+fee_rate) > cash):
-                        quantity=quantity.next_minus()
+                    with localcontext() as sizing:
+                        sizing.prec=80
+                        sizing.rounding=ROUND_DOWN
+                        quantity=min(cash*Decimal("0.0025")/per_unit,cash*Decimal("0.35")/entry,cash/(entry*(Decimal(1)+fee_rate)))
+                    with localcontext() as exact:
+                        exact.prec=precision
+                        while quantity > 0 and (quantity*per_unit > cash*Decimal("0.0025")
+                                or quantity*entry > cash*Decimal("0.35")
+                                or quantity*entry*(Decimal(1)+fee_rate) > cash):
+                            with localcontext() as sizing:
+                                sizing.prec=80
+                                sizing.rounding=ROUND_DOWN
+                                quantity=quantity.next_minus()
                     if quantity <= 0:
                         self._event("CANCELLED",stamp,available,key=key,reason="INSUFFICIENT_CAPITAL")
                     else:
