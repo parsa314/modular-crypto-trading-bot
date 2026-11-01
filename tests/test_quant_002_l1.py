@@ -222,6 +222,8 @@ class L1Tests(unittest.TestCase):
         self.assertTrue(s.state["position"]["risk_exit_pending"])
         self.assertTrue(any(x["kind"]=="EXPOSURE_LIMIT_BREACH" for x in s.state["events"]))
         s.bar(bar(3,"101","101","100","100"))
+        self.assertIsNotNone(s.state["position"])
+        s.bar(bar(4,"100","101","100","100"))
         self.assertEqual(s.state["trades"][0]["exit_reason"],"EXPOSURE_RISK_NEXT_OPEN")
         self.assertIsNone(s.state["position"])
 
@@ -237,12 +239,15 @@ class L1Tests(unittest.TestCase):
         for hour in range(3,10):s.bar(bar(hour))
         self.assertTrue(s.state["position"]["timeout_pending"])
         s.bar(bar(10))
+        self.assertIsNotNone(s.state["position"])
+        s.bar(bar(11))
         self.assertEqual(s.state["trades"][0]["exit_reason"],"TIMEOUT_NEXT_OPEN")
 
     def test_post_exit_intrabar_extremes_do_not_trigger_halt(self):
         s=sim();to_entry(s)
         for hour in range(3,10):s.bar(bar(hour))
-        s.bar(bar(10,"100","1000","1","100"))
+        s.bar(bar(10))
+        s.bar(bar(11,"100","1000","1","100"))
         self.assertEqual(s.state["trades"][0]["exit_reason"],"TIMEOUT_NEXT_OPEN")
         self.assertFalse(s.state["daily_halt"])
         self.assertFalse(s.state["hard_halt"])
@@ -250,7 +255,8 @@ class L1Tests(unittest.TestCase):
     def test_timeout_and_gap_stop_conflict_has_one_exit(self):
         s=sim();to_entry(s)
         for hour in range(3,10):s.bar(bar(hour))
-        s.bar(bar(10,"90","91","89","90"))
+        s.bar(bar(10))
+        s.bar(bar(11,"90","91","89","90"))
         self.assertEqual(len(s.state["trades"]),1)
         self.assertTrue(any(x["kind"]=="CONFLICTING_EXIT_INTENTS" for x in s.state["events"]))
         self.assertEqual(Decimal(s.state["trades"][0]["exit"]),Decimal("90"))
