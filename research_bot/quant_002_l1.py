@@ -6,6 +6,7 @@ All fills are scenario assumptions and no result is operational evidence.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation, ROUND_DOWN, localcontext
 import hashlib
@@ -208,10 +209,15 @@ class L1Simulator:
         return True
 
     def bar(self, bar: L1Bar) -> bool:
-        with localcontext() as ctx:
-            values=(_d(bar.open),_d(bar.high),_d(bar.low),_d(bar.close),_d(self.state["cash"]))
-            ctx.prec=max(320,5*sum(len(v.as_tuple().digits) for v in values)+100)
-            return self._bar(bar)
+        before=deepcopy(self.state)
+        try:
+            with localcontext() as ctx:
+                values=(_d(bar.open),_d(bar.high),_d(bar.low),_d(bar.close),_d(self.state["cash"]))
+                ctx.prec=max(320,5*sum(len(v.as_tuple().digits) for v in values)+100)
+                return self._bar(bar)
+        except Exception:
+            self.state=before
+            raise
 
     def _bar(self, bar: L1Bar) -> bool:
         b=bar.payload(); stamp=_utc(b["timestamp"]); available=_utc(b["available_at"])
