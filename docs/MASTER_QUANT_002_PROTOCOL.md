@@ -24,7 +24,9 @@ at most 35%, gross at most 70%. Stop-gaps can exceed the risk target. Daily
 loss 2% and peak drawdown 5% halt new entry; no automatic hard-halt release.
 
 Engineering amendment after the first development replay: a close-marked asset
-exposure above 35% schedules a full reduction at the next eligible open. The
+exposure above 35% schedules a full reduction at the first H1 open strictly after
+the bar becomes available. Timeout exits also wait for an open strictly after the
+timeout decision; pre-existing protective stops remain active while waiting. The
 prior replay exhibited a mark above 35%; its artifact is retained separately.
 This is a correction to enforce the declared risk policy, not a claim that the
 earlier run used this rule. No price gap or outage can guarantee a continuous
