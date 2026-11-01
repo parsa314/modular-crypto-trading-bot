@@ -241,6 +241,7 @@ class PostgresRiskGovernor:
             # Day rollover requires an observation within the first two minutes
             # of UTC day; a missed opening cannot be silently manufactured.
             valid_open = (at.hour == 0 and at.minute < 2)
+            rollover_ready = False
             if old is None:
                 day_equity, peak = D(o.equity), D(o.equity)
                 if not valid_open:
@@ -256,12 +257,12 @@ class PostgresRiskGovernor:
                         status = "ANCHOR_UNVERIFIED"
                     else:
                         status = "RECONCILED_TEST_FIXTURE" if o.source_id in self.accepted_fixture_sources else "ANCHOR_UNVERIFIED"
-                        conn.execute("UPDATE risk_halts SET state='RELEASED',released_at=%s,release_authorization='UTC_RECONCILED_ROLLOVER',state_version=state_version+1 WHERE account_id=%s AND venue_id=%s AND halt_type='DAILY' AND state='ACTIVE'",
-                                     (at,o.account_id,o.venue_id))
+                        rollover_ready = True
             if day_equity <= 0 or peak <= 0:
                 status = "ANCHOR_UNVERIFIED"
             unresolved = o.unresolved_orders
-            if conn.execute("SELECT to_regclass('testnet_orders')").fetchone()[0] is not None:
+            order_store_exists = conn.execute("SELECT to_regclass('testnet_orders')").fetchone()[0] is not None
+            if order_store_exists:
                 # Broker balances may already include a fill. Apply its delta
                 # before replacing the local account projection, or a subsequent
                 # restart could count the same fill twice.
@@ -284,6 +285,16 @@ class PostgresRiskGovernor:
                     WHERE r.account_id=%s AND r.venue_id=%s
                     AND t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION') LIMIT 1""",
                     (o.account_id,o.venue_id)).fetchone() is not None
+            # Caller-provided reconciliation cannot override persisted OMS or fee
+            # evidence. Keep the day anchor unverified and the halt active if
+            # either check identifies unresolved account state at the rollover.
+            if rollover_ready:
+                if unresolved or not order_store_exists:
+                    status = "ANCHOR_UNVERIFIED"
+                    unresolved = True
+                else:
+                    conn.execute("UPDATE risk_halts SET state='RELEASED',released_at=%s,release_authorization='UTC_RECONCILED_ROLLOVER',state_version=state_version+1 WHERE account_id=%s AND venue_id=%s AND halt_type='DAILY' AND state='ACTIVE'",
+                                 (at,o.account_id,o.venue_id))
             conn.execute("INSERT INTO risk_account_observations VALUES (%s,%s,%s,%s,%s::jsonb)",
                          (o.account_id,o.venue_id,o.snapshot_id,digest,encoded(payload)))
             conn.execute("""INSERT INTO risk_account_state(account_id,venue_id,snapshot_id,snapshot_hash,source_id,anchor_status,observed_at,equity,cash,day_equity,day_utc,peak_equity,net_deposits,gross_notional,asset_notionals,positions,reconciled,unresolved_orders)
