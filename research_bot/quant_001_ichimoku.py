@@ -43,6 +43,7 @@ class DataIdentity:
 class ResearchSetup:
     setup_id: str
     version: str
+    direction: str
     market_regime: dict[str, Any]
     timeframe_context: dict[str, Any]
     trigger: dict[str, Any]
@@ -117,6 +118,7 @@ def evaluate_kijun_pullback(*, h1: pd.DataFrame, h4: pd.DataFrame,
                   "H4": {**asdict(h4_source), "prefix_sha256": _prefix_hash(four)}}
     body = {
         "version": VERSION,
+        "direction": "LONG",
         "market_regime": {"type": "H4_ABOVE_VISIBLE_CLOUD_TENKAN_ABOVE_KIJUN", "model": "RULE_PROXY"},
         "timeframe_context": {"instrument": h1_source.instrument, "venue": h1_source.venue,
             "entry_timeframe": "H1", "trend_timeframe": "H4", "h1_available_at": one_at.isoformat(),
