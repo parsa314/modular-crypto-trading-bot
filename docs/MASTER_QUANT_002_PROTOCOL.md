@@ -25,8 +25,11 @@ loss 2% and peak drawdown 5% halt new entry; no automatic hard-halt release.
 
 L1 assumes H1 open/high/low/close, no actual quote, depth, queue or partial fills.
 A touched limit is not a proven fill. Same-bar stop+target is AMBIGUOUS; separate
-stop-first and target-touch-assumed scenarios are sensitivity bounds, neither an
-observed path or guarantee. Gap-through-stop is priced at the adverse bar open.
+stop-first and target-touch-assumed scenarios are sensitivities, not global bounds,
+observed paths or guarantees. The optimistic target scenario assumes a limit
+fill at the target only when the bar high covers the modelled adverse price
+adjustments; that fill is not guaranteed. Its cost-reference price is a computed
+threshold, not an observed quote. Gap-through-stop is priced at the adverse bar open.
 No assumption replaces a missing observed event with a fake market observation.
 
 Cost scenarios are assumed round-trip basis points; spreads/slippage are price
