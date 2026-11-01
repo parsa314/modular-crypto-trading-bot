@@ -1,0 +1,798 @@
+{
+  "as_observed_utc": "2026-11-01",
+  "source": "GitHub search for open PRs; snapshot, not a live status",
+  "items": [
+    {
+      "n": 146,
+      "base": "feat/executable-paper-bot-008",
+      "base_sha": "81071995fd7c5a27830d92780801cd0783e108d9",
+      "head": "research/strategy-012-causal-baseline",
+      "head_sha": "1674cf967f4970066e4b442dca65b9499e8467c5",
+      "draft": true
+    },
+    {
+      "n": 145,
+      "base": "fix/r1-financial-boundary-006",
+      "base_sha": "dcee2af5cdc205ae6acba696d53839faf19e6748",
+      "head": "feat/executable-paper-bot-008",
+      "head_sha": "81071995fd7c5a27830d92780801cd0783e108d9",
+      "draft": true
+    },
+    {
+      "n": 144,
+      "base": "fix/r1-financial-boundary-006",
+      "base_sha": "dcee2af5cdc205ae6acba696d53839faf19e6748",
+      "head": "fix/r12-durable-fee-precision-007",
+      "head_sha": "f7c0facd5b1ee1280bd2188c999cf0ca75b952f9",
+      "draft": true
+    },
+    {
+      "n": 143,
+      "base": "fix/r1-recovery-decimal-20261030",
+      "base_sha": "39b759e6243f9f565c50eda65bbbd3ebb513c4b8",
+      "head": "fix/r1-financial-boundary-006",
+      "head_sha": "dcee2af5cdc205ae6acba696d53839faf19e6748",
+      "draft": true
+    },
+    {
+      "n": 142,
+      "base": "fix/next-gate-p0-correctness-003",
+      "base_sha": "8855c1bc9151f75bd5c06a01cb2bd3ea44aec74e",
+      "head": "fix/r1-recovery-decimal-20261030",
+      "head_sha": "39b759e6243f9f565c50eda65bbbd3ebb513c4b8",
+      "draft": true
+    },
+    {
+      "n": 141,
+      "base": "fix/next-gate-p0-correctness-003",
+      "base_sha": "8855c1bc9151f75bd5c06a01cb2bd3ea44aec74e",
+      "head": "research/safer-trade-protocol-20261030",
+      "head_sha": "0d1a8f6fa46267d0b69fd7284b9c2d7b1d0c24a4",
+      "draft": true
+    },
+    {
+      "n": 140,
+      "base": "validation/next-gate-pg-oms-001-20261028",
+      "base_sha": "ae85db473e392cda3726d32ac6bccb07af861892",
+      "head": "fix/next-gate-p0-correctness-003",
+      "head_sha": "8855c1bc9151f75bd5c06a01cb2bd3ea44aec74e",
+      "draft": true
+    },
+    {
+      "n": 139,
+      "base": "main",
+      "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+      "head": "research/safer-trade-design-20261030",
+      "head_sha": "93ed1ad5065e30e4c2a30c00aee803633be05cdc",
+      "draft": true
+    },
+    {
+      "n": 138,
+      "base": "main",
+      "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+      "head": "dependabot/pip/ccxt-4.5.89",
+      "head_sha": "95abf809f1b73caca42f4d28495aab05f47074d3",
+      "draft": false
+    },
+    {
+      "n": 136,
+      "base": "main",
+      "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+      "head": "engineering/paper-trading-20261015",
+      "head_sha": "cda9e5ff47d0f40cb62b6734c784317d2f15e405",
+      "draft": true
+    },
+    {
+      "n": 135,
+      "base": "feature/four-confluence-20261014",
+      "base_sha": "ae65f99e092aa0f631675f02626003438d2f5dfe",
+      "head": "research/btcusdt-m15-real-backtest-20261014",
+      "head_sha": "99270d387c1778cb3ca804aba5e7d49713db850c",
+      "draft": true
+    },
+    {
+      "n": 134,
+      "base": "main",
+      "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+      "head": "engineering/mt5-demo-main-convergence-20261014",
+      "head_sha": "70000c6891c3f4cc1332c3847aeb4cef1f1374ab",
+      "draft": true
+    },
+    {
+      "n": 132,
+      "base": "feature/four-al-brooks-20261014",
+      "base_sha": "77fae9b2420cf8e53427ac418b7eec4d2eb07e93",
+      "head": "feature/four-confluence-20261014",
+      "head_sha": "ae65f99e092aa0f631675f02626003438d2f5dfe",
+      "draft": true
+    },
+    {
+      "n": 131,
+      "base": "feature/four-ict-smc-20261014",
+      "base_sha": "d1027a35fe8bdec1187c6e2e3e925571e8a51a6b",
+      "head": "feature/four-al-brooks-20261014",
+      "head_sha": "77fae9b2420cf8e53427ac418b7eec4d2eb07e93",
+      "draft": true
+    },
+    {
+      "n": 130,
+      "base": "feature/four-ichimoku-20261014",
+      "base_sha": "f86aa06cd8ecad72ac7dffef026f2e7397091352",
+      "head": "feature/four-ict-smc-20261014",
+      "head_sha": "d1027a35fe8bdec1187c6e2e3e925571e8a51a6b",
+      "draft": true
+    },
+    {
+      "n": 129,
+      "base": "feature/four-data-contract-20261014",
+      "base_sha": "852508675d73b2eae47e158efa3cd448aec91c86",
+      "head": "feature/four-ichimoku-20261014",
+      "head_sha": "f86aa06cd8ecad72ac7dffef026f2e7397091352",
+      "draft": true
+    },
+    {
+      "n": 128,
+      "base": "main",
+      "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+      "head": "feature/four-data-contract-20261014",
+      "head_sha": "852508675d73b2eae47e158efa3cd448aec91c86",
+      "draft": true
+    },
+    {
+      "n": 124,
+      "base": "main",
+      "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+      "head": "fix/p0-phaseq-future-asof-20261014",
+      "head_sha": "af4cce0510098dd091d4520687a8d4169074f9af",
+      "draft": true
+    },
+    {
+      "n": 123,
+      "base": "research/v58-four-framework-strategy-lab",
+      "base_sha": "9da68d3c500e1285830fba46dda155011a7114ec",
+      "head": "research/v58-al-brooks-engine",
+      "head_sha": "d28e699726e90e2faff8cf1ac581d66cff673841",
+      "draft": true
+    },
+    {
+      "n": 122,
+      "base": "research/v58-phase2-event-data-freeze",
+      "base_sha": "3d34adb731e60f001c1fe02cc21957bab0fabcba",
+      "head": "research/v58-four-framework-strategy-lab",
+      "head_sha": "9da68d3c500e1285830fba46dda155011a7114ec",
+      "draft": true
+    },
+    {
+      "n": 121,
+      "base": "main",
+      "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+      "head": "research/cognitive-core-canonical-bridge-20261012",
+      "head_sha": "c684bc80614565250c70ea8a942d3998685a2e6c",
+      "draft": true
+    },
+    {
+      "n": 120,
+      "base": "main",
+      "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+      "head": "governance/owner-live-consent-20261012",
+      "head_sha": "29ef4eab8f183fcc9bda9e9fbeb1ccde3654b085",
+      "draft": true
+    },
+    {
+      "n": 119,
+      "base": "research/jamalian-course-integration-2026-10-11",
+      "base_sha": "7376edeb5ead6bbb3c2ceb35ce4619a7ac499e67",
+      "head": "fix/p0-ten-coverage-20261012",
+      "head_sha": "cd700e1bd606b4b41cf728ef2f6653d44072ce26",
+      "draft": true
+    },
+    {
+      "n": 118,
+      "base": "research/jamalian-course-integration-2026-10-11",
+      "base_sha": "7376edeb5ead6bbb3c2ceb35ce4619a7ac499e67",
+      "head": "feature/p1-jamalian-readonly-cycle-20261012",
+      "head_sha": "a1b084b72212512e524e9d0195fb115302beb641",
+      "draft": true
+    },
+    {
+      "n": 117,
+      "base": "engineering/mt5-demo-validation",
+      "base_sha": "58914e6912546f3f1550f7a7c6dbfe3d38574b16",
+      "head": "fix/p0-mt5-async-test-dependency-20261012",
+      "head_sha": "0034f21421fb976495da5bcfa90516ce339b5d73",
+      "draft": true
+    },
+    {
+      "n": 116,
+      "base": "research/jamalian-course-integration-2026-10-11",
+      "base_sha": "7376edeb5ead6bbb3c2ceb35ce4619a7ac499e67",
+      "head": "fix/p0-jamalian-missing-csv-20261012",
+      "head_sha": "7e8211ec961c1cf1126bfe81c4020c4cfc596bf7",
+      "draft": true
+    },
+    {
+      "n": 115,
+      "base": "main",
+      "base_sha": "fa31e6f5ceb09f4f14ae13fef50706f2e10e1835",
+      "head": "research/jamalian-course-integration-2026-10-11",
+      "head_sha": "5d6521ecb698f5b2760efde7af8ac7b25784f913",
+      "draft": true
+    },
+    {
+      "n": 113,
+      "base": "main",
+      "base_sha": "7db5643f24bb713ba1df2abb9a2989f73d56a8c6",
+      "head": "engineering/mt5-demo-validation",
+      "head_sha": "a5aa3fdf40478895a33ebe9bc1b884700e4e6180",
+      "draft": true
+    },
+    {
+      "n": 111,
+      "base": "integration/production-convergence-20261005",
+      "base_sha": "fde6e758bfab244e40055778aa84c42cf454f295",
+      "head": "infrastructure/postgres-phase2a-20261005",
+      "head_sha": "6234a5d9d80dadab20a3bbd7a5e729b7a3e1fe62",
+      "draft": true
+    },
+    {
+      "n": 110,
+      "base": "research/v59-native-strategies-20261005",
+      "base_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "head": "integration/production-convergence-20261005",
+      "head_sha": "fde6e758bfab244e40055778aa84c42cf454f295",
+      "draft": true
+    },
+    {
+      "n": 109,
+      "base": "research/v59-stage7-native-strategy-engine-20261002",
+      "base_sha": "3419fe400aaba99bad648a6a40bf99a714990b3f",
+      "head": "research/v59-native-strategies-20261005",
+      "head_sha": "8d94096d8d9a1d066a30ecabb8134b55581a539f",
+      "draft": true
+    },
+    {
+      "n": 108,
+      "base": "research/v54-feature-audit-oos",
+      "base_sha": "f234a85028ed2d86cd3bc672e7491f72b0245b9b",
+      "head": "fix/v54-provenance-20261005",
+      "head_sha": "63fdcd5d617e9f653e70f30442f015a563e7c81c",
+      "draft": true
+    },
+    {
+      "n": 107,
+      "base": "feature/master-v3-stage0-20261004",
+      "base_sha": "822a81866582fa63d1f83ead83b8608662fa1cf1",
+      "head": "research/binance-profit-baseline-20261004",
+      "head_sha": "ce7e236e255a982a6f798c2944602acae736d77c",
+      "draft": true
+    },
+    {
+      "n": 105,
+      "base": "main",
+      "base_sha": "876e229a8d3e73f2e9d646d4126c8ce08e4c11b4",
+      "head": "fix/prospective-evidence-20261005",
+      "head_sha": "0b22f57ef719bdc235541c2d19a48af17a12615f",
+      "draft": true
+    },
+    {
+      "n": 104,
+      "base": "rebuild/v58-integrated-ai-20261001",
+      "base_sha": "09979266ebd7ba1466f13e8c01d8fe7857ea0e57",
+      "head": "audit/session-recovery-20261005",
+      "head_sha": "cf7fa7a6d252495e8e6c7620fa4c0bf2af052d9f",
+      "draft": true
+    },
+    {
+      "n": 103,
+      "base": "feature/live-ensemble-20261004",
+      "base_sha": "6d9a222c2f2dffb765e5e010b311275343f7ccc2",
+      "head": "feature/master-v3-stage0-20261004",
+      "head_sha": "822a81866582fa63d1f83ead83b8608662fa1cf1",
+      "draft": true
+    },
+    {
+      "n": 102,
+      "base": "research/causal-ensemble-ppo-20261002",
+      "base_sha": "151639b10276ddd627dd48f07a29499b8473fd40",
+      "head": "feature/live-ensemble-20261004",
+      "head_sha": "6d9a222c2f2dffb765e5e010b311275343f7ccc2",
+      "draft": true
+    },
+    {
+      "n": 101,
+      "base": "main",
+      "base_sha": "876e229a8d3e73f2e9d646d4126c8ce08e4c11b4",
+      "head": "research/causal-ensemble-ppo-20261002",
+      "head_sha": "151639b10276ddd627dd48f07a29499b8473fd40",
+      "draft": true
+    },
+    {
+      "n": 100,
+      "base": "research/v59-stage5-execution-calibration-20261002",
+      "base_sha": "7fd3fd77284652c835d4c323e24150f0b8857b57",
+      "head": "research/v59-stage6-model-strategy-tournament-20261002",
+      "head_sha": "0cb048deca3abe2a665f51a7005c8ff0e6dc1855",
+      "draft": true
+    },
+    {
+      "n": 99,
+      "base": "research/v59-stage4-microstructure-evidence-20261002",
+      "base_sha": "f44e2369047041d1b6c6fba10d6117f003040d38",
+      "head": "research/v59-stage5-execution-calibration-20261002",
+      "head_sha": "7fd3fd77284652c835d4c323e24150f0b8857b57",
+      "draft": true
+    },
+    {
+      "n": 98,
+      "base": "research/v59-stage3-execution-economics-20261002",
+      "base_sha": "2ebf996c9525c32bb86453e5519498ad5e38a646",
+      "head": "research/v59-stage4-microstructure-evidence-20261002",
+      "head_sha": "f44e2369047041d1b6c6fba10d6117f003040d38",
+      "draft": true
+    },
+    {
+      "n": 97,
+      "base": "research/v59-stage2-real-market-data-20261002",
+      "base_sha": "79a68559b6b9adb32cbd382fdb6a49bca1db1dd7",
+      "head": "research/v59-stage3-execution-economics-20261002",
+      "head_sha": "2ebf996c9525c32bb86453e5519498ad5e38a646",
+      "draft": true
+    },
+    {
+      "n": 96,
+      "base": "research/v59-nextgen-architecture-20261002",
+      "base_sha": "a05a8c50d6cf28918e45b12c1fe75f235ec3ce51",
+      "head": "research/v59-stage2-real-market-data-20261002",
+      "head_sha": "79a68559b6b9adb32cbd382fdb6a49bca1db1dd7",
+      "draft": true
+    },
+    {
+      "n": 95,
+      "base": "research/v58-signal-finder-fvg-ict-tsi-20261002",
+      "base_sha": "f943aaf32da56c487d58c9590e9e2ce76310ead2",
+      "head": "research/v59-nextgen-architecture-20261002",
+      "head_sha": "a05a8c50d6cf28918e45b12c1fe75f235ec3ce51",
+      "draft": true
+    },
+    {
+      "n": 94,
+      "base": "research/v58-10-confluence-strategies-20261002",
+      "base_sha": "a8c57a23dc6dbbdaa186c47918ac4060c33f4461",
+      "head": "research/v58-signal-finder-fvg-ict-tsi-20261002",
+      "head_sha": "f943aaf32da56c487d58c9590e9e2ce76310ead2",
+      "draft": true
+    },
+    {
+      "n": 93,
+      "base": "research/v58-finance-ai-orchestration-20261002",
+      "base_sha": "e7b28aa034c3bae104859b013ded40531847fb17",
+      "head": "research/v58-10-confluence-strategies-20261002",
+      "head_sha": "035b826a1c5200cd4310c45b5d6a821e7d0edc37",
+      "draft": true
+    },
+    {
+      "n": 92,
+      "base": "research/v58-market-audit-firewall-20261002",
+      "base_sha": "9bab7dac26746d4bc9b7bbc132a65a71ce5d7aad",
+      "head": "research/v58-finance-ai-orchestration-20261002",
+      "head_sha": "e7b28aa034c3bae104859b013ded40531847fb17",
+      "draft": true
+    },
+    {
+      "n": 91,
+      "base": "rebuild/v58-integrated-ai-20261001",
+      "base_sha": "09979266ebd7ba1466f13e8c01d8fe7857ea0e57",
+      "head": "research/v58-market-audit-firewall-20261002",
+      "head_sha": "db99a0e831c7aca338780da1a73c6c57ae69319c",
+      "draft": true
+    },
+    {
+      "n": 90,
+      "base": "research/v58-core-repair",
+      "base_sha": "455014d2b146165b7edc13cf7bc9c61489447948",
+      "head": "rebuild/v58-integrated-ai-20261001",
+      "head_sha": "09979266ebd7ba1466f13e8c01d8fe7857ea0e57",
+      "draft": true
+    },
+    {
+      "n": 89,
+      "base": "research/v58-phase2a-barrier-freeze",
+      "base_sha": "3a5faf59836e00c1ad26978dd9123839f7ccc682",
+      "head": "research/v58-core-repair",
+      "head_sha": "455014d2b146165b7edc13cf7bc9c61489447948",
+      "draft": true
+    },
+    {
+      "n": 87,
+      "base": "research/v58-implementation-phase1",
+      "base_sha": "fdaee2580f24997acd8122760dbf73a9f06a3141",
+      "head": "research/v58-phase2-event-data-freeze",
+      "head_sha": "3d34adb731e60f001c1fe02cc21957bab0fabcba",
+      "draft": true
+    },
+    {
+      "n": 86,
+      "base": "research/v58-implementation-phase1",
+      "base_sha": "fdaee2580f24997acd8122760dbf73a9f06a3141",
+      "head": "research/v58-phase2a-barrier-freeze",
+      "head_sha": "3a5faf59836e00c1ad26978dd9123839f7ccc682",
+      "draft": true
+    },
+    {
+      "n": 85,
+      "base": "research/v58-research-freeze",
+      "base_sha": "d566898a612a6d8f98aa28ba4f83ed093c0d3613",
+      "head": "research/v58-implementation-phase1",
+      "head_sha": "fdaee2580f24997acd8122760dbf73a9f06a3141",
+      "draft": true
+    },
+    {
+      "n": 84,
+      "base": "main",
+      "base_sha": "876e229a8d3e73f2e9d646d4126c8ce08e4c11b4",
+      "head": "research/v58-research-freeze",
+      "head_sha": "d566898a612a6d8f98aa28ba4f83ed093c0d3613",
+      "draft": true
+    },
+    {
+      "n": 83,
+      "base": "research/v54-feature-audit-oos",
+      "base_sha": "f234a85028ed2d86cd3bc672e7491f72b0245b9b",
+      "head": "feature/spot-ichimoku-research-runner",
+      "head_sha": "6238fb59cde023832ea62c83aff06849eb4832d2",
+      "draft": true
+    },
+    {
+      "n": 82,
+      "base": "main",
+      "base_sha": "f3d15fa1b3868443edc6a7913d155b68183d7d17",
+      "head": "research/v54-empirical-evidence-20260924",
+      "head_sha": "946b250cb59743f797713978c11090798c537058",
+      "draft": true
+    },
+    {
+      "n": 81,
+      "base": "research/v54-feature-audit-oos",
+      "base_sha": "f234a85028ed2d86cd3bc672e7491f72b0245b9b",
+      "head": "evidence/v54-colab-operational",
+      "head_sha": "717700dafcaf2ce18a07197101355274ca83c976",
+      "draft": true
+    },
+    {
+      "n": 80,
+      "base": "main",
+      "base_sha": "0ef14c03b034cc5b08a67bef43057fb375d5f6f0",
+      "head": "feature/bitpin-readonly-2026-09-14",
+      "head_sha": "3ef544788066b4f6851f8c0261681563c5c95c35",
+      "draft": true
+    },
+    {
+      "n": 77,
+      "base": "rebuild/pr64-causal-mtf-v53",
+      "base_sha": "2875ae31cb95ed8c668874cc6a26e516839f51eb",
+      "head": "research/v54-feature-audit-oos",
+      "head_sha": "f234a85028ed2d86cd3bc672e7491f72b0245b9b",
+      "draft": true
+    },
+    {
+      "n": 76,
+      "base": "main",
+      "base_sha": "0ef14c03b034cc5b08a67bef43057fb375d5f6f0",
+      "head": "rebuild/pr64-causal-mtf-v53",
+      "head_sha": "2875ae31cb95ed8c668874cc6a26e516839f51eb",
+      "draft": true
+    },
+    {
+      "n": 72,
+      "base": "main",
+      "base_sha": "49bc1512986c2733aa2bbfef39eab579b4073480",
+      "head": "dependabot/github_actions/actions/upload-artifact-7",
+      "head_sha": "7ec55640e8f7cd02e4293399c91b9e62240d6c16",
+      "draft": false
+    },
+    {
+      "n": 71,
+      "base": "main",
+      "base_sha": "fa31e6f5ceb09f4f14ae13fef50706f2e10e1835",
+      "head": "dependabot/github_actions/actions/checkout-7",
+      "head_sha": "c2a3f8a8b52d39453606320a3acb89fb81924dd5",
+      "draft": false
+    },
+    {
+      "n": 70,
+      "base": "main",
+      "base_sha": "fa31e6f5ceb09f4f14ae13fef50706f2e10e1835",
+      "head": "dependabot/github_actions/actions/setup-python-7",
+      "head_sha": "0822e18479ac24960830e83b2d8dc5dcea55ddf9",
+      "draft": false
+    },
+    {
+      "n": 67,
+      "base": "research/v51-overlap-arbitration-empirical",
+      "base_sha": "78ac363386ae4c0a3b8f70884dc9db700dc5c340",
+      "head": "research/v51-terminal-finalizer",
+      "head_sha": "bff9abaccec1f2d7c4c5c873258f05d1be563e75",
+      "draft": true
+    },
+    {
+      "n": 62,
+      "base": "main",
+      "base_sha": "3f1a7a1a7bb6f612c734295a988b1c2d5c86e9aa",
+      "head": "research/v51-overlap-arbitration-empirical",
+      "head_sha": "cd897d9ac367e1f3cbead94e720efcaf949093c1",
+      "draft": false
+    },
+    {
+      "n": 61,
+      "base": "deploy/research-v50",
+      "base_sha": "a6ec80ba480da2d33a87d9d3ba97d27d0ab22d1d",
+      "head": "evidence/versioned-ledger-v19-v25",
+      "head_sha": "c3ebf9a6aa0fea0110295f317c2189f7e7dc0e3a",
+      "draft": true
+    },
+    {
+      "n": 60,
+      "base": "research/v51-overlap-arbitration-empirical",
+      "base_sha": "ab55589b95c759bf030c0b5fa31156356a0118ca",
+      "head": "research/v51-predictor-bundle-freeze-valid",
+      "head_sha": "b4fccaab5f8d204824bcd681f6eac38289da4a0f",
+      "draft": false
+    },
+    {
+      "n": 58,
+      "base": "deploy/research-v50",
+      "base_sha": "7ccf434fd88437abf005ea9672c37355a4c7f753",
+      "head": "research/v51-predictor-identity-freeze",
+      "head_sha": "4df81c5a2345ac258edbc90894aebb0681f5f0b6",
+      "draft": false
+    },
+    {
+      "n": 51,
+      "base": "research/v50-expected-r-utility-mapping-empirical",
+      "base_sha": "776f42664f3b01f9deac235fc611c5d84746d74f",
+      "head": "deploy/research-v50",
+      "head_sha": "a6ec80ba480da2d33a87d9d3ba97d27d0ab22d1d",
+      "draft": true
+    },
+    {
+      "n": 50,
+      "base": "research/v50-expected-r-utility-mapping-prereg",
+      "base_sha": "9b3f8d1bda650cc93af7b6cc69f162ae30d64cac",
+      "head": "research/v50-expected-r-utility-mapping-empirical",
+      "head_sha": "776f42664f3b01f9deac235fc611c5d84746d74f",
+      "draft": true
+    },
+    {
+      "n": 49,
+      "base": "research/v49-conditional-concept-drift-empirical",
+      "base_sha": "2ff93d61ea77c088497881efc2d930309e1a8ec9",
+      "head": "research/v50-expected-r-utility-mapping-prereg",
+      "head_sha": "9b3f8d1bda650cc93af7b6cc69f162ae30d64cac",
+      "draft": true
+    },
+    {
+      "n": 48,
+      "base": "research/v49-conditional-concept-drift-prereg",
+      "base_sha": "4c6081504b57f8ed513a2d8445e6d17b3230b7a4",
+      "head": "research/v49-conditional-concept-drift-empirical",
+      "head_sha": "2ff93d61ea77c088497881efc2d930309e1a8ec9",
+      "draft": true
+    },
+    {
+      "n": 47,
+      "base": "research/v48-temporal-regime-diagnostic-empirical",
+      "base_sha": "b2dbd3e2ce3ab1939586772a54a83d3820198eea",
+      "head": "research/v49-conditional-concept-drift-prereg",
+      "head_sha": "4c6081504b57f8ed513a2d8445e6d17b3230b7a4",
+      "draft": true
+    },
+    {
+      "n": 46,
+      "base": "research/v48-temporal-regime-diagnostic-prereg",
+      "base_sha": "648253fc8b8ad807b2a442a0cc9ae3e0c0b4d523",
+      "head": "research/v48-temporal-regime-diagnostic-empirical",
+      "head_sha": "b2dbd3e2ce3ab1939586772a54a83d3820198eea",
+      "draft": true
+    },
+    {
+      "n": 45,
+      "base": "research/v47-probability-calibration-empirical",
+      "base_sha": "6d20e8c4ba3cfe2523e38747bd82756213fc07b1",
+      "head": "research/v48-temporal-regime-diagnostic-prereg",
+      "head_sha": "648253fc8b8ad807b2a442a0cc9ae3e0c0b4d523",
+      "draft": true
+    },
+    {
+      "n": 44,
+      "base": "research/v47-probability-calibration-prereg",
+      "base_sha": "7959089a3816b1b3cf1b4179ee386285be4e0b5c",
+      "head": "research/v47-probability-calibration-empirical",
+      "head_sha": "6d20e8c4ba3cfe2523e38747bd82756213fc07b1",
+      "draft": true
+    },
+    {
+      "n": 43,
+      "base": "research/v46-economic-state-representation-prereg",
+      "base_sha": "857cfa9673834a18feca25bc20e75f2e94cebdb4",
+      "head": "research/v46-economic-state-representation-empirical-valid",
+      "head_sha": "d3d7003b735ae72ca1be9b0b4d5d020916bf4d7c",
+      "draft": true
+    },
+    {
+      "n": 41,
+      "base": "research/v45-label-representation-diagnostic",
+      "base_sha": "bad91d4fa91d0d58c8758645c0866fa17533e3b7",
+      "head": "research/v46-economic-state-representation-prereg",
+      "head_sha": "857cfa9673834a18feca25bc20e75f2e94cebdb4",
+      "draft": true
+    },
+    {
+      "n": 40,
+      "base": "research/v45-post-v44-decision-policy",
+      "base_sha": "cb30c62962603d79d59a5c1f60fb0a3ef43796a2",
+      "head": "research/v45-label-representation-diagnostic",
+      "head_sha": "bad91d4fa91d0d58c8758645c0866fa17533e3b7",
+      "draft": true
+    },
+    {
+      "n": 39,
+      "base": "research/v44-information-driven-sampling-empirical",
+      "base_sha": "5efb843d385d194c549a69dc4b2fd38d56ab906c",
+      "head": "research/v45-post-v44-decision-policy",
+      "head_sha": "cb30c62962603d79d59a5c1f60fb0a3ef43796a2",
+      "draft": true
+    },
+    {
+      "n": 38,
+      "base": "research/v44-information-driven-sampling",
+      "base_sha": "ec7b371410334dd8eaee371725ffb754c102e9a5",
+      "head": "research/v44-information-driven-sampling-empirical",
+      "head_sha": "5efb843d385d194c549a69dc4b2fd38d56ab906c",
+      "draft": true
+    },
+    {
+      "n": 37,
+      "base": "chore/workflow-governance-v43",
+      "base_sha": "3923695243f5b7cca4756f0fe6c94714ff72d13c",
+      "head": "research/v44-information-driven-sampling",
+      "head_sha": "ec7b371410334dd8eaee371725ffb754c102e9a5",
+      "draft": true
+    },
+    {
+      "n": 36,
+      "base": "research/v43-asset-crossvenue-stability",
+      "base_sha": "4ccc2cecfbb0a471b90a2aa970ccb28d214aedf7",
+      "head": "chore/workflow-governance-v43",
+      "head_sha": "3923695243f5b7cca4756f0fe6c94714ff72d13c",
+      "draft": true
+    },
+    {
+      "n": 35,
+      "base": "research/v43-asset-crossvenue-stability",
+      "base_sha": "c13d113947bbfa97b332ca16e4039b824eb70ef7",
+      "head": "research/v44-information-driven-sampling-prereg",
+      "head_sha": "3c130f7ff0621ec97b39fc63222d024875c33f7a",
+      "draft": true
+    },
+    {
+      "n": 34,
+      "base": "research/v42-breadth-cluster-robust",
+      "base_sha": "e8e085023a20bcebec18f35b4561fd054cfe783b",
+      "head": "research/v43-asset-crossvenue-stability",
+      "head_sha": "4ccc2cecfbb0a471b90a2aa970ccb28d214aedf7",
+      "draft": true
+    },
+    {
+      "n": 33,
+      "base": "research/v41-event-competing-risk",
+      "base_sha": "a063dfe733fd9ab0a17dd6eb38d1131ca0260e75",
+      "head": "research/v42-breadth-cluster-robust",
+      "head_sha": "a0d179269693290c5475936df07060f9ddbfbb6f",
+      "draft": false
+    },
+    {
+      "n": 32,
+      "base": "research/v40-two-stage-hurdle",
+      "base_sha": "a58b454769513d5321eced36d6a3472b535f8636",
+      "head": "research/v41-event-competing-risk",
+      "head_sha": "a063dfe733fd9ab0a17dd6eb38d1131ca0260e75",
+      "draft": false
+    },
+    {
+      "n": 31,
+      "base": "research/v39-robust-financial-system",
+      "base_sha": "309c01001592fe2cd7a68b2178c469591109faff",
+      "head": "research/v40-two-stage-hurdle",
+      "head_sha": "a58b454769513d5321eced36d6a3472b535f8636",
+      "draft": false
+    },
+    {
+      "n": 30,
+      "base": "research/v39r-canonical-reconstruction",
+      "base_sha": "2a293a14d334dd067aadd973d25ed2476952cda6",
+      "head": "research/v39-robust-financial-system",
+      "head_sha": "309c01001592fe2cd7a68b2178c469591109faff",
+      "draft": false
+    },
+    {
+      "n": 25,
+      "base": "research/v24c-multiplan-ml-validation",
+      "base_sha": "61c710ad1de16f0271d3e82528c03ea77689b74e",
+      "head": "research/v24d-frozen-snapshot-external",
+      "head_sha": "ab373e2e5792e5660e0d946967e2774e74b6913a",
+      "draft": false
+    },
+    {
+      "n": 24,
+      "base": "research/v24b-family-meta-portfolio-risk",
+      "base_sha": "29fbe393ec8b193382e9277943bcdb5dfb248d55",
+      "head": "research/v24c-multiplan-ml-validation",
+      "head_sha": "61c710ad1de16f0271d3e82528c03ea77689b74e",
+      "draft": false
+    },
+    {
+      "n": 23,
+      "base": "research/v24-strategy-aware-meta-labeling",
+      "base_sha": "bb288528d7ca518d13f5ad82bd1cf4190f058215",
+      "head": "research/v24b-family-meta-portfolio-risk",
+      "head_sha": "29fbe393ec8b193382e9277943bcdb5dfb248d55",
+      "draft": false
+    },
+    {
+      "n": 22,
+      "base": "research/v23-ml-rebuild-audit2",
+      "base_sha": "7b0afbb45114aaa8ca7a88aa313801974f70bdb0",
+      "head": "research/v24-strategy-aware-meta-labeling",
+      "head_sha": "bb288528d7ca518d13f5ad82bd1cf4190f058215",
+      "draft": false
+    },
+    {
+      "n": 21,
+      "base": "research/v22-ict-vision-lab",
+      "base_sha": "2a5b62c84354b9cbffd35c0bdd6591d4219bf216",
+      "head": "research/v23-ml-rebuild-audit2",
+      "head_sha": "7b0afbb45114aaa8ca7a88aa313801974f70bdb0",
+      "draft": false
+    },
+    {
+      "n": 20,
+      "base": "research/v22-ict-vision-lab",
+      "base_sha": "2a5b62c84354b9cbffd35c0bdd6591d4219bf216",
+      "head": "research/v23-ml-rebuild-clean",
+      "head_sha": "448d69ee72f47f90a251fc0f2b7635eb23b1ab8d",
+      "draft": true
+    },
+    {
+      "n": 19,
+      "base": "main",
+      "base_sha": "32daba288052e86c8ed73819c1a6a31ba661e6f4",
+      "head": "v21-common-anchor-microstructure-proxy",
+      "head_sha": "63f13b7473c97a870db35b378d61025e08a7e027",
+      "draft": false
+    },
+    {
+      "n": 17,
+      "base": "main",
+      "base_sha": "4c5b4140db5596a747dbca6b7ef3908495bd5545",
+      "head": "research/v20-global-strategy-risk-lab",
+      "head_sha": "89a8542a257717a1af32a7bac116a11e6a977777",
+      "draft": false
+    },
+    {
+      "n": 15,
+      "base": "main",
+      "base_sha": "6901ccb6dc14fdbebc7f87a2b0a328435e5b0697",
+      "head": "research-v20-ict-m1",
+      "head_sha": "ce09296bacc6b01a5e9f4b0823ead93e7cbbfaf2",
+      "draft": false
+    },
+    {
+      "n": 1,
+      "base": "main",
+      "base_sha": "815359fcc312c1dd01309bc6bd38019029962ad7",
+      "head": "research/ichimoku-ml-rl-v0.1.0",
+      "head_sha": "f2e93765bae0f1f1172026e0344d96efec905fb6",
+      "draft": false
+    }
+  ]
+}
