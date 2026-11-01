@@ -174,7 +174,7 @@ class L1Tests(unittest.TestCase):
         s.bar(bar(2,price,"2","1.01",price))
         p=s.state["position"]
         with localcontext() as ctx:
-            ctx.prec=80
+            ctx.prec=500
             qty,entry,stop=map(Decimal,(p["quantity"],p["entry"],p["stop"]))
             fee=Decimal("24")/Decimal("20000")
             self.assertLessEqual(qty*(entry*(1+fee)-stop*(1-fee)),Decimal("25"))
