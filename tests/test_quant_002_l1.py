@@ -70,6 +70,17 @@ class L1Tests(unittest.TestCase):
         event=next(e for e in s.state["events"] if e["kind"]=="TARGET_TOUCH_UNMODELED")
         self.assertEqual(Decimal(s.state["trades"][0]["exit"]),Decimal(event["price"]))
 
+    def test_rounded_target_reference_never_exceeds_observed_high(self):
+        with localcontext() as ctx:
+            ctx.prec=400
+            price=Decimal(100)+Decimal(10)**-100
+            target=price+2*(price-Decimal(98))
+        s=sim(mode="target_touch_assumed")
+        to_entry(s,entry=bar(2,str(price),str(target),"99",str(price)))
+        exits=[x for x in s.state["events"] if x["kind"]=="EXIT"]
+        if exits:
+            self.assertLessEqual(Decimal(exits[0]["details"]["raw_price"]),target)
+
     def test_ambiguous_stop_and_target_remain_labeled_and_separate(self):
         a,b=sim(),sim(mode="target_touch_assumed")
         for s in (a,b): to_entry(s,entry=bar(2,"100","110","97","100"))
@@ -191,6 +202,18 @@ class L1Tests(unittest.TestCase):
             qty,entry,stop=map(Decimal,(p["quantity"],p["entry"],p["stop"]))
             fee=Decimal("24")/Decimal("20000")
             self.assertLessEqual(qty*(entry*(1+fee)-stop*(1-fee)),Decimal("25"))
+
+    def test_asset_cap_uses_post_fee_nav(self):
+        s=sim(cost="24")
+        s.bar(bar(0,lo="99.99"));s.signal(setup(stop="99.99"));s.bar(bar(1))
+        s.bar(bar(2,"100","100","100","100"))
+        p=s.state["position"]
+        with localcontext() as ctx:
+            ctx.prec=500
+            qty,entry=map(Decimal,(p["quantity"],p["entry"]))
+            fee=Decimal("24")/Decimal("20000")
+            post_fee_nav=Decimal("10000")-qty*(entry*(1+fee)-Decimal("100"))
+            self.assertLessEqual(qty*entry,post_fee_nav*Decimal("0.35"))
 
     def test_expiry_without_fabricating_bar(self):
         s=sim();s.bar(bar(0,lo="98"));s.signal(setup());self.assertFalse(s.expire(as_of=T+timedelta(hours=3)))
