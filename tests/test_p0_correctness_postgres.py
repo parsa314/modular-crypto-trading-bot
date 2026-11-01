@@ -271,6 +271,46 @@ else: raise AssertionError('restart cleared halt')
         self.assertEqual(self.fetch('SELECT anchor_status,reconciled,unresolved_orders FROM risk_account_state')[0],
                          ('ANCHOR_UNVERIFIED',False,True))
 
+    def test_daily_rollover_cannot_revalidate_prior_unverified_anchor(self):
+        self.observe(equity='980',cash='980',source='unverified:external')
+        self.now=NOW+timedelta(days=1)
+        self.g.observe(observation(now=self.now),received_at=self.now)
+        self.assertEqual(self.fetch("SELECT state FROM risk_halts WHERE halt_type='DAILY'")[0][0],'ACTIVE')
+        self.assertEqual(self.fetch('SELECT anchor_status FROM risk_account_state')[0][0],'ANCHOR_UNVERIFIED')
+
+    def test_daily_rollover_stays_halted_with_venue_orphan_order(self):
+        self.observe(equity='980',cash='980')
+        intent=TestnetOrderIntent('orphan','BTC/USDT',OrderSide.BUY,Decimal('1'),Decimal('100'),self.now)
+        order=ReconciledOrder('orphan','BTC/USDT','buy',Decimal('1'),updated_at=self.now)
+        self.orders.create(venue=VENUE,intent=intent,order=order)
+        self.now=NOW+timedelta(days=1)
+        self.g.observe(observation(now=self.now),received_at=self.now)
+        self.assertEqual(self.fetch("SELECT state FROM risk_halts WHERE halt_type='DAILY'")[0][0],'ACTIVE')
+        self.assertEqual(self.fetch('SELECT anchor_status,reconciled,unresolved_orders FROM risk_account_state')[0],
+                         ('ANCHOR_UNVERIFIED',False,True))
+
+    def test_daily_rollover_stays_halted_with_account_orphan_reservation(self):
+        approve(self.g,cid='reserved-before-halt')
+        self.observe(equity='980',cash='980')
+        self.now=NOW+timedelta(days=1)
+        self.g.observe(observation(now=self.now),received_at=self.now)
+        self.assertEqual(self.fetch("SELECT state FROM risk_halts WHERE halt_type='DAILY'")[0][0],'ACTIVE')
+        self.assertEqual(self.fetch('SELECT anchor_status,reconciled,unresolved_orders FROM risk_account_state')[0],
+                         ('ANCHOR_UNVERIFIED',False,True))
+
+    def test_resolved_unfilled_venue_orphan_does_not_block_clean_rollover(self):
+        self.observe(equity='980',cash='980')
+        intent=TestnetOrderIntent('cancelled-orphan','BTC/USDT',OrderSide.BUY,Decimal('1'),Decimal('100'),self.now)
+        order=ReconciledOrder('cancelled-orphan','BTC/USDT','buy',Decimal('1'),updated_at=self.now)
+        self.orders.create(venue=VENUE,intent=intent,order=order)
+        order=self.orders.update(replace(order,state=OrderLifecycle.SUBMITTING))
+        self.orders.update(replace(order,state=OrderLifecycle.CANCELLED))
+        self.now=NOW+timedelta(days=1)
+        self.g.observe(observation(now=self.now),received_at=self.now)
+        self.assertEqual(self.fetch("SELECT state FROM risk_halts WHERE halt_type='DAILY'")[0][0],'RELEASED')
+        self.assertEqual(self.fetch('SELECT anchor_status,reconciled,unresolved_orders FROM risk_account_state')[0],
+                         ('RECONCILED_TEST_FIXTURE',True,False))
+
     def test_anchor_unknown_source_stale_duplicate_hash_and_day_open(self):
         self.observe(source='unverified:external')
         with self.assertRaisesRegex(RiskAdmissionError,'ANCHOR_UNVERIFIED'):approve(self.g,now=self.now)
