@@ -34,7 +34,7 @@ jobs:
           git -C source-data rev-parse HEAD > artifacts/master-quant-002/source-sha.txt
           python --version > artifacts/master-quant-002/python-version.txt
           python -m pip freeze > artifacts/master-quant-002/environment.txt
-          pytest -q tests/test_quant_002_l1.py tests/test_quant_002_data.py tests/test_quant_001_ichimoku.py tests/test_strategy_research_012.py tests/test_strategy_labels_012.py tests/test_strategy_regime_012.py --junitxml=artifacts/master-quant-002/junit.xml 2>&1 | tee artifacts/master-quant-002/tests.log
+          pytest -q tests/test_baseline_trade_contracts.py tests/test_quant_002_l1.py tests/test_quant_002_data.py tests/test_quant_001_ichimoku.py tests/test_strategy_research_012.py tests/test_strategy_labels_012.py tests/test_strategy_regime_012.py --junitxml=artifacts/master-quant-002/junit.xml 2>&1 | tee artifacts/master-quant-002/tests.log
       - name: Previously observed historical development scenario
         shell: bash
         run: |
