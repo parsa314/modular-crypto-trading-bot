@@ -232,6 +232,45 @@ else: raise AssertionError('restart cleared halt')
         self.g.observe(observation(now=self.now),received_at=self.now)
         self.assertTrue(approve(self.g,now=self.now).approved)
 
+    def test_daily_latch_rollover_stays_active_for_unresolved_submission(self):
+        approval=approve(self.g)
+        self.transport.timeout=True
+        with self.assertRaises(AmbiguousTestnetSubmission): self.submit(approval)
+        self.observe(equity='980',cash='980')
+        self.assertEqual(self.fetch("SELECT state FROM risk_halts WHERE halt_type='DAILY'")[0][0],'ACTIVE')
+        self.now=NOW+timedelta(days=1)
+        self.g.observe(observation(now=self.now),received_at=self.now)
+        self.assertEqual(self.fetch("SELECT state FROM risk_halts WHERE halt_type='DAILY'")[0][0],'ACTIVE')
+        self.assertEqual(self.fetch('SELECT anchor_status,reconciled,unresolved_orders FROM risk_account_state')[0],
+                         ('ANCHOR_UNVERIFIED',False,True))
+        with self.assertRaisesRegex(RiskAdmissionError,'ANCHOR_UNVERIFIED'):
+            approve(governor(self.dsn),cid='unsafe-entry',now=self.now)
+
+    def test_daily_latch_rollover_stays_active_for_unresolved_fee(self):
+        approval=approve(self.g)
+        self.transport.snapshot=VenueOrderSnapshot(approval.client_order_id,'V',OrderLifecycle.FILLED,
+                                                   Decimal('1'),Decimal('100'))
+        self.submit(approval)
+        self.observe(equity='980',cash='900',held='1')
+        self.assertEqual(self.fetch("SELECT state FROM risk_halts WHERE halt_type='DAILY'")[0][0],'ACTIVE')
+        self.now=NOW+timedelta(days=1)
+        self.g.observe(observation(now=self.now,cash='900',held='1'),received_at=self.now)
+        self.assertEqual(self.fetch("SELECT state FROM risk_halts WHERE halt_type='DAILY'")[0][0],'ACTIVE')
+        self.assertEqual(self.fetch('SELECT anchor_status,reconciled,unresolved_orders FROM risk_account_state')[0],
+                         ('ANCHOR_UNVERIFIED',False,True))
+        with self.assertRaisesRegex(RiskAdmissionError,'ANCHOR_UNVERIFIED'):
+            approve(governor(self.dsn),cid='unsafe-entry',now=self.now)
+
+    def test_daily_latch_rollover_stays_active_when_order_store_missing(self):
+        self.observe(equity='980',cash='980')
+        with self.g._connect() as conn:
+            conn.execute('DROP TABLE testnet_orders')
+        self.now=NOW+timedelta(days=1)
+        self.g.observe(observation(now=self.now),received_at=self.now)
+        self.assertEqual(self.fetch("SELECT state FROM risk_halts WHERE halt_type='DAILY'")[0][0],'ACTIVE')
+        self.assertEqual(self.fetch('SELECT anchor_status,reconciled,unresolved_orders FROM risk_account_state')[0],
+                         ('ANCHOR_UNVERIFIED',False,True))
+
     def test_anchor_unknown_source_stale_duplicate_hash_and_day_open(self):
         self.observe(source='unverified:external')
         with self.assertRaisesRegex(RiskAdmissionError,'ANCHOR_UNVERIFIED'):approve(self.g,now=self.now)
