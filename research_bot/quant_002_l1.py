@@ -299,7 +299,12 @@ class L1Simulator:
         if position:
             key=position["id"]; qty=_d(position["quantity"]); stop=_d(position["stop"]); target=_d(position["target"])
             reason=None; raw_exit=None
-            if position["timeout_pending"]:
+            if position.get("risk_exit_pending",False):
+                if op <= stop:
+                    self._event("CONFLICTING_EXIT_INTENTS",stamp,available,key=key,
+                                reason="EXPOSURE_EXIT_AND_GAP_STOP_BOTH_OPEN_SINGLE_FILL_ASSUMED")
+                reason,raw_exit="EXPOSURE_RISK_NEXT_OPEN",op
+            elif position["timeout_pending"]:
                 if op <= stop:
                     self._event("CONFLICTING_EXIT_INTENTS",stamp,available,key=key,
                                 reason="TIMEOUT_AND_GAP_STOP_BOTH_OPEN_SINGLE_FILL_ASSUMED")
@@ -339,11 +344,11 @@ class L1Simulator:
                 cash=_d(self.state["cash"])+exit_price*qty-fee
                 pnl=(exit_price-_d(position["entry"]))*qty-_d(position["entry_fee"])-fee
                 self.state["cash"]=str(cash);self.state["total_fees"]=str(_d(self.state["total_fees"])+fee)
-                exit_at=stamp if reason in {"TIMEOUT_NEXT_OPEN","GAP_THROUGH_STOP"} else stamp+timedelta(hours=1)
+                exit_at=stamp if reason in {"TIMEOUT_NEXT_OPEN","GAP_THROUGH_STOP","EXPOSURE_RISK_NEXT_OPEN"} else stamp+timedelta(hours=1)
                 self._event("EXIT",exit_at,
                             available,key=key,price=exit_price,quantity=qty,reason=reason,fee=str(fee),raw_price=str(raw_exit))
                 trade={"id":key,"entry_at":position["entry_at"],"exit_at":exit_at.isoformat(),
-                       "exit_time_semantics":"BAR_OPEN" if reason in {"TIMEOUT_NEXT_OPEN","GAP_THROUGH_STOP"} else "BAR_CLOSE_DETECTION_ACTUAL_UNKNOWN",
+                       "exit_time_semantics":"BAR_OPEN" if reason in {"TIMEOUT_NEXT_OPEN","GAP_THROUGH_STOP","EXPOSURE_RISK_NEXT_OPEN"} else "BAR_CLOSE_DETECTION_ACTUAL_UNKNOWN",
                        "entry":position["entry"],
                        "exit":str(exit_price),"quantity":str(qty),"pnl":str(pnl),"exit_reason":reason,
                        "entry_fee":position["entry_fee"],"exit_fee":str(fee),
@@ -360,6 +365,10 @@ class L1Simulator:
         current=self.state["position"]
         nav=_d(self.state["cash"])+(_d(current["quantity"])*close if current else Decimal(0))
         self._latch(nav)
+        if current and (nav <= 0 or _d(current["quantity"])*close > nav*Decimal("0.35")):
+            current["risk_exit_pending"] = True
+            self._event("EXPOSURE_LIMIT_BREACH",stamp+timedelta(hours=1),available,key=current["id"],
+                        reason="REDUCE_AT_NEXT_ELIGIBLE_OPEN",mark=str(close))
         # This rounded ratio is reporting-only; it is never fed back into risk.
         with localcontext() as reporting:
             reporting.prec=34
