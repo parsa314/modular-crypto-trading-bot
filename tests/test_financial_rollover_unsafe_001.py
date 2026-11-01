@@ -12,21 +12,27 @@ class Cursor:
 
 
 class RecordingConnection:
-    def __init__(self, *, pending_order, pending_fee, order_store=True):
+    def __init__(self, *, pending_order, pending_fee, order_store=True, orphan_order=False, orphan_reservation=False):
         self.pending_order=pending_order; self.pending_fee=pending_fee
         self.order_store=order_store
+        self.orphan_order=orphan_order; self.orphan_reservation=orphan_reservation
         self.halt_releases=0; self.account_values=None
 
     def __enter__(self): return self
     def __exit__(self, *args): return False
 
     def execute(self, sql, args=()):
+        normalized=" ".join(sql.split())
         if "SELECT snapshot_hash FROM risk_account_observations" in sql: return Cursor()
         if "SELECT to_regclass('testnet_orders')" in sql: return Cursor(("testnet_orders" if self.order_store else None,))
         if "AND (t.matched_quantity != r.matched_quantity" in sql: return Cursor()
         if "FROM risk_fee_liabilities" in sql: return Cursor((1,) if self.pending_fee else None)
         if "t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION')" in sql:
             return Cursor((1,) if self.pending_order else None)
+        if "FROM testnet_orders t LEFT JOIN risk_reservations r" in normalized:
+            return Cursor((1,) if self.orphan_order else None)
+        if "FROM risk_reservations r LEFT JOIN testnet_orders t" in normalized:
+            return Cursor((1,) if self.orphan_reservation else None)
         if "UPDATE risk_halts SET state='RELEASED'" in sql: self.halt_releases+=1
         if "INSERT INTO risk_account_state" in sql: self.account_values=args
         return Cursor()
@@ -45,13 +51,15 @@ class SyntheticGovernor(PostgresRiskGovernor):
 
 
 class DailyRolloverSafetyTests(unittest.TestCase):
-    def scenario(self, *, pending_order=False, pending_fee=False, order_store=True):
+    def scenario(self, *, pending_order=False, pending_fee=False, order_store=True,
+                 orphan_order=False, orphan_reservation=False, old_status="RECONCILED_TEST_FIXTURE"):
         now=datetime(2026,10,31,0,0,tzinfo=timezone.utc)
         old={"net_deposits":Decimal(0),"observed_at":now-timedelta(minutes=1),
-             "anchor_status":"RECONCILED_TEST_FIXTURE","peak_equity":Decimal(1000),
+             "anchor_status":old_status,"peak_equity":Decimal(1000),
              "day_equity":Decimal(1000),"day_utc":(now-timedelta(days=1)).date(),
              "cash":Decimal(1000),"positions":{}}
-        conn=RecordingConnection(pending_order=pending_order,pending_fee=pending_fee,order_store=order_store)
+        conn=RecordingConnection(pending_order=pending_order,pending_fee=pending_fee,order_store=order_store,
+                                 orphan_order=orphan_order,orphan_reservation=orphan_reservation)
         g=SyntheticGovernor(conn,old)
         obs=AccountObservation("synthetic","venue","snapshot","fixture:explicit",now,
             Decimal(1000),Decimal(1000),Decimal(0),{}, {},reconciled=True,unresolved_orders=False)
@@ -78,6 +86,23 @@ class DailyRolloverSafetyTests(unittest.TestCase):
 
     def test_missing_order_store_cannot_release_daily_halt(self):
         c=self.scenario(order_store=False)
+        self.assertEqual(c.halt_releases,0)
+        self.assertEqual(c.account_values[5],"ANCHOR_UNVERIFIED")
+        self.assertEqual(c.account_values[-2:],(False,True))
+
+    def test_previous_unverified_anchor_cannot_be_revalidated_by_next_day(self):
+        c=self.scenario(old_status="ANCHOR_UNVERIFIED")
+        self.assertEqual(c.halt_releases,0)
+        self.assertEqual(c.account_values[5],"ANCHOR_UNVERIFIED")
+
+    def test_venue_orphan_order_blocks_rollover(self):
+        c=self.scenario(orphan_order=True)
+        self.assertEqual(c.halt_releases,0)
+        self.assertEqual(c.account_values[5],"ANCHOR_UNVERIFIED")
+        self.assertEqual(c.account_values[-2:],(False,True))
+
+    def test_account_orphan_reservation_blocks_rollover(self):
+        c=self.scenario(orphan_reservation=True)
         self.assertEqual(c.halt_releases,0)
         self.assertEqual(c.account_values[5],"ANCHOR_UNVERIFIED")
         self.assertEqual(c.account_values[-2:],(False,True))
