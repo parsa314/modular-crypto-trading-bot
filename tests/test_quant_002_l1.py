@@ -70,6 +70,13 @@ class L1Tests(unittest.TestCase):
         event=next(e for e in s.state["events"] if e["kind"]=="TARGET_TOUCH_UNMODELED")
         self.assertEqual(Decimal(s.state["trades"][0]["exit"]),Decimal(event["price"]))
 
+    def test_target_exit_does_not_latch_on_later_bar_high(self):
+        s=sim(mode="target_touch_assumed")
+        to_entry(s,entry=bar(2,"100","1000","99","100"))
+        self.assertEqual(s.state["trades"][0]["exit_reason"],"TARGET_TOUCH_ASSUMED")
+        self.assertFalse(s.state["hard_halt"])
+        self.assertFalse(s.state["daily_halt"])
+
     def test_rounded_target_reference_never_exceeds_observed_high(self):
         with localcontext() as ctx:
             ctx.prec=400
