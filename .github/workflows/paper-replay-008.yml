@@ -3,7 +3,7 @@ on:
   push:
     branches: ["feat/executable-paper-bot-008"]
   pull_request:
-    branches: ["fix/r1-financial-boundary-006"]
+    branches: ["fix/r1-financial-boundary-006", "feat/executable-paper-bot-008"]
 permissions:
   contents: read
 jobs:
