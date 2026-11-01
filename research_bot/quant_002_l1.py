@@ -299,12 +299,12 @@ class L1Simulator:
         if position:
             key=position["id"]; qty=_d(position["quantity"]); stop=_d(position["stop"]); target=_d(position["target"])
             reason=None; raw_exit=None
-            if position.get("risk_exit_pending",False):
+            if position.get("risk_exit_pending",False) and stamp > _utc(position["risk_exit_decision_at"]):
                 if op <= stop:
                     self._event("CONFLICTING_EXIT_INTENTS",stamp,available,key=key,
                                 reason="EXPOSURE_EXIT_AND_GAP_STOP_BOTH_OPEN_SINGLE_FILL_ASSUMED")
                 reason,raw_exit="EXPOSURE_RISK_NEXT_OPEN",op
-            elif position["timeout_pending"]:
+            elif position["timeout_pending"] and stamp > _utc(position["timeout_decision_at"]):
                 if op <= stop:
                     self._event("CONFLICTING_EXIT_INTENTS",stamp,available,key=key,
                                 reason="TIMEOUT_AND_GAP_STOP_BOTH_OPEN_SINGLE_FILL_ASSUMED")
@@ -360,13 +360,15 @@ class L1Simulator:
                 self._latch(cash)
             else:
                 position["bars"] += 1
-                if position["bars"] >= 8:
+                if position["bars"] >= 8 and not position["timeout_pending"]:
                     position["timeout_pending"] = True
+                    position["timeout_decision_at"] = available.isoformat()
         current=self.state["position"]
         nav=_d(self.state["cash"])+(_d(current["quantity"])*close if current else Decimal(0))
         self._latch(nav)
-        if current and (nav <= 0 or _d(current["quantity"])*close > nav*Decimal("0.35")):
+        if current and not current.get("risk_exit_pending",False) and (nav <= 0 or _d(current["quantity"])*close > nav*Decimal("0.35")):
             current["risk_exit_pending"] = True
+            current["risk_exit_decision_at"] = available.isoformat()
             self._event("EXPOSURE_LIMIT_BREACH",stamp+timedelta(hours=1),available,key=current["id"],
                         reason="REDUCE_AT_NEXT_ELIGIBLE_OPEN",mark=str(close))
         # This rounded ratio is reporting-only; it is never fed back into risk.
