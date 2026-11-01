@@ -261,17 +261,20 @@ class L1Simulator:
                 with localcontext() as sizing:
                     sizing.prec=precision
                     per_unit=entry*(Decimal(1)+fee_rate)-stop*(Decimal(1)-price_rate)*(Decimal(1)-fee_rate)
+                    # Enforce the asset cap against NAV immediately after entry
+                    # (marked at the observed open), not the larger pre-fee cash.
+                    exposure_unit=entry+Decimal("0.35")*(entry*(Decimal(1)+fee_rate)-op)
                 if per_unit <= 0 or cash <= 0:
                     self._event("CANCELLED",stamp,available,key=key,reason="INVALID_RISK_OR_CAPITAL")
                 else:
                     with localcontext() as sizing:
                         sizing.prec=80
                         sizing.rounding=ROUND_DOWN
-                        quantity=min(cash*Decimal("0.0025")/per_unit,cash*Decimal("0.35")/entry,cash/(entry*(Decimal(1)+fee_rate)))
+                        quantity=min(cash*Decimal("0.0025")/per_unit,cash*Decimal("0.35")/exposure_unit,cash/(entry*(Decimal(1)+fee_rate)))
                     with localcontext() as exact:
                         exact.prec=precision
                         while quantity > 0 and (quantity*per_unit > cash*Decimal("0.0025")
-                                or quantity*entry > cash*Decimal("0.35")
+                                or quantity*exposure_unit > cash*Decimal("0.35")
                                 or quantity*entry*(Decimal(1)+fee_rate) > cash):
                             with localcontext() as sizing:
                                 sizing.prec=80
@@ -317,6 +320,9 @@ class L1Simulator:
                     reporting.prec=80
                     reporting.rounding=ROUND_CEILING
                     target_raw_reference=target/(Decimal(1)-price_rate)
+                # A rounded reference outside the observed range cannot support
+                # even the optimistic touch assumption.
+                target_assumed = target_assumed and target_raw_reference <= high
                 if stop_hit and target_hit:
                     self._event("AMBIGUOUS",stamp+timedelta(hours=1),available,key=key,reason="STOP_AND_TARGET_SAME_BAR")
                     reason = "AMBIGUOUS_TARGET_BOUND" if target_assumed else "AMBIGUOUS_STOP_BOUND"
