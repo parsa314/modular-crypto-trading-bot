@@ -215,6 +215,16 @@ class L1Tests(unittest.TestCase):
             post_fee_nav=Decimal("10000")-qty*(entry*(1+fee)-Decimal("100"))
             self.assertLessEqual(qty*entry,post_fee_nav*Decimal("0.35"))
 
+    def test_marked_exposure_breach_schedules_reduction(self):
+        s=sim(cost="24")
+        s.bar(bar(0,lo="99.99"));s.signal(setup(stop="99.99"));s.bar(bar(1))
+        s.bar(bar(2,"100","101","100","101"))
+        self.assertTrue(s.state["position"]["risk_exit_pending"])
+        self.assertTrue(any(x["kind"]=="EXPOSURE_LIMIT_BREACH" for x in s.state["events"]))
+        s.bar(bar(3,"101","101","100","100"))
+        self.assertEqual(s.state["trades"][0]["exit_reason"],"EXPOSURE_RISK_NEXT_OPEN")
+        self.assertIsNone(s.state["position"])
+
     def test_expiry_without_fabricating_bar(self):
         s=sim();s.bar(bar(0,lo="98"));s.signal(setup());self.assertFalse(s.expire(as_of=T+timedelta(hours=3)))
         with self.assertRaisesRegex(ValueError,"EXPIRY_UNRESOLVED_MISSING_MARKET_DATA"):
