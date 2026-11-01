@@ -23,6 +23,14 @@ risk target at stop at most 0.25% of equity after modelled cost, per-asset expos
 at most 35%, gross at most 70%. Stop-gaps can exceed the risk target. Daily
 loss 2% and peak drawdown 5% halt new entry; no automatic hard-halt release.
 
+Engineering amendment after the first development replay: a close-marked asset
+exposure above 35% schedules a full reduction at the next eligible open. The
+prior replay exhibited a mark above 35%; its artifact is retained separately.
+This is a correction to enforce the declared risk policy, not a claim that the
+earlier run used this rule. No price gap or outage can guarantee a continuous
+35% maximum, and this post-observation correction precludes calling the same
+development sample untouched or independently confirmatory.
+
 L1 assumes H1 open/high/low/close, no actual quote, depth, queue or partial fills.
 A touched limit is not a proven fill. Same-bar stop+target is AMBIGUOUS; separate
 stop-first and target-touch-assumed scenarios are sensitivities, not global bounds,
