@@ -284,6 +284,26 @@ else: raise AssertionError('restart cleared halt')
         self.assertEqual(self.fetch('SELECT cash FROM risk_account_state')[0][0],Decimal('900'))
         self.assertEqual(self.fetch("SELECT count(*) FROM risk_audit WHERE event='CUMULATIVE_FILL_APPLIED'")[0][0],1)
 
+    def test_duplicate_unresolved_fee_reconciliation_keeps_persisted_state_unchanged(self):
+        approval=approve(self.g)
+        self.submit(approval)
+        local=self.orders.get(approval.client_order_id)
+        filled=replace(local,state=OrderLifecycle.FILLED,matched_quantity=Decimal('1'),average_price=Decimal('100'))
+        self.g.persist_snapshot_and_account(store=self.orders,order=filled,account_id=ACCOUNT,venue_id=VENUE,now=self.now)
+        account_sql='SELECT cash,positions,reconciled,unresolved_orders,state_version FROM risk_account_state'
+        fee_sql='SELECT state,updated_at FROM risk_fee_liabilities'
+        reservation_sql='SELECT matched_quantity,cumulative_fee,cumulative_quote,state FROM risk_reservations'
+        audit_sql="SELECT count(*) FROM risk_audit WHERE event='CUMULATIVE_FILL_APPLIED'"
+        before=(self.fetch(account_sql),self.fetch(fee_sql),self.fetch(reservation_sql),self.fetch(audit_sql))
+        restarted=governor(self.dsn)
+        restarted.reconcile_accounting(account_id=ACCOUNT,venue_id=VENUE,client_order_id=approval.client_order_id,
+            now=self.now+timedelta(minutes=1))
+        after=(self.fetch(account_sql),self.fetch(fee_sql),self.fetch(reservation_sql),self.fetch(audit_sql))
+        self.assertEqual(before,after)
+        self.assertEqual(before[0][0][:4],(Decimal('900'),{'BTC/USDT':'1'},False,True))
+        self.assertEqual(before[1][0][0],'UNRESOLVED')
+        self.assertEqual(before[3][0][0],1)
+
     def test_unknown_fee_principal_posted_once_by_independent_processes(self):
         a=approve(self.g)
         self.submit(a)
@@ -387,4 +407,5 @@ else: raise AssertionError('restart cleared halt')
                 quantity=Decimal('10'),reference_price=Decimal('100'),precision=self.precision,
                 risk_decision=RiskDecision(True,False,(),None),created_at=self.now)
         self.assertEqual(self.transport.calls,0)
+
 
