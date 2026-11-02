@@ -378,6 +378,9 @@ else: raise AssertionError('restart cleared halt')
     def test_direct_store_fill_invalidates_previously_issued_approval(self):
         first = approve(self.g, cid='first')
         self.submit(first)
+        # Respect the existing 15-minute entry cooldown; the regression is
+        # about an intervening fill, not the independent cooldown veto.
+        self.now += timedelta(minutes=16)
         self.observe()
         second = approve(self.g, cid='second', now=self.now)
         ctx = multiprocessing.get_context('spawn')
