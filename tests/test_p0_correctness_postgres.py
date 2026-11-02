@@ -400,6 +400,40 @@ else: raise AssertionError('restart cleared halt')
         self.assertEqual(self.transport.calls, 1, 'stale approval must not reach even the fake transport')
         self.assertIsNone(self.orders.get(second.client_order_id))
 
+    def test_account_version_change_invalidates_approval_even_if_snapshot_hash_is_unchanged(self):
+        approval=approve(self.g)
+        before=self.fetch('SELECT snapshot_hash,state_version FROM risk_account_state')[0]
+        with self.g._connect() as conn:
+            # A direct writer omits a version bump; the DB must advance it.
+            conn.execute('UPDATE risk_account_state SET cash=cash WHERE account_id=%s AND venue_id=%s',
+                         (ACCOUNT,VENUE))
+        after=self.fetch('SELECT snapshot_hash,state_version FROM risk_account_state')[0]
+        self.assertEqual(before[0],after[0])
+        self.assertEqual(after[1],before[1]+1)
+        with self.assertRaisesRegex(TestnetSafetyError,'STALE_ACCOUNT_VERSION_REAPPROVAL_REQUIRED'):
+            self.submit(approval)
+        self.assertEqual(self.transport.calls,0)
+        self.assertEqual(self.fetch('SELECT state FROM risk_approvals')[0][0],'ISSUED')
+
+    def test_direct_reservation_update_invalidates_approval_and_account(self):
+        approval=approve(self.g)
+        with self.g._connect() as conn:
+            conn.execute("UPDATE risk_reservations SET notional=notional WHERE reservation_id=%s",
+                         (approval.reservation_id,))
+        self.assertEqual(self.fetch('SELECT reconciled,unresolved_orders FROM risk_account_state')[0],(False,True))
+        with self.assertRaises(TestnetSafetyError):
+            self.submit(approval)
+        self.assertEqual(self.transport.calls,0)
+
+    def test_disabled_order_invalidation_trigger_blocks_approval_consumption(self):
+        approval=approve(self.g)
+        with self.g._connect() as conn:
+            conn.execute('ALTER TABLE testnet_orders DISABLE TRIGGER testnet_order_risk_invalidation')
+        with self.assertRaisesRegex(TestnetSafetyError,'FINANCIAL_MUTATION_GUARDS_UNAVAILABLE'):
+            self.submit(approval)
+        self.assertEqual(self.transport.calls,0)
+        self.assertEqual(self.fetch('SELECT state FROM risk_approvals')[0][0],'ISSUED')
+
     def test_duplicate_unresolved_fee_reconciliation_keeps_persisted_state_unchanged(self):
         approval=approve(self.g)
         self.submit(approval)
