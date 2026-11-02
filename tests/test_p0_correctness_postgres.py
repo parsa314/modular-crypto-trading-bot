@@ -43,6 +43,18 @@ def process_post_principal(dsn, start, result, client_order_id):
         result.put(type(exc).__name__ + ':' + str(exc))
 
 
+def process_direct_partial_fill(dsn, client_order_id, result):
+    """Independent process/connection, synthetic snapshot, no broker I/O."""
+    try:
+        store = PostgresTestnetOrderStore(dsn)
+        old = store.get(client_order_id)
+        store.update(replace(old, state=OrderLifecycle.PARTIAL,
+                             matched_quantity=Decimal('0.5'), average_price=Decimal('100')))
+        result.put('COMMITTED')
+    except Exception as exc:
+        result.put(type(exc).__name__ + ':' + str(exc))
+
+
 def process_crash_after_snapshot_before_post(dsn, client_order_id):
     store=PostgresTestnetOrderStore(dsn)
     local=store.get(client_order_id)
@@ -363,6 +375,28 @@ else: raise AssertionError('restart cleared halt')
         self.assertEqual(self.fetch('SELECT cash FROM risk_account_state')[0][0],Decimal('900'))
         self.assertEqual(self.fetch("SELECT count(*) FROM risk_audit WHERE event='CUMULATIVE_FILL_APPLIED'")[0][0],1)
 
+    def test_direct_store_fill_invalidates_previously_issued_approval(self):
+        first = approve(self.g, cid='first')
+        self.submit(first)
+        self.observe()
+        second = approve(self.g, cid='second', now=self.now)
+        ctx = multiprocessing.get_context('spawn')
+        result = ctx.Queue()
+        worker = ctx.Process(target=process_direct_partial_fill, args=(self.dsn, first.client_order_id, result))
+        worker.start()
+        try:
+            self.assertEqual(result.get(timeout=20), 'COMMITTED')
+            worker.join(10)
+            self.assertEqual(worker.exitcode, 0)
+        finally:
+            if worker.is_alive(): worker.kill(); worker.join(10)
+            result.close(); result.join_thread()
+        self.assertEqual(self.orders.get(first.client_order_id).matched_quantity, Decimal('0.5'))
+        with self.assertRaises(TestnetSafetyError):
+            self.submit(second)
+        self.assertEqual(self.transport.calls, 1, 'stale approval must not reach even the fake transport')
+        self.assertIsNone(self.orders.get(second.client_order_id))
+
     def test_duplicate_unresolved_fee_reconciliation_keeps_persisted_state_unchanged(self):
         approval=approve(self.g)
         self.submit(approval)
@@ -486,5 +520,6 @@ else: raise AssertionError('restart cleared halt')
                 quantity=Decimal('10'),reference_price=Decimal('100'),precision=self.precision,
                 risk_decision=RiskDecision(True,False,(),None),created_at=self.now)
         self.assertEqual(self.transport.calls,0)
+
 
 
