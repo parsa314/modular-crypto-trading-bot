@@ -55,6 +55,17 @@ def process_direct_partial_fill(dsn, client_order_id, result):
         result.put(type(exc).__name__ + ':' + str(exc))
 
 
+def process_direct_cancel(dsn, client_order_id, result):
+    """Persist a cancellation on an independent connection, not a broker."""
+    try:
+        store=PostgresTestnetOrderStore(dsn)
+        old=store.get(client_order_id)
+        store.update(replace(old,state=OrderLifecycle.CANCELLED))
+        result.put('COMMITTED')
+    except Exception as exc:
+        result.put(type(exc).__name__ + ':' + str(exc))
+
+
 def process_uncommitted_order_update(dsn, client_order_id, ready, release):
     """Hold a SQL write open so the parent can kill the isolated worker."""
     import psycopg
@@ -525,6 +536,32 @@ else: raise AssertionError('restart cleared halt')
             self.submit(approval)
         self.assertEqual(self.transport.calls,0)
         self.assertEqual(self.fetch('SELECT state FROM risk_approvals')[0][0],'ISSUED')
+
+    def test_independent_order_cancel_invalidates_approval_and_keeps_reservation(self):
+        first=approve(self.g,cid='first-cancel')
+        self.submit(first)
+        self.now += timedelta(minutes=16)
+        self.observe()
+        second=approve(self.g,cid='second-cancel',now=self.now)
+        ctx=multiprocessing.get_context('spawn')
+        result=ctx.Queue()
+        worker=ctx.Process(target=process_direct_cancel,args=(self.dsn,first.client_order_id,result))
+        worker.start()
+        try:
+            self.assertEqual(result.get(timeout=20),'COMMITTED')
+            worker.join(10)
+            self.assertEqual(worker.exitcode,0)
+            self.assertEqual(self.orders.get(first.client_order_id).state,OrderLifecycle.CANCELLED)
+            with self.assertRaises(TestnetSafetyError):
+                self.submit(second)
+            self.assertEqual(self.transport.calls,1)
+            self.assertEqual(self.fetch('SELECT state FROM risk_reservations WHERE client_order_id=%s',
+                                        (second.client_order_id,))[0][0],'RESERVED')
+            self.assertEqual(self.fetch('SELECT state FROM risk_approvals WHERE approval_id=%s',
+                                        (second.approval_id,))[0][0],'ISSUED')
+        finally:
+            if worker.is_alive(): worker.kill();worker.join(10)
+            result.close();result.join_thread()
 
     def test_direct_reservation_update_invalidates_approval_and_account(self):
         approval=approve(self.g)
