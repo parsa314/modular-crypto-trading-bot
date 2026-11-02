@@ -66,6 +66,20 @@ def process_uncommitted_order_update(dsn, client_order_id, ready, release):
         release.wait(30)
 
 
+def process_blocking_order_update(dsn, client_order_id, application_name, ready, result):
+    """Separate connection used to demonstrate the database lock boundary."""
+    import psycopg
+    try:
+        with psycopg.connect(dsn, application_name=application_name) as conn:
+            ready.put('ATTEMPTING')
+            conn.execute("""UPDATE testnet_orders SET state='PARTIAL',
+              matched_quantity=0.5,average_price=100,state_version=state_version+1
+              WHERE client_order_id=%s""", (client_order_id,))
+        result.put('COMMITTED')
+    except Exception as exc:
+        result.put(type(exc).__name__ + ':' + str(exc))
+
+
 def process_crash_after_snapshot_before_post(dsn, client_order_id):
     store=PostgresTestnetOrderStore(dsn)
     local=store.get(client_order_id)
@@ -410,6 +424,47 @@ else: raise AssertionError('restart cleared halt')
             self.submit(second)
         self.assertEqual(self.transport.calls, 1, 'stale approval must not reach even the fake transport')
         self.assertIsNone(self.orders.get(second.client_order_id))
+
+    def test_concurrent_direct_order_mutation_waits_for_account_lock(self):
+        from time import monotonic, sleep
+        from uuid import uuid4
+        first=approve(self.g,cid='first-lock')
+        self.submit(first)
+        self.now += timedelta(minutes=16)
+        self.observe()
+        second=approve(self.g,cid='second-lock',now=self.now)
+        ctx=multiprocessing.get_context('spawn')
+        ready=ctx.Queue();result=ctx.Queue()
+        app='p0_order_lock_'+uuid4().hex
+        worker=ctx.Process(target=process_blocking_order_update,
+                           args=(self.dsn,first.client_order_id,app,ready,result))
+        try:
+            with self.g._connect() as conn:
+                conn.execute('SELECT 1 FROM risk_account_state WHERE account_id=%s AND venue_id=%s FOR UPDATE',
+                             (ACCOUNT,VENUE))
+                worker.start()
+                self.assertEqual(ready.get(timeout=20),'ATTEMPTING')
+                deadline=monotonic()+15
+                waited=False
+                while monotonic()<deadline:
+                    rows=self.fetch('SELECT wait_event_type FROM pg_stat_activity WHERE application_name=%s',
+                                    (app,))
+                    if rows and rows[0][0]=='Lock':
+                        waited=True
+                        break
+                    sleep(.05)
+                self.assertTrue(waited,'independent writer never waited on the locked account')
+                self.assertEqual(self.orders.get(first.client_order_id).matched_quantity,Decimal('0'))
+            self.assertEqual(result.get(timeout=20),'COMMITTED')
+            worker.join(10)
+            self.assertEqual(worker.exitcode,0)
+            self.assertEqual(self.fetch('SELECT reconciled FROM risk_account_state')[0][0],False)
+            with self.assertRaises(TestnetSafetyError):
+                self.submit(second)
+            self.assertEqual(self.transport.calls,1)
+        finally:
+            if worker.is_alive(): worker.kill();worker.join(10)
+            ready.close();ready.join_thread();result.close();result.join_thread()
 
     def test_account_version_change_invalidates_approval_even_if_snapshot_hash_is_unchanged(self):
         approval=approve(self.g)
