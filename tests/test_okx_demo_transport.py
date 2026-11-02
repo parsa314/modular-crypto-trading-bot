@@ -28,6 +28,10 @@ class FakeOKX:
     def __init__(self, config=None):
         self.config = config or {}
         self.calls = []
+        # Explicit simulated CCXT sandbox state; this is not broker evidence.
+        self.isSandboxModeEnabled = True
+        self.options = {"sandboxMode": True}
+        self.headers = {"x-simulated-trading": "1"}
         self.created = None
         self.fetch_result = {
             "id": "venue-1",
@@ -50,6 +54,9 @@ class FakeOKX:
 
     def set_sandbox_mode(self, enabled):
         self.calls.append(("set_sandbox_mode", enabled))
+        self.isSandboxModeEnabled = enabled
+        self.options["sandboxMode"] = enabled
+        self.headers = {"x-simulated-trading": "1"} if enabled else {}
 
     def load_markets(self):
         self.calls.append(("load_markets",))
@@ -129,6 +136,57 @@ def test_factory_enables_sandbox_before_any_exchange_call():
     assert transport.venue == "OKX_DEMO"
     assert instances[0].calls == [("set_sandbox_mode", True)]
     assert instances[0].config["options"]["defaultType"] == "spot"
+
+
+def test_injected_live_config_is_rejected_before_any_private_call():
+    ex = FakeOKX()
+    ex.set_sandbox_mode(False)
+    with pytest.raises(TestnetSafetyError, match="OKX_DEMO_MODE_UNVERIFIED"):
+        OKXDemoTransport(ex)
+    assert not any(call[0] in {"create_order", "cancel_order", "fetch_balance"} for call in ex.calls)
+
+
+def test_factory_that_does_not_enable_demo_is_rejected():
+    class BrokenFactoryExchange(FakeOKX):
+        def __init__(self, config=None):
+            super().__init__(config)
+            self.isSandboxModeEnabled = False
+            self.options = {"sandboxMode": False}
+            self.headers = {}
+
+        def set_sandbox_mode(self, enabled):
+            self.calls.append(("set_sandbox_mode", enabled))
+
+    with pytest.raises(TestnetSafetyError, match="OKX_DEMO_MODE_UNVERIFIED"):
+        OKXDemoTransport.from_credentials(_creds(),exchange_factory=BrokenFactoryExchange)
+
+
+def test_tampered_demo_header_is_rejected_before_order_or_cancel():
+    ex = FakeOKX()
+    transport = OKXDemoTransport(ex)
+    ex.headers = {}
+    with pytest.raises(TestnetSafetyError, match="OKX_DEMO_MODE_UNVERIFIED"):
+        transport.submit_market_order(_intent())
+    with pytest.raises(TestnetSafetyError, match="OKX_DEMO_MODE_UNVERIFIED"):
+        transport.cancel_order(client_order_id="cid-1",venue_order_id="venue-1",symbol="BTC/USDT")
+    ex.headers = {"x-simulated-trading": "1", "X-SIMULATED-TRADING": "0"}
+    with pytest.raises(TestnetSafetyError, match="OKX_DEMO_MODE_UNVERIFIED"):
+        transport.submit_market_order(_intent())
+    assert not any(call[0] in {"create_order", "cancel_order"} for call in ex.calls)
+
+
+def test_ccxt_pinned_version_prepares_demo_header_without_network():
+    ex = ccxt.okx({"apiKey":"synthetic-key","secret":"synthetic-secret",
+                   "password":"synthetic-passphrase"})
+    ex.set_sandbox_mode(True)
+    transport = OKXDemoTransport(ex)
+    request = ex.sign("trade/order","private","POST",
+                      {"instId":"BTC-USDT","side":"buy","ordType":"market","sz":"0.01"})
+    # prepare_request_headers is the last CCXT header-preparation step before
+    # HTTP fetch; it does not send a request.
+    headers = ex.prepare_request_headers(request["headers"])
+    assert headers.get("x-simulated-trading") == "1"
+    assert transport.sandbox is True
 
 
 def test_private_preflight_is_read_only_and_authenticated():
@@ -279,3 +337,4 @@ def test_public_reference_price_is_read_only():
     px = transport.public_reference_price("BTC/USDT")
     assert px == Decimal("100000.0")
     assert ex.calls[-1] == ("fetch_ticker", "BTC/USDT")
+

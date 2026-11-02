@@ -53,3 +53,10 @@ caller-created readiness Boolean cannot grant execution. In the future,
 activation needs independently verified account, financial, risk, execution
 and observation evidence plus time-limited, revocable operator authorization
 bound to the exact account, venue, instruments, limits and code/config version.
+
+The OKX demo transport also checks the pinned CCXT sandbox flag, option and
+simulated-trading header at construction and before private actions. This
+only prevents certain accidental non-sandbox configurations; mutable injected
+objects and request-time races still require a trusted final boundary. It does
+not authenticate a demo account, authorize an order, resolve float quantity
+serialization or make private broker access safe.

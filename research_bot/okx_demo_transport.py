@@ -167,6 +167,26 @@ class OKXDemoTransport:
         if str(getattr(exchange, "id", "")).lower() != "okx":
             raise TestnetSafetyError("OKX_EXCHANGE_REQUIRED")
         self._exchange = exchange
+        self._require_demo_mode()
+
+    def _require_demo_mode(self) -> None:
+        """Reject an injected or subsequently modified non-sandbox exchange.
+
+        CCXT 4.5.77 sets all three fields in OKX set_sandbox_mode(True). This is
+        an engineering check, not proof of account identity or authorization.
+        """
+        exchange = self._exchange
+        options = getattr(exchange, "options", None)
+        headers = getattr(exchange, "headers", None)
+        if not isinstance(options, Mapping) or not isinstance(headers, Mapping):
+            raise TestnetSafetyError("OKX_DEMO_MODE_UNVERIFIED")
+        simulated = [value for key,value in headers.items()
+                     if isinstance(key,str) and key.lower() == "x-simulated-trading"]
+        if (str(getattr(exchange,"id","")).lower() != "okx"
+            or getattr(exchange,"isSandboxModeEnabled",False) is not True
+            or options.get("sandboxMode") is not True
+            or simulated != ["1"]):
+            raise TestnetSafetyError("OKX_DEMO_MODE_UNVERIFIED")
 
     @classmethod
     def from_credentials(
@@ -278,6 +298,7 @@ class OKXDemoTransport:
 
     def private_preflight(self, symbol: str) -> dict[str, Any]:
         """Authenticate against Demo without placing, amending or cancelling an order."""
+        self._require_demo_mode()
         markets = self._exchange.load_markets()
         if symbol not in markets:
             raise TestnetSafetyError(f"OKX_DEMO_MARKET_NOT_FOUND:{symbol}")
@@ -291,6 +312,7 @@ class OKXDemoTransport:
         }
 
     def submit_market_order(self, intent: TestnetOrderIntent) -> VenueOrderSnapshot:
+        self._require_demo_mode()
         params = {"clientOrderId": intent.client_order_id}
         try:
             order = self._exchange.create_order(
@@ -318,6 +340,7 @@ class OKXDemoTransport:
         venue_order_id: str | None,
         symbol: str,
     ) -> VenueOrderSnapshot | None:
+        self._require_demo_mode()
         try:
             if venue_order_id:
                 order = self._exchange.fetch_order(venue_order_id, symbol)
@@ -341,6 +364,7 @@ class OKXDemoTransport:
         venue_order_id: str | None,
         symbol: str,
     ) -> VenueOrderSnapshot:
+        self._require_demo_mode()
         if venue_order_id:
             order = self._exchange.cancel_order(venue_order_id, symbol)
         else:
@@ -358,3 +382,4 @@ class OKXDemoTransport:
         if refreshed is None:
             raise TestnetSafetyError("OKX_CANCEL_RECONCILIATION_MISSING")
         return refreshed
+
