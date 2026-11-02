@@ -41,3 +41,11 @@ boundary must fence every writer, authorize the final transmission, handle
 ambiguous sends, and be independently verified under concurrent PostgreSQL
 connections and crash injection. A successful CI suite is not proof of live
 safety. The engineering, broker, paper and live release gates remain BLOCKED.
+
+The product policy explicitly includes distinct LIVE capability and approval
+states, but this revision reports `LIVE_NOT_IMPLEMENTED`: there is no verified
+production broker boundary or authenticated scoped approval authority. A
+caller-created readiness Boolean cannot grant execution. In the future,
+activation needs independently verified account, financial, risk, execution
+and observation evidence plus time-limited, revocable operator authorization
+bound to the exact account, venue, instruments, limits and code/config version.

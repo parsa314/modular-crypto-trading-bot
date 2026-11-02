@@ -18,6 +18,29 @@ class ReadinessStage(str, Enum):
     LIVE_REVIEW_CANDIDATE = "LIVE_REVIEW_CANDIDATE"
 
 
+class LiveProductState(str, Enum):
+    """Product capability and authorization states, not interchangeable gates.
+
+    The current branch has no verified production order authority and therefore
+    reports LIVE_NOT_IMPLEMENTED. Later states name future evidence-based
+    transitions; declaring a value is not itself authorization.
+    """
+    LIVE_NOT_IMPLEMENTED = "LIVE_NOT_IMPLEMENTED"
+    LIVE_IMPLEMENTED_DISABLED = "LIVE_IMPLEMENTED_DISABLED"
+    LIVE_READ_ONLY_VERIFIED = "LIVE_READ_ONLY_VERIFIED"
+    LIVE_EXECUTION_TESTED = "LIVE_EXECUTION_TESTED"
+    LIVE_FINANCIAL_GATE_PASSED = "LIVE_FINANCIAL_GATE_PASSED"
+    LIVE_RISK_GATE_PASSED = "LIVE_RISK_GATE_PASSED"
+    LIVE_OPERATOR_APPROVAL_REQUIRED = "LIVE_OPERATOR_APPROVAL_REQUIRED"
+    LIVE_AUTHORIZED = "LIVE_AUTHORIZED"
+    LIVE_HALTED = "LIVE_HALTED"
+
+
+def current_live_product_state() -> LiveProductState:
+    """Current implementation status; no inferred account or operator proof."""
+    return LiveProductState.LIVE_NOT_IMPLEMENTED
+
+
 @dataclass(frozen=True)
 class LiveReadinessChecklist:
     scientific_promotion_passed: bool = False
@@ -80,8 +103,14 @@ def evaluate_live_readiness(checklist: LiveReadinessChecklist) -> LiveReadinessD
 
 
 def assert_live_execution_authorized(decision: LiveReadinessDecision) -> None:
-    """Hard stop for any private adapter wired to the current canonical branch."""
-    if not decision.live_execution_authorized:
-        raise RuntimeError(
-            "LIVE_EXECUTION_NOT_AUTHORIZED: readiness review is not real-money authorization"
-        )
+    """Deny until a separately authenticated, scoped authority is implemented.
+
+    A caller can construct or mutate a decision object in Python. In particular,
+    its Boolean is not signed operator consent and cannot authorize execution.
+    This temporary boundary must be replaced only together with a verified
+    production authority and final broker-boundary enforcement.
+    """
+    raise RuntimeError(
+        "LIVE_EXECUTION_NOT_AUTHORIZED: no verified production order authority"
+    )
+

@@ -55,6 +55,17 @@ def process_direct_partial_fill(dsn, client_order_id, result):
         result.put(type(exc).__name__ + ':' + str(exc))
 
 
+def process_uncommitted_order_update(dsn, client_order_id, ready, release):
+    """Hold a SQL write open so the parent can kill the isolated worker."""
+    import psycopg
+    with psycopg.connect(dsn) as conn:
+        conn.execute("""UPDATE testnet_orders SET state='PARTIAL',
+          matched_quantity=0.5,average_price=100,state_version=state_version+1
+          WHERE client_order_id=%s""", (client_order_id,))
+        ready.put('UPDATED_BEFORE_COMMIT')
+        release.wait(30)
+
+
 def process_crash_after_snapshot_before_post(dsn, client_order_id):
     store=PostgresTestnetOrderStore(dsn)
     local=store.get(client_order_id)
@@ -434,6 +445,28 @@ else: raise AssertionError('restart cleared halt')
         self.assertEqual(self.transport.calls,0)
         self.assertEqual(self.fetch('SELECT state FROM risk_approvals')[0][0],'ISSUED')
 
+    def test_crash_rolls_back_order_and_transactional_account_invalidation(self):
+        approval=approve(self.g)
+        self.submit(approval)
+        self.observe()
+        before_order=self.orders.get(approval.client_order_id)
+        account_sql='SELECT reconciled,unresolved_orders,state_version FROM risk_account_state'
+        before_account=self.fetch(account_sql)
+        ctx=multiprocessing.get_context('spawn')
+        ready=ctx.Queue(); release=ctx.Event()
+        worker=ctx.Process(target=process_uncommitted_order_update,
+                           args=(self.dsn,approval.client_order_id,ready,release))
+        worker.start()
+        try:
+            self.assertEqual(ready.get(timeout=20),'UPDATED_BEFORE_COMMIT')
+            worker.kill(); worker.join(10)
+            self.assertIsNotNone(worker.exitcode)
+        finally:
+            if worker.is_alive(): worker.kill(); worker.join(10)
+            ready.close(); ready.join_thread()
+        self.assertEqual(self.orders.get(approval.client_order_id),before_order)
+        self.assertEqual(self.fetch(account_sql),before_account)
+
     def test_duplicate_unresolved_fee_reconciliation_keeps_persisted_state_unchanged(self):
         approval=approve(self.g)
         self.submit(approval)
@@ -546,7 +579,14 @@ else: raise AssertionError('restart cleared halt')
         self.orders.ensure_schema();self.orders.ensure_schema();self.g.ensure_schema()
         self.assertEqual(self.orders.get('legacy').requested_quantity,q)
         self.assertEqual(self.orders.get('legacy').state_version,0)
-        self.submit(approve(self.g,quantity=str(q)))
+        # The legacy order has no account/reservation identity. Migration must
+        # preserve it AND prevent admission until its state is reconciled.
+        with self.assertRaisesRegex(RiskAdmissionError,'ACCOUNT_NOT_RECONCILED'):
+            approve(self.g,quantity=str(q))
+        legacy=self.orders.get('legacy')
+        self.orders.update(replace(legacy,state=OrderLifecycle.CANCELLED))
+        self.observe()
+        self.submit(approve(self.g,quantity=str(q),now=self.now))
         self.assertEqual(self.orders.get('precision').requested_quantity,q)
         self.assertEqual(self.fetch('SELECT peak_equity FROM risk_account_state')[0][0],Decimal('1000'))
 
