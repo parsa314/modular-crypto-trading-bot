@@ -32,6 +32,10 @@ first, the old approval is rejected. If admission takes the account lock first,
 the mutation waits or PostgreSQL detects a deadlock and aborts a transaction;
 aborted work must be rolled back and reevaluated. Triggers are transactional and
 crash rollback must not leave an invalidation detached from its OMS write.
+The acceptance suite includes independent spawned processes for stale order
+mutation, waiting on the account lock, crash before commit, and an explicit
+SERIALIZABLE conflict followed by reevaluation in a fresh transaction. Results
+must be read from the exact CI revision; listing a test is not a passing result.
 
 This does **not** solve the window between committed intent consumption and the
 external send, authenticate the database role/schema, prevent privileged DDL or

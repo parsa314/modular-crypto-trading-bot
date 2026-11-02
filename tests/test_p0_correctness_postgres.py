@@ -80,6 +80,31 @@ def process_blocking_order_update(dsn, client_order_id, application_name, ready,
         result.put(type(exc).__name__ + ':' + str(exc))
 
 
+def process_serializable_approval_retry(dsn, ready, proceed, result):
+    """Force an old SERIALIZABLE snapshot, then retry with a fresh connection."""
+    import psycopg
+    try:
+        conn=psycopg.connect(dsn)
+        conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+        conn.execute('SELECT state_version FROM risk_account_state WHERE account_id=%s AND venue_id=%s',
+                     (ACCOUNT,VENUE)).fetchone()
+        ready.put('SNAPSHOT_TAKEN')
+        if not proceed.wait(20): raise RuntimeError('TEST_BARRIER_TIMEOUT')
+        stale=governor(dsn)
+        stale._connect=lambda: conn
+        try:
+            approve(stale,cid='serial-retry')
+        except RiskAdmissionError as exc:
+            if 'RISK_TRANSACTION_CONFLICT_REEVALUATE' not in str(exc):
+                raise
+        else:
+            raise AssertionError('stale serializable transaction was not rejected')
+        retry=approve(governor(dsn),cid='serial-retry')
+        result.put('RETRIED' if retry.approved else 'RETRY_NOT_APPROVED')
+    except Exception as exc:
+        result.put(type(exc).__name__ + ':' + str(exc))
+
+
 def process_crash_after_snapshot_before_post(dsn, client_order_id):
     store=PostgresTestnetOrderStore(dsn)
     local=store.get(client_order_id)
@@ -462,6 +487,26 @@ else: raise AssertionError('restart cleared halt')
             with self.assertRaises(TestnetSafetyError):
                 self.submit(second)
             self.assertEqual(self.transport.calls,1)
+        finally:
+            if worker.is_alive(): worker.kill();worker.join(10)
+            ready.close();ready.join_thread();result.close();result.join_thread()
+
+    def test_serialization_conflict_rolls_back_and_retry_reevaluates(self):
+        ctx=multiprocessing.get_context('spawn')
+        ready=ctx.Queue();result=ctx.Queue();proceed=ctx.Event()
+        worker=ctx.Process(target=process_serializable_approval_retry,args=(self.dsn,ready,proceed,result))
+        worker.start()
+        try:
+            self.assertEqual(ready.get(timeout=20),'SNAPSHOT_TAKEN')
+            with self.g._connect() as conn:
+                conn.execute('UPDATE risk_account_state SET cash=cash WHERE account_id=%s AND venue_id=%s',
+                             (ACCOUNT,VENUE))
+            proceed.set()
+            self.assertEqual(result.get(timeout=20),'RETRIED')
+            worker.join(10)
+            self.assertEqual(worker.exitcode,0)
+            self.assertEqual(self.fetch("SELECT count(*) FROM risk_reservations WHERE client_order_id='serial-retry'")[0][0],1)
+            self.assertEqual(self.fetch("SELECT count(*) FROM risk_approvals WHERE state='ISSUED'")[0][0],1)
         finally:
             if worker.is_alive(): worker.kill();worker.join(10)
             ready.close();ready.join_thread();result.close();result.join_thread()
