@@ -71,6 +71,11 @@ Authorization is distinct from runtime state: this documentation update does not
 
 Historical research records retain their original execution state as provenance and do not override this later owner authorization.
 
+### 2026-11-04 — Separate real-data and test execution gates
+
+The owner prioritizes **authentic exchange-origin live/historical market data**, a separate **first-seen forward-paper engine**, and verified **official exchange DEMO** tests. See [the live-data/PAPER/DEMO policy](docs/LIVE_DATA_PAPER_DEMO_GATE_POLICY_2026-11-04.md). Production G1 financial blockers do **not** prohibit read-only public market feeds, immutable historical downloads or isolated paper simulation; DEMO private read-only preflight is permitted. Official DEMO orders require separate proof of D0 sandbox safety. Earlier generic live-trading authorization does **not** instruct agents to activate production real-money orders in this development task. Preserve production fail-closed barriers, risk limits, scientific holdouts and evidence provenance.
+
+
 ## 6. Dependency Authority
 
 For the scientific bot, use the dependency declarations in this repository as authoritative.
