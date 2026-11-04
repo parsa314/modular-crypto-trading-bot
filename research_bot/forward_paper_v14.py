@@ -33,19 +33,37 @@ class ForwardPaperConfig:
     period: str = "4hour"
     bars: int = 280
     initial_cash: float = 10_000.0
-    risk_fraction: float = 0.005
+    risk_fraction: float = 0.0025
     max_order_notional: float = 2_000.0
     entry_rule_score: float = 0.80
     fee_bps: float = 10.0
     slippage_bps: float = 2.0
     max_spread_bps: float = 35.0
-    max_drawdown: float = 0.12
+    max_drawdown: float = 0.05
+    max_gross_exposure: float = 0.70
     max_asset_weight: float = 0.25
     min_stop_fraction: float = 0.01
     atr_stop_multiple: float = 2.0
     max_quote_age_seconds: float = 30.0
     max_future_quote_skew_seconds: float = 5.0
     max_signal_age_minutes: float = 60.0
+
+    def __post_init__(self) -> None:
+        # Strategy-level paper limits cannot be relaxed by configuration.
+        # This is NOT a durable daily-loss gate or a real broker stop order.
+        import math
+
+        checks = {
+            "risk_fraction": (self.risk_fraction, 0.0025),
+            "max_drawdown": (self.max_drawdown, 0.05),
+            "max_gross_exposure": (self.max_gross_exposure, 0.70),
+            "max_asset_weight": (self.max_asset_weight, 0.35),
+        }
+        for name, (value, ceiling) in checks.items():
+            if not math.isfinite(value) or not 0 < value <= ceiling:
+                raise ValueError(f"PAPER_RISK_CONSTITUTION_BREACH:{name}")
+        if not math.isfinite(self.max_order_notional) or self.max_order_notional <= 0:
+            raise ValueError("INVALID_PAPER_ORDER_NOTIONAL")
 
 
 @dataclass(frozen=True)
@@ -186,7 +204,7 @@ class ForwardPaperRunner:
         self.risk_engine = RiskEngine(
             RiskLimits(
                 max_drawdown=self.config.max_drawdown,
-                max_gross_exposure=1.0,
+                max_gross_exposure=self.config.max_gross_exposure,
                 max_asset_weight=self.config.max_asset_weight,
                 max_turnover_per_step=0.50,
                 max_spread_bps=self.config.max_spread_bps,
@@ -342,9 +360,15 @@ class ForwardPaperRunner:
                 self.config.atr_stop_multiple
                 * (signal.atr_pct if np.isfinite(signal.atr_pct) else self.config.min_stop_fraction),
             )
+            # Conservative estimated round-trip costs participate in the
+            # sizing hypothesis; this does not imply an actual stop is placed.
+            round_trip_cost_fraction = (
+                2.0 * (self.config.fee_bps + self.config.slippage_bps)
+                + max(0.0, depth.spread_bps)
+            ) / 10_000.0
             risk_notional = self.risk_engine.position_size_from_risk(
                 equity=account.equity,
-                stop_distance_fraction=stop_fraction,
+                stop_distance_fraction=stop_fraction + round_trip_cost_fraction,
                 risk_fraction=self.config.risk_fraction,
                 volatility_scale=1.0,
             )
