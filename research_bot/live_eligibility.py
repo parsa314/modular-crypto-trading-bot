@@ -7,7 +7,6 @@ from typing import Iterable
 
 import ccxt
 import numpy as np
-import numpy as np
 import pandas as pd
 
 from .fast_scanner import FastScanConfig, scan_universe
