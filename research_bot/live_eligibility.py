@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, replace
+import math
 from datetime import datetime, timezone
 from typing import Iterable
 
@@ -78,7 +79,7 @@ def _abnormal_fraction(df: pd.DataFrame) -> float:
         return 1.0
     x = df[required].apply(pd.to_numeric, errors="coerce")
     bad = (
-        x.isna().any(axis=1)
+        (~np.isfinite(x).all(axis=1))
         | (x["high"] < x[["open", "close", "low"]].max(axis=1))
         | (x["low"] > x[["open", "close", "high"]].min(axis=1))
         | (x[["open", "high", "low", "close"]] <= 0).any(axis=1)
@@ -136,9 +137,17 @@ def prefilter_discovery(
             continue
         if x.base.upper() in _STABLE_BASES or _looks_leveraged(x.base):
             continue
-        if x.volume_24h_quote is None or x.volume_24h_quote < cfg.min_volume_24h_quote:
+        if (
+            x.volume_24h_quote is None
+            or not math.isfinite(x.volume_24h_quote)
+            or x.volume_24h_quote < cfg.min_volume_24h_quote
+        ):
             continue
-        if x.spread_bps is not None and x.spread_bps > cfg.max_spread_bps:
+        if x.spread_bps is not None and (
+            not math.isfinite(x.spread_bps)
+            or x.spread_bps < 0
+            or x.spread_bps > cfg.max_spread_bps
+        ):
             continue
         viable.append(x)
 
@@ -215,7 +224,7 @@ class CCXTLiveAuditor:
         return frame.drop_duplicates("timestamp").sort_values("timestamp").tail(target).reset_index(drop=True)
 
     def fetch_spread_bps(self, listing: MarketListing) -> float | None:
-        if listing.spread_bps is not None:
+        if listing.spread_bps is not None and math.isfinite(listing.spread_bps) and listing.spread_bps >= 0:
             return float(listing.spread_bps)
         ex = self._exchange(listing.exchange)
         book = ex.fetch_order_book(listing.symbol, limit=5)
@@ -225,10 +234,13 @@ class CCXTLiveAuditor:
             return None
         bid = float(bids[0][0])
         ask = float(asks[0][0])
+        if not (math.isfinite(bid) and math.isfinite(ask)):
+            return None
         if bid <= 0 or ask <= 0 or ask < bid:
             return None
         mid = (bid + ask) / 2.0
-        return float((ask - bid) / mid * 10_000.0) if mid else None
+        spread = (ask - bid) / mid * 10_000.0 if mid > 0 else float("nan")
+        return float(spread) if math.isfinite(spread) else None
 
 
 def run_live_eligibility_pipeline(

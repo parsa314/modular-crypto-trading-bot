@@ -40,7 +40,7 @@ def _abnormal_fraction(df: pd.DataFrame) -> float:
         return 1.0
     x = df[list(required)].apply(pd.to_numeric, errors="coerce")
     bad = (
-        x.isna().any(axis=1)
+        (~np.isfinite(x).all(axis=1))
         | (x["high"] < x[["open", "close", "low"]].max(axis=1))
         | (x["low"] > x[["open", "close", "high"]].min(axis=1))
         | (x[["open", "high", "low", "close"]] <= 0).any(axis=1)
@@ -88,6 +88,9 @@ def scan_symbol(symbol: str, bars: pd.DataFrame, config: FastScanConfig | None =
     abnormal_fraction = _abnormal_fraction(bars)
     if abnormal_fraction > cfg.max_abnormal_fraction:
         reasons.append("ABNORMAL_CANDLES")
+    # Do not silently fall back to an older bar when the newest candle is bad.
+    if not bars.empty and _abnormal_fraction(bars.tail(1)) > 0:
+        reasons.append("LATEST_CANDLE_INVALID")
 
     if reasons:
         return FastScanRow(
