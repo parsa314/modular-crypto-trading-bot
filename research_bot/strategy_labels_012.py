@@ -56,21 +56,28 @@ def triple_barrier_label(frame: pd.DataFrame, *, decision_at: datetime, entry_at
     if data.empty:
         return BarrierLabel("PENDING",None,0,"NO_COMPLETED_ENTRY_BAR")
     data=data.iloc[:horizon_bars]
+    # Path-dependent labels consume every bar up through the event bar.
+    # The label cannot be available before the slowest consumed observation.
+    latest_consumed_availability = None
     for index, row in enumerate(data.itertuples(index=False),start=1):
         expected = entry + (index-1)*_DURATIONS[timeframe]
         if row.timestamp != expected or row.timestamp.floor(_UTC_ALIGNMENT[timeframe]) != row.timestamp:
             raise ValueError("MISSING_DUPLICATE_OR_MISALIGNED_LABEL_BARS")
         if row.available_at < row.timestamp + _DURATIONS[timeframe]:
             raise ValueError("LABEL_BAR_NOT_CLOSED")
+        latest_consumed_availability = (
+            row.available_at if latest_consumed_availability is None
+            else max(latest_consumed_availability, row.available_at)
+        )
         high,low = _number(row.high),_number(row.low)
         if low > high:
             raise ValueError("INVALID_BAR_RANGE")
         tp_hit = high >= tp if direction == "LONG" else low <= tp
         sl_hit = low <= sl if direction == "LONG" else high >= sl
         if tp_hit and sl_hit:
-            return BarrierLabel("AMBIGUOUS",row.available_at.isoformat(),index,"BOTH_BARRIERS_SAME_BAR")
+            return BarrierLabel("AMBIGUOUS",latest_consumed_availability.isoformat(),index,"BOTH_BARRIERS_SAME_BAR")
         if tp_hit or sl_hit:
-            return BarrierLabel("TP" if tp_hit else "SL",row.available_at.isoformat(),index,"BARRIER_OBSERVED")
+            return BarrierLabel("TP" if tp_hit else "SL",latest_consumed_availability.isoformat(),index,"BARRIER_OBSERVED")
     if len(data) == horizon_bars:
-        return BarrierLabel("TIMEOUT",data.available_at.iloc[-1].isoformat(),len(data),"HORIZON_COMPLETE")
+        return BarrierLabel("TIMEOUT",latest_consumed_availability.isoformat(),len(data),"HORIZON_COMPLETE")
     return BarrierLabel("PENDING",None,len(data),"HORIZON_NOT_YET_AVAILABLE")

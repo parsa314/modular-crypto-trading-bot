@@ -1,0 +1,53 @@
+name: master-quant-002-offline
+on:
+  push:
+    branches: [research/master-quant-002-l1]
+  pull_request:
+    branches: [research/master-quant-001-ichimoku]
+permissions:
+  contents: read
+jobs:
+  offline-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LIVE_EXECUTION: 'false'
+      PAPER_EXECUTION: 'false'
+      BOT_FORWARD_PAPER_ENABLED: 'false'
+      BOT_PAPER_EXECUTION_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: cda9e5ff47d0f40cb62b6734c784317d2f15e405
+          path: source-data
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e '.[dev]' pyarrow
+      - name: Causality, execution and data tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/master-quant-002
+          git rev-parse HEAD > artifacts/master-quant-002/checkout-sha.txt
+          git -C source-data rev-parse HEAD > artifacts/master-quant-002/source-sha.txt
+          python --version > artifacts/master-quant-002/python-version.txt
+          python -m pip freeze > artifacts/master-quant-002/environment.txt
+          pytest -q tests/test_baseline_trade_contracts.py tests/test_quant_002_l1.py tests/test_quant_002_data.py tests/test_quant_001_ichimoku.py tests/test_strategy_research_012.py tests/test_strategy_labels_012.py tests/test_strategy_label_availability_001.py tests/test_strategy_regime_012.py --junitxml=artifacts/master-quant-002/junit.xml 2>&1 | tee artifacts/master-quant-002/tests.log
+      - name: Previously observed historical development scenario
+        shell: bash
+        run: |
+          set -euo pipefail
+          export QUANT_002_SOURCE_SHA="$(git rev-parse HEAD)"
+          python scripts/quant_002_historical.py source-data/data/btc_usdt_m15_2022_2024.parquet source-data/data/btc_usdt_m15_2022_2024.manifest.json artifacts/master-quant-002/historical 2>&1 | tee artifacts/master-quant-002/historical.log
+      - name: Hash evidence
+        if: always()
+        run: |
+          mkdir -p artifacts/master-quant-002
+          find artifacts/master-quant-002 -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 -r sha256sum > artifacts/master-quant-002/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: master-quant-002-${{ github.sha }}
+          path: artifacts/master-quant-002/
