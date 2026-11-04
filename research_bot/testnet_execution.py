@@ -15,6 +15,7 @@ import json
 from typing import Any, Protocol
 
 from .contracts import ExecutionMode
+from .demo_readiness import DemoOrderDecision
 from .execution import OrderSide
 from .live_readiness import LiveReadinessDecision
 from .order_reconciliation_v52 import (
@@ -268,20 +269,28 @@ class TestnetExecutionGateway:
         *,
         transport: SandboxTransport,
         store: TestnetOrderStore,
-        readiness: LiveReadinessDecision,
+        readiness: LiveReadinessDecision | None = None,
+        demo_readiness: DemoOrderDecision | None = None,
         mode: ExecutionMode = ExecutionMode.TESTNET,
     ) -> None:
         if mode is not ExecutionMode.TESTNET:
             raise TestnetSafetyError("TESTNET_GATEWAY_REJECTS_NON_TESTNET_MODE")
         if not bool(getattr(transport, "sandbox", False)):
             raise TestnetSafetyError("SANDBOX_TRANSPORT_REQUIRED")
-        if not readiness.testnet_review_eligible:
-            raise TestnetSafetyError("TESTNET_READINESS_GATE_CLOSED")
-        if readiness.live_execution_authorized:
+        # Legacy scientific/testnet readiness is not D0 authority. Both an
+        # absent D0 decision and a failed D0 decision must block demo orders.
+        if readiness is not None and readiness.live_execution_authorized:
             raise TestnetSafetyError("LIVE_AUTHORIZATION_MUST_NOT_FLOW_THROUGH_TESTNET_GATEWAY")
+        if demo_readiness is None or not demo_readiness.order_test_eligible:
+            raise TestnetSafetyError("TESTNET_READINESS_GATE_CLOSED:D0")
+        if demo_readiness.live_execution_authorized:
+            raise TestnetSafetyError("DEMO_GATE_MUST_NOT_AUTHORIZE_LIVE")
+        if demo_readiness.venue != transport.venue:
+            raise TestnetSafetyError("DEMO_VENUE_IDENTITY_MISMATCH")
         self.transport = transport
         self.store = store
         self.readiness = readiness
+        self.demo_readiness = demo_readiness
         self.mode = mode
 
     def submit_market(
@@ -296,10 +305,20 @@ class TestnetExecutionGateway:
         risk_decision: RiskDecision,
         created_at: datetime | None = None,
     ) -> ReconciledOrder:
+        # No transport method may be called when sandbox identity, D0 or
+        # independent portfolio risk is not satisfied at submit time.
+        if not bool(getattr(self.transport, "sandbox", False)):
+            raise TestnetSafetyError("SANDBOX_TRANSPORT_REQUIRED")
+        if not self.demo_readiness.order_test_eligible:
+            raise TestnetSafetyError("TESTNET_READINESS_GATE_CLOSED:D0")
+        if self.transport.venue != self.demo_readiness.venue:
+            raise TestnetSafetyError("DEMO_VENUE_IDENTITY_MISMATCH")
         if not risk_decision.approved or risk_decision.kill_switch:
             raise TestnetSafetyError("RISK_GATE_REJECTED")
         if not client_order_id.strip() or not symbol.strip():
             raise ValueError("client_order_id and symbol are required")
+        if symbol not in self.demo_readiness.allowed_symbols:
+            raise TestnetSafetyError("DEMO_SYMBOL_NOT_ALLOWLISTED")
 
         qty = decimal_from(quantity, "quantity")
         ref = decimal_from(reference_price, "reference_price")
@@ -310,6 +329,8 @@ class TestnetExecutionGateway:
             raise TestnetSafetyError("MIN_QUANTITY_BREACH")
         if qty * ref < precision.min_notional:
             raise TestnetSafetyError("MIN_NOTIONAL_BREACH")
+        if qty * ref > self.demo_readiness.max_virtual_notional:
+            raise TestnetSafetyError("DEMO_VIRTUAL_NOTIONAL_CAP_BREACH")
 
         now = created_at or datetime.now(timezone.utc)
         if now.tzinfo is None:

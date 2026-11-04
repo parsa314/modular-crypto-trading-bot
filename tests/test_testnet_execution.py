@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from research_bot.contracts import ExecutionMode
+from research_bot.demo_readiness import DemoOrderEvidence, evaluate_demo_order_readiness
 from research_bot.execution import OrderSide
 from research_bot.live_readiness import LiveReadinessChecklist, evaluate_live_readiness
 from research_bot.order_reconciliation_v52 import OrderLifecycle
@@ -29,6 +30,26 @@ def _readiness():
             forward_paper_reconciled=True,
             order_reconciliation_validated=True,
             risk_constitution_unified=True,
+        )
+    )
+
+
+def _demo_ready():
+    return evaluate_demo_order_readiness(
+        DemoOrderEvidence(
+            venue="FAKE_DEMO",
+            allowed_symbols=("BTC/USDT",),
+            max_virtual_notional=Decimal("2000"),
+            explicit_demo_enabled=True,
+            official_sandbox_identity_verified=True,
+            demo_scoped_credentials_verified=True,
+            authenticated_readonly_preflight_passed=True,
+            durable_intent_and_recovery_validated=True,
+            ambiguous_submit_reconciliation_validated=True,
+            fee_liability_and_terminal_reconciliation_validated=True,
+            independent_risk_and_kill_switch_validated=True,
+            failure_drills_passed=True,
+            explicit_operator_demo_order_approval=True,
         )
     )
 
@@ -74,6 +95,7 @@ def _gateway(transport=None, store=None):
         transport=transport or FakeSandboxTransport(),
         store=store or MemoryTestnetOrderStore(),
         readiness=_readiness(),
+        demo_readiness=_demo_ready(),
     )
 
 
