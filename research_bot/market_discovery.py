@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -35,21 +36,33 @@ def _market_type(market: dict) -> str:
 
 
 def _quote_volume(ticker: dict | None) -> float | None:
+    """Normalize public quote volume; non-finite or negative values are unknown."""
     if not ticker:
         return None
     qv = ticker.get("quoteVolume")
     if qv is not None:
         try:
-            return float(qv)
-        except (TypeError, ValueError):
+            volume = float(qv)
+            if math.isfinite(volume) and volume >= 0:
+                return volume
+        except (TypeError, ValueError, OverflowError):
             pass
     bv = ticker.get("baseVolume")
     last = ticker.get("last") or ticker.get("close")
     if bv is not None and last is not None:
         try:
-            return float(bv) * float(last)
-        except (TypeError, ValueError):
-            return None
+            base_volume, price = float(bv), float(last)
+            volume = base_volume * price
+            if (
+                math.isfinite(base_volume)
+                and math.isfinite(price)
+                and base_volume >= 0
+                and price > 0
+                and math.isfinite(volume)
+            ):
+                return volume
+        except (TypeError, ValueError, OverflowError):
+            pass
     return None
 
 
@@ -59,12 +72,15 @@ def _spread_bps(ticker: dict | None) -> float | None:
     try:
         bid = float(ticker.get("bid"))
         ask = float(ticker.get("ask"))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not (math.isfinite(bid) and math.isfinite(ask)):
         return None
     if bid <= 0 or ask <= 0 or ask < bid:
         return None
     mid = (bid + ask) / 2.0
-    return float((ask - bid) / mid * 10_000.0) if mid else None
+    spread = (ask - bid) / mid * 10_000.0 if mid > 0 else float("nan")
+    return float(spread) if math.isfinite(spread) and spread >= 0 else None
 
 
 def normalize_market_listing(

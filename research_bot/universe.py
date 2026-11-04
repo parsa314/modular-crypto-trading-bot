@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Iterable
 
 
@@ -82,6 +83,14 @@ def _looks_leveraged(base: str, suffixes: tuple[str, ...]) -> bool:
     return any(b.endswith(s) and len(b) > len(s) + 1 for s in suffixes)
 
 
+def _finite_nonnegative(value: float | None) -> bool:
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return math.isfinite(number) and number >= 0
+
+
 def evaluate_listing(listing: MarketListing, policy: EligibilityPolicy | None = None) -> EligibilityResult:
     p = policy or EligibilityPolicy()
     reasons: list[str] = []
@@ -102,11 +111,15 @@ def evaluate_listing(listing: MarketListing, policy: EligibilityPolicy | None = 
 
     if listing.volume_24h_quote is None:
         reasons.append("MISSING_VOLUME")
+    elif not _finite_nonnegative(listing.volume_24h_quote):
+        reasons.append("INVALID_VOLUME")
     elif listing.volume_24h_quote < p.min_volume_24h_quote:
         reasons.append("LOW_LIQUIDITY")
 
     if listing.spread_bps is None:
         reasons.append("MISSING_SPREAD")
+    elif not _finite_nonnegative(listing.spread_bps):
+        reasons.append("INVALID_SPREAD")
     elif listing.spread_bps > p.max_spread_bps:
         reasons.append("SPREAD_TOO_WIDE")
 
@@ -117,11 +130,15 @@ def evaluate_listing(listing: MarketListing, policy: EligibilityPolicy | None = 
 
     if listing.missing_fraction is None:
         reasons.append("MISSING_DATA_QUALITY_AUDIT")
+    elif not _finite_nonnegative(listing.missing_fraction) or listing.missing_fraction > 1:
+        reasons.append("INVALID_MISSING_FRACTION")
     elif listing.missing_fraction > p.max_missing_fraction:
         reasons.append("TOO_MANY_MISSING_BARS")
 
     if listing.abnormal_fraction is None:
         reasons.append("MISSING_ABNORMAL_CANDLE_AUDIT")
+    elif not _finite_nonnegative(listing.abnormal_fraction) or listing.abnormal_fraction > 1:
+        reasons.append("INVALID_ABNORMAL_FRACTION")
     elif listing.abnormal_fraction > p.max_abnormal_fraction:
         reasons.append("TOO_MANY_ABNORMAL_BARS")
 
