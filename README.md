@@ -3,11 +3,13 @@
 **Evidence-driven MSc research platform for an AI cryptocurrency trading bot using financial machine learning, deep learning, portfolio risk management and reproducible out-of-sample validation.**
 
 > **Scientific contract:** Evidence Before Opinion  
-> **Execution status:** `RESEARCH_ONLY / PAPER_OFF / LIVE_OFF`  
+> **Current monitoring deployment:** `RESEARCH_ONLY / PAPER_OFF / LIVE_OFF`; this does not prohibit separate real exchange feed / forward-paper development.  
 > **Latest completed scientific result:** `v0.50 — V50_NONOVERLAP_FAILURE_SUPPORTED`  
 > **Active prospective hypothesis:** `v0.51 — overlap-conflict arbitration`  
 > **Current v0.51 state:** `BLOCKED / SCIENTIFIC_DECISION_DEFERRED` — canonical prospective evidence has not yet been collected.  
 > **Research claim:** no strategy is claimed as guaranteed profitable alpha.
+
+> **2026-11-04 development policy:** [exchange-origin live data, first-seen paper, official DEMO gates](docs/LIVE_DATA_PAPER_DEMO_GATE_POLICY_2026-11-04.md). Public live data and isolated PAPER are not blocked by G1 financial readiness; DEMO orders require a separate sandbox safety gate D0; production trading is not enabled by this policy.
 
 > **Agent / repository routing:** This repository is the **canonical scientific and engineering source of truth**. `parsa314/miladchicomobot` is a lightweight public deployment/monitoring shell, not the main research codebase. Any coding or research agent must read [`AGENTS.md`](AGENTS.md) before changing repository roles, Railway routing, execution flags, dependencies, or scientific logic.
 
@@ -51,7 +53,7 @@ Core principles:
 - mark-to-market portfolio risk, correlation and CVaR constraints;
 - immutable manifests, artifact digests and dependency provenance;
 - no same-test rescue tuning;
-- PAPER/LIVE execution remains fail-closed until a separate promotion path is satisfied.
+- The monitoring deployment remains PAPER/LIVE-off. Real-feed forward PAPER must use a separate isolated worker and provenance record; real-money production orders remain independently gated.
 
 ## v0.50 — latest completed scientific result
 
@@ -143,6 +145,7 @@ Predictive models do not directly authorize exchange execution. Portfolio/risk c
 ## Repository governance
 
 - [Agent operating contract](AGENTS.md)
+- [Live data and official DEMO mode gates](docs/LIVE_DATA_PAPER_DEMO_GATE_POLICY_2026-11-04.md)
 - [Contribution guidelines](CONTRIBUTING.md)
 - [Code of conduct](CODE_OF_CONDUCT.md)
 - [Security policy](SECURITY.md)
