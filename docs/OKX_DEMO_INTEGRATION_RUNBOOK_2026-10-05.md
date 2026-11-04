@@ -44,15 +44,25 @@ Never commit credentials, `.env` files, API keys, secrets, or passphrases.
 
 ## Required evidence before a Demo order
 
-A Demo submission must still pass the existing `TestnetExecutionGateway`:
+A Demo submission must pass `TestnetExecutionGateway` with a separate
+`DemoOrderDecision` from `research_bot.demo_readiness.evaluate_demo_order_readiness`.
+Legacy `LiveReadinessDecision.testnet_review_eligible` does **not** confer
+DEMO order permission.
 
-- TESTNET readiness review eligible;
-- independent RiskDecision approved;
-- risk kill-switch false;
-- quantity/minimum checks;
-- durable order intent persisted before submit.
+- D0 defaults to denied: verified official sandbox/account identity, demo-only
+  credential scope and actual authenticated read-only preflight evidence;
+- independent operator-scoped DEMO approval, finite virtual order-notional cap,
+  exact venue identity and symbol allowlist;
+- demonstrated persistent intent, uncertain-submit recovery, foreign-currency
+  fee liability/terminal reconciliation, kill switch and failure drills;
+- independent `RiskDecision` approved with kill switch off;
+- quantity/minimum checks and a durable order intent before submit.
 
-The adapter itself cannot bypass these conditions.
+**Important:** Passing unit tests with all evidence booleans true is synthetic
+engineering verification ONLY. Do not populate operational D0 evidence from
+a fixture, environment guess, or the prior broad LIVE authorization.
+Known unresolved finance defects keep operational D0 blocked until separately
+tested for the selected DEMO path. The adapter itself cannot bypass the gate.
 
 ## Credentialed preflight
 
