@@ -127,7 +127,12 @@ def snapshot_from_ccxt_order(
         raise TestnetSafetyError("OKX_CLIENT_ORDER_ID_MISMATCH")
     client_order_id = fallback_client_order_id if venue_client in (None, "") else str(venue_client)
 
-    filled = _decimal_or_zero(order.get("filled"), "filled")
+    # An absent cumulative fill is not proof of an explicitly unfilled order.
+    # In particular, treating a missing terminal fill as zero can release
+    # reserved capital while real fills remain unreconciled.
+    if order.get("filled") in (None, ""):
+        raise AmbiguousTransportOutcome("OKX_FILL_QUANTITY_UNAVAILABLE")
+    filled = decimal_from(order["filled"], "filled")
     amount_raw = order.get("amount")
     if amount_raw in (None, ""):
         amount = fallback_requested_quantity or Decimal("0")
