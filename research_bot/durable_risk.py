@@ -90,6 +90,9 @@ class RiskApproval:
     expires_at: datetime
     reservation_id: str
     approval_state: str = "ISSUED"
+    # Older serialized approvals have no version and are rejected by the
+    # PostgreSQL authority; unit-only test authorities may still construct them.
+    account_state_version: int | None = None
 
     @property
     def approved(self) -> bool:
@@ -176,6 +179,89 @@ class PostgresRiskGovernor:
               state TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL,
               PRIMARY KEY(account_id,venue_id,client_order_id),
               CHECK(state IN ('UNRESOLVED','QUOTE_REPORTED')));
+            -- A prior deployment may contain orders/reservations that changed
+            -- without advancing the account version. Do not silently trust its
+            -- previous anchor when installing the guards.
+            DO $$ BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_trigger
+                WHERE tgrelid='risk_reservations'::regclass
+                  AND tgname='risk_reservation_invalidation' AND NOT tgisinternal)
+              OR NOT EXISTS (SELECT 1 FROM pg_trigger
+                WHERE tgrelid='risk_fee_liabilities'::regclass
+                  AND tgname='risk_fee_invalidation' AND NOT tgisinternal) THEN
+                UPDATE risk_account_state a SET reconciled=FALSE,unresolved_orders=TRUE,
+                  state_version=state_version+1 WHERE EXISTS (
+                    SELECT 1 FROM risk_reservations r WHERE r.account_id=a.account_id AND r.venue_id=a.venue_id
+                    UNION ALL
+                    SELECT 1 FROM risk_fee_liabilities f WHERE f.account_id=a.account_id AND f.venue_id=a.venue_id
+                  );
+              END IF;
+            END $$;
+            CREATE OR REPLACE FUNCTION advance_risk_account_version()
+            RETURNS trigger LANGUAGE plpgsql AS $$
+            BEGIN
+              IF (NEW.account_id,NEW.venue_id) IS DISTINCT FROM (OLD.account_id,OLD.venue_id) THEN
+                RAISE EXCEPTION 'IMMUTABLE_RISK_ACCOUNT_IDENTITY';
+              END IF;
+              NEW.state_version := OLD.state_version + 1;
+              RETURN NEW;
+            END $$;
+            DROP TRIGGER IF EXISTS risk_account_state_version_guard ON risk_account_state;
+            CREATE TRIGGER risk_account_state_version_guard BEFORE UPDATE ON risk_account_state
+              FOR EACH ROW EXECUTE FUNCTION advance_risk_account_version();
+            -- A reservation change must invalidate a previously issued risk
+            -- decision even when it is made through SQL, not the governor.
+            -- INSERT is already a risk reservation: bump the version while
+            -- keeping a verified anchor usable for the issuing transaction.
+            -- UPDATE/DELETE may change fill or released-budget semantics, so
+            -- additionally require a fresh reconciliation.
+            CREATE OR REPLACE FUNCTION invalidate_risk_reservation_change()
+            RETURNS trigger LANGUAGE plpgsql AS $$
+            BEGIN
+              IF TG_OP = 'UPDATE' AND
+                 (NEW.reservation_id,NEW.account_id,NEW.venue_id,NEW.client_order_id)
+                 IS DISTINCT FROM
+                 (OLD.reservation_id,OLD.account_id,OLD.venue_id,OLD.client_order_id) THEN
+                RAISE EXCEPTION 'IMMUTABLE_RESERVATION_IDENTITY';
+              END IF;
+              IF TG_OP = 'INSERT' THEN
+                UPDATE risk_account_state SET state_version=state_version+1
+                  WHERE account_id=NEW.account_id AND venue_id=NEW.venue_id;
+                RETURN NEW;
+              END IF;
+              UPDATE risk_account_state SET reconciled=FALSE,unresolved_orders=TRUE,
+                state_version=state_version+1
+                WHERE account_id=OLD.account_id AND venue_id=OLD.venue_id;
+              IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+              RETURN NEW;
+            END $$;
+            DROP TRIGGER IF EXISTS risk_reservation_invalidation ON risk_reservations;
+            CREATE TRIGGER risk_reservation_invalidation
+              AFTER INSERT OR UPDATE OR DELETE ON risk_reservations
+              FOR EACH ROW EXECUTE FUNCTION invalidate_risk_reservation_change();
+            CREATE OR REPLACE FUNCTION invalidate_risk_fee_change()
+            RETURNS trigger LANGUAGE plpgsql AS $$
+            BEGIN
+              IF TG_OP = 'UPDATE' AND
+                 (NEW.account_id,NEW.venue_id,NEW.client_order_id) IS DISTINCT FROM
+                 (OLD.account_id,OLD.venue_id,OLD.client_order_id) THEN
+                RAISE EXCEPTION 'IMMUTABLE_FEE_LIABILITY_IDENTITY';
+              END IF;
+              IF TG_OP = 'DELETE' THEN
+                UPDATE risk_account_state SET reconciled=FALSE,unresolved_orders=TRUE,
+                  state_version=state_version+1
+                  WHERE account_id=OLD.account_id AND venue_id=OLD.venue_id;
+                RETURN OLD;
+              END IF;
+              UPDATE risk_account_state SET reconciled=FALSE,unresolved_orders=TRUE,
+                state_version=state_version+1
+                WHERE account_id=NEW.account_id AND venue_id=NEW.venue_id;
+              RETURN NEW;
+            END $$;
+            DROP TRIGGER IF EXISTS risk_fee_invalidation ON risk_fee_liabilities;
+            CREATE TRIGGER risk_fee_invalidation
+              AFTER INSERT OR UPDATE OR DELETE ON risk_fee_liabilities
+              FOR EACH ROW EXECUTE FUNCTION invalidate_risk_fee_change();
             """)
 
     @staticmethod
@@ -241,6 +327,7 @@ class PostgresRiskGovernor:
             # Day rollover requires an observation within the first two minutes
             # of UTC day; a missed opening cannot be silently manufactured.
             valid_open = (at.hour == 0 and at.minute < 2)
+            rollover_ready = False
             if old is None:
                 day_equity, peak = D(o.equity), D(o.equity)
                 if not valid_open:
@@ -252,16 +339,18 @@ class PostgresRiskGovernor:
                 day_equity = old['day_equity']+flow
                 if old['day_utc'] != day:
                     day_equity = D(o.equity)
-                    if not valid_open or not o.reconciled or o.unresolved_orders or o.source_id not in self.accepted_fixture_sources:
+                    if (not valid_open or not o.reconciled or o.unresolved_orders
+                        or o.source_id not in self.accepted_fixture_sources
+                        or old['anchor_status'] != 'RECONCILED_TEST_FIXTURE'):
                         status = "ANCHOR_UNVERIFIED"
                     else:
                         status = "RECONCILED_TEST_FIXTURE" if o.source_id in self.accepted_fixture_sources else "ANCHOR_UNVERIFIED"
-                        conn.execute("UPDATE risk_halts SET state='RELEASED',released_at=%s,release_authorization='UTC_RECONCILED_ROLLOVER',state_version=state_version+1 WHERE account_id=%s AND venue_id=%s AND halt_type='DAILY' AND state='ACTIVE'",
-                                     (at,o.account_id,o.venue_id))
+                        rollover_ready = True
             if day_equity <= 0 or peak <= 0:
                 status = "ANCHOR_UNVERIFIED"
             unresolved = o.unresolved_orders
-            if conn.execute("SELECT to_regclass('testnet_orders')").fetchone()[0] is not None:
+            order_store_exists = conn.execute("SELECT to_regclass('testnet_orders')").fetchone()[0] is not None
+            if order_store_exists:
                 # Broker balances may already include a fill. Apply its delta
                 # before replacing the local account projection, or a subsequent
                 # restart could count the same fill twice.
@@ -284,6 +373,29 @@ class PostgresRiskGovernor:
                     WHERE r.account_id=%s AND r.venue_id=%s
                     AND t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION') LIMIT 1""",
                     (o.account_id,o.venue_id)).fetchone() is not None
+                if not unresolved:
+                    # Orders have no account_id: an unowned open/filled order
+                    # at this venue cannot safely be assigned to one account.
+                    orphan_order = conn.execute("""SELECT 1 FROM testnet_orders t
+                        LEFT JOIN risk_reservations r ON r.client_order_id=t.client_order_id AND r.venue_id=t.venue
+                        WHERE t.venue=%s AND r.reservation_id IS NULL
+                        AND (t.state IN ('CREATED','SUBMITTING','UNKNOWN_PENDING_RECONCILIATION','ACKNOWLEDGED','PARTIAL')
+                             OR t.matched_quantity > 0) LIMIT 1""", (o.venue_id,)).fetchone() is not None
+                    orphan_reservation = conn.execute("""SELECT 1 FROM risk_reservations r
+                        LEFT JOIN testnet_orders t ON t.client_order_id=r.client_order_id AND t.venue=r.venue_id
+                        WHERE r.account_id=%s AND r.venue_id=%s AND t.client_order_id IS NULL
+                        AND r.state != 'CLOSED' LIMIT 1""", (o.account_id,o.venue_id)).fetchone() is not None
+                    unresolved = orphan_order or orphan_reservation
+            # Caller-provided reconciliation cannot override persisted OMS or fee
+            # evidence. Keep the day anchor unverified and the halt active if
+            # either check identifies unresolved account state at the rollover.
+            if rollover_ready:
+                if unresolved or not order_store_exists:
+                    status = "ANCHOR_UNVERIFIED"
+                    unresolved = True
+                else:
+                    conn.execute("UPDATE risk_halts SET state='RELEASED',released_at=%s,release_authorization='UTC_RECONCILED_ROLLOVER',state_version=state_version+1 WHERE account_id=%s AND venue_id=%s AND halt_type='DAILY' AND state='ACTIVE'",
+                                 (at,o.account_id,o.venue_id))
             conn.execute("INSERT INTO risk_account_observations VALUES (%s,%s,%s,%s,%s::jsonb)",
                          (o.account_id,o.venue_id,o.snapshot_id,digest,encoded(payload)))
             conn.execute("""INSERT INTO risk_account_state(account_id,venue_id,snapshot_id,snapshot_hash,source_id,anchor_status,observed_at,equity,cash,day_equity,day_utc,peak_equity,net_deposits,gross_notional,asset_notionals,positions,reconciled,unresolved_orders)
@@ -316,6 +428,19 @@ class PostgresRiskGovernor:
         if account['day_utc'] != now.date():
             raise RiskAdmissionError("MISSING_UTC_DAY_ANCHOR")
 
+    @staticmethod
+    def _require_mutation_guards(conn: Connection) -> None:
+        """An incomplete/disabled migration cannot authorize a new intent."""
+        row = conn.execute("""SELECT current_setting('session_replication_role')='origin'
+          AND (SELECT count(*) FROM pg_trigger t
+            WHERE NOT t.tgisinternal AND t.tgenabled IN ('O','A')
+              AND ((t.tgrelid=to_regclass('testnet_orders') AND t.tgname='testnet_order_risk_invalidation')
+                OR (t.tgrelid=to_regclass('risk_account_state') AND t.tgname='risk_account_state_version_guard')
+                OR (t.tgrelid=to_regclass('risk_reservations') AND t.tgname='risk_reservation_invalidation')
+                OR (t.tgrelid=to_regclass('risk_fee_liabilities') AND t.tgname='risk_fee_invalidation'))) = 4""").fetchone()
+        if row is None or not row[0]:
+            raise RiskAdmissionError("FINANCIAL_MUTATION_GUARDS_UNAVAILABLE")
+
     def approve(self, *, account_id: str, venue_id: str, client_order_id: str,
                 symbol: str, side: str, quantity: Decimal, reference_price: Decimal,
                 stop_price: Decimal | None, cost_bps: Decimal, now: datetime,
@@ -343,6 +468,7 @@ class PostgresRiskGovernor:
         with localcontext() as ctx, self._connect() as conn:
             ctx.prec = 120
             conn.execute("SET LOCAL lock_timeout='5s'")
+            self._require_mutation_guards(conn)
             a = self._account(conn,account_id,venue_id)
             self._fresh(a,now)
             active = conn.execute("SELECT halt_type FROM risk_halts WHERE account_id=%s AND venue_id=%s AND state='ACTIVE'",(account_id,venue_id)).fetchall()
@@ -373,11 +499,13 @@ class PostgresRiskGovernor:
             loss = qty*(ref-D(stop_price))+notional*cost/D(10000) if side=='BUY' else D(0)
             if side=='BUY' and (pending_loss+loss > a['equity']*D('.0025') or pending_gross+notional > a['cash']):
                 raise RiskAdmissionError("SHARED_RISK_OR_CASH_BUDGET")
+            reservation_id = str(uuid4())
+            conn.execute("INSERT INTO risk_reservations(reservation_id,account_id,venue_id,client_order_id,symbol,side,quantity,notional,loss_budget,state,created_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'RESERVED',%s)",
+                (reservation_id,account_id,venue_id,client_order_id,symbol,side,qty,notional,loss,now))
+            version = self._account(conn,account_id,venue_id)['state_version']
             approval = RiskApproval(str(uuid4()),account_id,venue_id,symbol,side,client_order_id,qty,notional,ref,
                 None if stop_price is None else D(stop_price),cost,POLICY_ID,a['snapshot_id'],a['snapshot_hash'],now,
-                now+timedelta(seconds=ttl_seconds),str(uuid4()))
-            conn.execute("INSERT INTO risk_reservations(reservation_id,account_id,venue_id,client_order_id,symbol,side,quantity,notional,loss_budget,state,created_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'RESERVED',%s)",
-                (approval.reservation_id,account_id,venue_id,client_order_id,symbol,side,qty,notional,loss,now))
+                now+timedelta(seconds=ttl_seconds),reservation_id,account_state_version=version)
             conn.execute("INSERT INTO risk_approvals(approval_id,reservation_id,payload,state) VALUES (%s,%s,%s::jsonb,'ISSUED')",
                 (approval.approval_id,approval.reservation_id,encoded(asdict(approval))))
             self._audit(conn,account_id,venue_id,"APPROVAL_RESERVED",now,asdict(approval))
@@ -398,8 +526,11 @@ class PostgresRiskGovernor:
         if not approval.issued_at <= now <= approval.expires_at:
             raise RiskAdmissionError("APPROVAL_EXPIRED_OR_FUTURE")
         with self._connect() as conn:
+            self._require_mutation_guards(conn)
             a = self._account(conn,account_id,venue_id)
             self._fresh(a,now)
+            if approval.account_state_version is None or a['state_version'] != approval.account_state_version:
+                raise RiskAdmissionError("STALE_ACCOUNT_VERSION_REAPPROVAL_REQUIRED")
             if a['snapshot_hash'] != approval.risk_snapshot_hash:
                 raise RiskAdmissionError("ACCOUNT_CHANGED_REAPPROVAL_REQUIRED")
             if approval.side == 'BUY' and conn.execute("SELECT 1 FROM risk_halts WHERE account_id=%s AND venue_id=%s AND state='ACTIVE'",(account_id,venue_id)).fetchone():
@@ -497,7 +628,8 @@ class PostgresRiskGovernor:
             if matched:
                 conn.execute("""INSERT INTO risk_fee_liabilities(account_id,venue_id,client_order_id,state,updated_at)
                     VALUES (%s,%s,%s,%s,%s) ON CONFLICT(account_id,venue_id,client_order_id)
-                    DO UPDATE SET state=EXCLUDED.state,updated_at=EXCLUDED.updated_at""",
+                    DO UPDATE SET state=EXCLUDED.state,updated_at=EXCLUDED.updated_at
+                    WHERE risk_fee_liabilities.state IS DISTINCT FROM EXCLUDED.state""",
                     (account_id,venue_id,client_order_id,'UNRESOLVED' if unresolved_fee else 'QUOTE_REPORTED',utc(now)))
             positions = {k:D(v) for k,v in a['positions'].items()}
             held = positions.get(symbol,D(0))
@@ -513,12 +645,17 @@ class PostgresRiskGovernor:
             if cash < 0:
                 raise RiskAdmissionError("NEGATIVE_CASH_AFTER_SETTLEMENT")
             terminal = OrderLifecycle(state) in TERMINAL_STATES
-            if delta or delta_fee or unresolved_fee:
+            if delta or delta_fee or (unresolved_fee and (a['reconciled'] or not a['unresolved_orders'])):
                 conn.execute("UPDATE risk_account_state SET cash=%s,positions=%s::jsonb,reconciled=FALSE,unresolved_orders=unresolved_orders OR %s,state_version=state_version+1 WHERE account_id=%s AND venue_id=%s",
                     (cash,encoded(positions),unresolved_fee,account_id,venue_id))
-            conn.execute("UPDATE risk_reservations SET matched_quantity=%s,cumulative_fee=%s,cumulative_quote=%s,state=%s WHERE reservation_id=%s",
-                (matched,previous_fee if unresolved_fee else fee,quote,'UNRESOLVED_FEE' if unresolved_fee else 'CLOSED' if terminal else 'PARTIAL' if matched else reservation_state,rid))
+            next_fee = previous_fee if unresolved_fee else fee
+            next_state = 'UNRESOLVED_FEE' if unresolved_fee else 'CLOSED' if terminal else 'PARTIAL' if matched else reservation_state
+            if (matched, next_fee, quote, next_state) != (previous, previous_fee, previous_quote, reservation_state):
+                conn.execute("UPDATE risk_reservations SET matched_quantity=%s,cumulative_fee=%s,cumulative_quote=%s,state=%s WHERE reservation_id=%s",
+                    (matched,next_fee,quote,next_state,rid))
             if delta or delta_fee or (terminal and not unresolved_fee and reservation_state != 'CLOSED'):
                 self._audit(conn,account_id,venue_id,"CUMULATIVE_FILL_APPLIED",utc(now),
                     {"client_order_id":client_order_id,"quantity_delta":delta,"fee_delta":delta_fee,"quote_delta":delta_quote,"terminal":terminal})
+
+
 

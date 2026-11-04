@@ -145,7 +145,11 @@ def reconcile_nobitex_order(
         raise ValueError("venue order id mismatch")
 
     amount = decimal_value(venue_order.get("amount", local.requested_quantity), "amount")
-    matched = decimal_value(venue_order.get("matchedAmount", "0"), "matchedAmount")
+    # A terminal status with no matchedAmount is not an authoritative zero.
+    # Never use it to clear a reservation; explicit "0" is still valid.
+    if venue_order.get("matchedAmount") in (None, ""):
+        raise ValueError("NOBITEX_MATCHED_AMOUNT_UNAVAILABLE")
+    matched = decimal_value(venue_order["matchedAmount"], "matchedAmount")
     if amount <= 0 or not local.matched_quantity <= matched <= amount:
         raise ValueError("invalid fill quantities")
     if amount != local.requested_quantity:

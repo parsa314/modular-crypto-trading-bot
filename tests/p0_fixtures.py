@@ -59,6 +59,9 @@ def observation(*, now=NOW, equity='1000', cash='1000', held='0', account=ACCOUN
 
 def seed(dsn, *, venue=VENUE, held='0', equity='1000', cash='1000', now=NOW, account=ACCOUNT):
     g=governor(dsn);g.ensure_schema()
+    # Admission requires the order-store invalidation trigger to exist, even
+    # in a risk-only fixture. This creates an isolated, empty synthetic store.
+    PostgresTestnetOrderStore(dsn).ensure_schema()
     g.observe(observation(venue=venue,held=held,equity=equity,cash=cash,now=now,account=account),received_at=now)
     return g
 
@@ -99,3 +102,4 @@ def unit_approval(*, cid='cid-1', qty='0.01', price='100000', venue='FAKE_DEMO',
     return RiskApproval(str(uuid4()),ACCOUNT,venue,'BTC/USDT','BUY',cid,Decimal(qty),Decimal(qty)*Decimal(price),
         Decimal(price),Decimal(price)*Decimal('.999'),Decimal('50'),POLICY_ID,'UNIT_FIXTURE','UNIT_FIXTURE',
         now,now+timedelta(seconds=30),str(uuid4()))
+

@@ -254,6 +254,39 @@ class PostgresTestnetOrderStore:
         DROP TRIGGER IF EXISTS testnet_order_version_guard ON testnet_orders;
         CREATE TRIGGER testnet_order_version_guard BEFORE UPDATE ON testnet_orders
           FOR EACH ROW EXECUTE FUNCTION enforce_testnet_order_version();
+        -- Store rows have no account identity. A mutation therefore invalidates
+        -- every account at this venue, not a guessed owner. PostgreSQL performs
+        -- this update in the same transaction as the OMS mutation.
+        CREATE OR REPLACE FUNCTION invalidate_risk_for_order_change() RETURNS trigger
+        LANGUAGE plpgsql AS $$
+        DECLARE changed_venue TEXT;
+        BEGIN
+          IF TG_OP = 'DELETE' THEN changed_venue := OLD.venue;
+          ELSE changed_venue := NEW.venue; END IF;
+          IF to_regclass('risk_account_state') IS NOT NULL THEN
+            UPDATE risk_account_state SET reconciled=FALSE,unresolved_orders=TRUE,
+              state_version=state_version+1 WHERE venue_id=changed_venue;
+          END IF;
+          IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+          RETURN NEW;
+        END $$;
+        -- Quarantine pre-existing orders on first installation: old account
+        -- snapshots cannot establish whether those orders were already counted.
+        DO $$ BEGIN
+          IF to_regclass('risk_account_state') IS NOT NULL AND NOT EXISTS (
+            SELECT 1 FROM pg_trigger
+            WHERE tgrelid='testnet_orders'::regclass
+              AND tgname='testnet_order_risk_invalidation' AND NOT tgisinternal
+          ) THEN
+            UPDATE risk_account_state SET reconciled=FALSE,unresolved_orders=TRUE,
+              state_version=state_version+1
+              WHERE venue_id IN (SELECT DISTINCT venue FROM testnet_orders);
+          END IF;
+        END $$;
+        DROP TRIGGER IF EXISTS testnet_order_risk_invalidation ON testnet_orders;
+        CREATE TRIGGER testnet_order_risk_invalidation
+          AFTER INSERT OR UPDATE OR DELETE ON testnet_orders
+          FOR EACH ROW EXECUTE FUNCTION invalidate_risk_for_order_change();
         """
         with self._connect() as conn:
             with conn.cursor() as cur:
@@ -588,4 +621,5 @@ class TestnetExecutionGateway:
             updated_at=datetime.now(timezone.utc),
             state_version=local.state_version,
         )
+
 
