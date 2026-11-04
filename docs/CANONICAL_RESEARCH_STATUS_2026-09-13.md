@@ -20,6 +20,11 @@ This replaces the prior current-authorization instruction `RESEARCH_ONLY / PAPER
 
 This is a permission update, not evidence that execution is running or that deployment flags have changed. Risk controls remain applicable and the Kraken research holdout remains sealed. Successful CI, backtests and healthchecks do not prove profitable alpha.
 
+### 2026-11-04 — current real-feed / PAPER / DEMO development scope
+
+The owner has additionally directed the project to use **authentic exchange historical and first-seen live market data**, evaluate implemented strategies through isolated forward PAPER, and test in a **verified official exchange DEMO** environment. See [the live-data/PAPER/DEMO mode policy](LIVE_DATA_PAPER_DEMO_GATE_POLICY_2026-11-04.md). A production G1 BLOCKED verdict does not prohibit public read-only market data or isolated paper trades. Official DEMO private preflight is permitted; DEMO order submission requires the separate D0 sandbox safety evidence. Nothing in this policy promotes scientific alpha, changes historical experimental gates, enables real-money order routing or alters the existing research-only deployment firewall.
+
+
 The scientific results and provenance below are historical records dated 2026-09-13 and remain unchanged.
 
 ## Latest completed scientific result — v0.50
