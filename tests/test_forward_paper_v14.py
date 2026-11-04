@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 import numpy as np
+import pytest
 import pandas as pd
 
 from research_bot.coinex_depth import DepthSnapshot
@@ -221,3 +222,65 @@ def test_large_exit_is_reduced_in_safe_notional_chunks():
     assert result["status"] == "EXECUTED_PAPER"
     assert result["fill"]["requested_quantity"] * result["fill"]["fill_price"] <= 2_000.0 * 1.001
     assert 0.0 < store.get_position("BTC/USDT").quantity < 50.0
+
+
+
+@pytest.mark.parametrize(
+    "override",
+    [
+        {"risk_fraction": 0.005},
+        {"max_drawdown": 0.12},
+        {"max_gross_exposure": 1.0},
+        {"max_asset_weight": 0.40},
+        {"risk_fraction": float("nan")},
+    ],
+)
+def test_forward_paper_config_cannot_weaken_risk_constitution(override):
+    with pytest.raises(ValueError, match="PAPER_RISK_CONSTITUTION_BREACH"):
+        ForwardPaperConfig(**override)
+
+
+def test_forward_paper_runner_uses_constitution_limits_not_old_one_hundred_pct_gross():
+    runner = ForwardPaperRunner(MemoryPaperStore(10_000.0))
+    assert runner.config.risk_fraction == 0.0025
+    assert runner.risk_engine.limits.max_drawdown == 0.05
+    assert runner.risk_engine.limits.max_gross_exposure == 0.70
+    assert runner.risk_engine.limits.max_asset_weight <= 0.35
+    from research_bot.risk import RiskSnapshot
+    risk = runner.risk_engine.evaluate(RiskSnapshot(
+        equity=10_000.0,
+        peak_equity=10_000.0,
+        gross_exposure=0.71,
+        asset_weight=0.20,
+        turnover=0.10,
+        spread_bps=4.0,
+        slippage_bps=4.0,
+    ))
+    assert risk.approved is False
+    assert risk.kill_switch is True
+    assert "MAX_GROSS_EXPOSURE_BREACH" in risk.reasons
+
+
+def test_forward_paper_risk_sizing_includes_estimated_round_trip_costs():
+    frame = bullish_bars()
+    now = pd.Timestamp(frame["timestamp"].iloc[-1]).to_pydatetime() + timedelta(hours=5)
+    store = MemoryPaperStore(10_000.0)
+    runner = ForwardPaperRunner(
+        store,
+        config=ForwardPaperConfig(symbols=("BTC/USDT",)),
+        market_client=FakeMarket(frame, depth_timestamp=now, spread_bps=4.0),
+        paper_execution_enabled=True,
+    )
+    result = runner.run_cycle(now=now)["results"][0]
+    assert result["status"] == "EXECUTED_PAPER"
+    from research_bot.forward_paper_v14 import _atr_pct
+    stop = max(
+        runner.config.min_stop_fraction,
+        runner.config.atr_stop_multiple * _atr_pct(frame),
+    )
+    round_trip_cost = (2 * (runner.config.fee_bps + runner.config.slippage_bps) + 4.0) / 10000.0
+    notional = result["fill"]["requested_quantity"] * result["fill"]["fill_price"]
+    # The reference quote and executed fill differ slightly; use proposed
+    # notional as a strict-upper sizing bound with small slippage allowance.
+    assert notional <= (10_000.0 * 0.0025 / (stop + round_trip_cost)) * 1.001
+    assert result["fill"]["mode"] == "PAPER"
