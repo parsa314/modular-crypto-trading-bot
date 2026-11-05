@@ -1,0 +1,56 @@
+name: forward-observer-002
+on:
+  push:
+    branches: ["feat/forward-observer-002-20261105"]
+  pull_request:
+    paths:
+      - "research_bot/forward_observer_002.py"
+      - "tests/test_forward_observer_002.py"
+      - ".github/workflows/forward-observer-002.yml"
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - run: python -m unittest discover -s tests -p 'test_forward_observer_002.py' -v
+      - run: python -m unittest discover -s tests -p 'test_e2e_observer_unittest.py' -v
+  public-bootstrap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - run: mkdir -p artifacts
+      - name: Two public polling cycles, not a 24-hour forward test
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m research_bot.forward_observer_002 --db artifacts/collector.sqlite --poll-seconds 1 --cycles 2 --check-coinex | tee artifacts/collector.log
+      - name: Summarize persisted evidence
+        if: always()
+        run: |
+          python - <<'PY' | tee artifacts/summary.json
+          import json, pathlib, sqlite3
+          p = pathlib.Path('artifacts/collector.sqlite')
+          if not p.exists():
+              print(json.dumps({'status': 'NO_JOURNAL'}))
+          else:
+              with sqlite3.connect(p) as db:
+                  print(json.dumps({'bars': db.execute('select status,count(*) from collector_bars group by status').fetchall(), 'health': db.execute('select venue,status,count(*) from collector_health group by venue,status').fetchall(), 'gaps': db.execute('select coalesce(sum(gaps),0) from collector_streams').fetchone()[0], 'decisions': db.execute('select count(*) from collector_decisions').fetchone()[0], 'pending': db.execute('select count(*) from collector_pending').fetchone()[0]}, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forward-observer-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: warn

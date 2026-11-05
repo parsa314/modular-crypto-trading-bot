@@ -157,3 +157,8 @@ Maintained by **Milad Parsanezhad** as an academic financial-ML, AI cryptocurren
 ## E2E observation increment
 
 `python -m research_bot.e2e_observer --db artifacts/observation.sqlite --symbol BTC/USDT` requests public CoinEx H1 candles and evaluates four existing prototype arms in OBSERVATION_ONLY mode. The same command accepts ETH/USDT. Public data bootstrap is historical and is not first-seen forward evidence. The command stores raw response hashes and observations; network failures exit with status 2. Financial execution and orders are disabled. M15/H4, first-seen forward collection, account reconciliation and complete risk checks remain unimplemented. Synthetic tests: `python -m unittest discover -s tests -p 'test_e2e_observer_unittest.py' -v`.
+
+
+## Continuous public observer (experimental)
+
+`python -m research_bot.forward_observer_002 --db artifacts/forward.sqlite --poll-seconds 60 --check-coinex` runs a public OKX-only observation worker. Press Ctrl-C to stop. Use a persistent local filesystem and exactly one worker per journal. No orders are submitted. Bootstrap is historical; process restarts, detected gaps and network errors reset continuous-coverage evidence. Four existing H1 prototypes are observed only; M15/H4 are validated context, not strategy features. This is not a verified 24-hour forward run or Paper release. Offline checks: `python -m unittest discover -s tests -p 'test_forward_observer_002.py' -v`.
