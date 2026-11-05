@@ -1,0 +1,141 @@
+"""Offline/online observation increment. No broker or order submission.
+
+Financial gate remains blocked: this module cannot create simulated orders.
+Historical data must not be relabelled as prospective first-seen data.
+"""
+from __future__ import annotations
+
+import argparse
+from dataclasses import asdict
+from datetime import datetime, timezone
+import hashlib
+import json
+from pathlib import Path
+import sqlite3
+import sys
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+
+import pandas as pd
+
+from .coinex_public import COINEX_BASE_URL, fetch_coinex_klines
+from .strategies import al_brooks_strategy, ichimoku_strategy, ict_strategy, smc_strategy
+
+STRATEGY_SHA = '81071995fd7c5a27830d92780801cd0783e108d9'
+ARMS = {'ICHIMOKU': ichimoku_strategy, 'ICT': ict_strategy,
+        'SMC': smc_strategy, 'AL_BROOKS': al_brooks_strategy}
+
+
+def _utc(value):
+    ts = pd.Timestamp(value)
+    if ts.tzinfo is None:
+        raise ValueError('TIMEZONE_REQUIRED')
+    return ts.tz_convert('UTC')
+
+
+def evaluate(frame, *, as_of, symbol, source, max_staleness='2h'):
+    """Evaluate four existing exploratory arms using only valid closed H1 bars."""
+    now = _utc(as_of)
+    if symbol not in ('BTC/USDT', 'ETH/USDT') or not source:
+        raise ValueError('INVALID_SYMBOL_OR_SOURCE')
+    x = frame.copy()
+    for field in ('timestamp', 'available_at'):
+        if field not in x:
+            raise ValueError('MISSING_TIMESTAMP')
+        x[field] = x[field].map(_utc)
+    if x.timestamp.duplicated().any() or not x.timestamp.is_monotonic_increasing:
+        raise ValueError('DUPLICATE_OR_UNORDERED_BARS')
+    if not (x.timestamp == x.timestamp.dt.floor('h')).all():
+        raise ValueError('BAR_ALIGNMENT')
+    if not x.timestamp.diff().dropna().eq(pd.Timedelta(hours=1)).all():
+        raise ValueError('BAR_GAP')
+    if (x.available_at < x.timestamp + pd.Timedelta(hours=1)).any():
+        raise ValueError('BAR_AVAILABLE_BEFORE_CLOSE')
+    x = x.loc[(x.available_at <= now) & (x.timestamp + pd.Timedelta(hours=1) <= now)].copy()
+    if len(x) < 90:
+        raise ValueError('INSUFFICIENT_CAUSAL_BARS')
+    if now - (x.timestamp.iloc[-1] + pd.Timedelta(hours=1)) > pd.Timedelta(max_staleness):
+        raise ValueError('STALE_BAR')
+    results = {name: asdict(module.evaluate(x, as_of=now.to_pydatetime()))
+               for name, module in ARMS.items()}
+    actions = {v['action'] for v in results.values()} - {'HOLD'}
+    reasons = ['ML_NOT_PROMOTED', 'FINANCIAL_GATE_BLOCKED']
+    if len(actions) > 1:
+        reasons.append('CONFLICTING_SIGNALS')
+    # A research score is never a calibrated probability or permission to trade.
+    decision = {'symbol': symbol, 'source': source, 'as_of': now.isoformat(),
+                'bar_open': x.timestamp.iloc[-1].isoformat(), 'strategy_sha': STRATEGY_SHA,
+                'strategies': results, 'action': 'NO_TRADE', 'reason_codes': reasons,
+                'execution_mode': 'OBSERVATION_ONLY', 'paper_orders': 0}
+    return json.loads(json.dumps(decision, sort_keys=True, default=str, allow_nan=False))
+
+
+def store_decision(path, decision):
+    payload = json.dumps(decision, sort_keys=True, separators=(',', ':'), allow_nan=False)
+    key = hashlib.sha256(payload.encode()).hexdigest()
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE IF NOT EXISTS observations (id TEXT PRIMARY KEY, payload TEXT NOT NULL)')
+        db.execute('INSERT OR IGNORE INTO observations VALUES (?, ?)', (key, payload))
+    return key
+
+
+def live_observe(symbol, db_path):
+    """Capture raw public CoinEx responses; historical bootstrap is not first-seen."""
+    received = []
+    seen = set()
+    def request(path, params, timeout):
+        url = COINEX_BASE_URL + path + '?' + urlencode(params)
+        with urlopen(Request(url, headers={'User-Agent': 'parsa-observation/1'}), timeout=timeout) as response:
+            raw = response.read()
+        at = datetime.now(timezone.utc)
+        payload = json.loads(raw)
+        if payload.get('code') != 0:
+            raise ValueError('COINEX_API_ERROR')
+        rows = payload.get('data') or []
+        timestamps = [r.get('created_at') for r in rows]
+        if len(timestamps) != len(set(timestamps)):
+            raise ValueError('DUPLICATE_PROVIDER_BARS')
+        if any(ts in seen for ts in timestamps):
+            raise ValueError('DUPLICATE_PROVIDER_BARS_ACROSS_RESPONSES')
+        seen.update(timestamps)
+        digest = hashlib.sha256(raw).hexdigest()
+        with sqlite3.connect(db_path) as db:
+            db.execute('CREATE TABLE IF NOT EXISTS raw_responses (hash TEXT PRIMARY KEY, endpoint TEXT, received_at TEXT, payload BLOB)')
+            db.execute('INSERT OR IGNORE INTO raw_responses VALUES (?,?,?,?)', (digest, url, at.isoformat(), raw))
+        received.append((at, digest))
+        return payload
+    frame = fetch_coinex_klines(symbol=symbol, period='1hour', bars=120, request_fn=request)
+    if not received:
+        raise ValueError('NO_PROVIDER_RESPONSE')
+    observed = max(at for at, _ in received)
+    frame['available_at'] = pd.Timestamp(observed)
+    # Remove forming bars before checking the availability rule.
+    frame = frame.loc[frame.timestamp + pd.Timedelta(hours=1) <= pd.Timestamp(observed)].copy()
+    decision = evaluate(frame, as_of=observed, symbol=symbol, source='HISTORICAL_BOOTSTRAP_PUBLIC_REST')
+    decision.update(raw_hashes=[h for _, h in received], first_seen_forward=False)
+    decision['decision_id'] = store_decision(db_path, decision)
+    return decision
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--symbol', choices=('BTC/USDT', 'ETH/USDT'), default='BTC/USDT')
+    parser.add_argument('--db', type=Path, required=True)
+    args = parser.parse_args()
+    args.db.parent.mkdir(parents=True, exist_ok=True)
+    exit_code = 0
+    try:
+        result = live_observe(args.symbol, args.db)
+    except (HTTPError, URLError, TimeoutError, ValueError, OSError) as exc:
+        exit_code = 2
+        result = {'status': 'NOT_CONNECTED_OR_INVALID_DATA', 'error_type': type(exc).__name__,
+                  'error': str(exc), 'execution_mode': 'OBSERVATION_ONLY',
+                  'observed_at': datetime.now(timezone.utc).isoformat()}
+        result['decision_id'] = store_decision(args.db, result)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return exit_code
+
+
+if __name__ == '__main__':
+    sys.exit(main())
