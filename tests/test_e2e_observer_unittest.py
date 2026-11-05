@@ -1,10 +1,13 @@
 """Synthetic engineering fixtures only; no market performance claims."""
 import tempfile
 import unittest
+import json
+from io import BytesIO
 from pathlib import Path
+from unittest.mock import patch
 import pandas as pd
 
-from research_bot.e2e_observer import evaluate, store_decision
+from research_bot.e2e_observer import evaluate, store_decision, okx_observe
 
 
 def bars():
@@ -57,6 +60,18 @@ class ObservationTests(unittest.TestCase):
     def test_stale_bars_rejected(self):
         with self.assertRaisesRegex(ValueError, 'STALE_BAR'):
             self.run_decision(bars().iloc[:95])
+
+    def test_okx_public_payload_is_historical_not_forward(self):
+        end = pd.Timestamp.now(tz='UTC').floor('h')
+        times = pd.date_range(end=end - pd.Timedelta(hours=1), periods=100, freq='h')
+        rows = [[str(int(t.timestamp()*1000)), '100', '102', '98', '100', '10', '0', '0', '1']
+                for t in reversed(times)]
+        raw = json.dumps({'code': '0', 'data': rows}).encode()
+        with tempfile.TemporaryDirectory() as tmp, patch('research_bot.e2e_observer.urlopen', return_value=BytesIO(raw)):
+            result = okx_observe('BTC/USDT', Path(tmp) / 'state.sqlite')
+        self.assertFalse(result['first_seen_forward'])
+        self.assertEqual(result['action'], 'NO_TRADE')
+        self.assertEqual(len(result['raw_hashes']), 1)
 
 
 if __name__ == '__main__':

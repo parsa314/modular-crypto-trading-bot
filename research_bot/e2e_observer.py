@@ -118,15 +118,48 @@ def live_observe(symbol, db_path):
     return decision
 
 
+def okx_observe(symbol, db_path):
+    """Read OKX public spot history; this bootstrap is not first-seen forward."""
+    market = symbol.replace('/', '-')
+    url = 'https://www.okx.com/api/v5/market/candles?' + urlencode(
+        {'instId': market, 'bar': '1H', 'limit': 100})
+    with urlopen(Request(url, headers={'User-Agent': 'parsa-observation/1'}), timeout=20) as response:
+        raw = response.read()
+    observed = datetime.now(timezone.utc)
+    payload = json.loads(raw)
+    if payload.get('code') != '0' or not isinstance(payload.get('data'), list):
+        raise ValueError('OKX_API_ERROR')
+    digest = hashlib.sha256(raw).hexdigest()
+    with sqlite3.connect(db_path) as db:
+        db.execute('CREATE TABLE IF NOT EXISTS raw_responses (hash TEXT PRIMARY KEY, endpoint TEXT, received_at TEXT, payload BLOB)')
+        db.execute('INSERT OR IGNORE INTO raw_responses VALUES (?,?,?,?)', (digest, url, observed.isoformat(), raw))
+    rows = []
+    for item in payload['data']:
+        if len(item) < 9 or item[8] not in ('0', '1'):
+            raise ValueError('INVALID_OKX_CANDLE')
+        if item[8] == '1':
+            rows.append({'timestamp': pd.to_datetime(int(item[0]), unit='ms', utc=True),
+                         'open': item[1], 'high': item[2], 'low': item[3],
+                         'close': item[4], 'volume': item[5], 'available_at': observed})
+    if not rows:
+        raise ValueError('NO_CLOSED_CANDLES')
+    frame = pd.DataFrame(rows).sort_values('timestamp').reset_index(drop=True)
+    decision = evaluate(frame, as_of=observed, symbol=symbol, source='OKX_HISTORICAL_BOOTSTRAP_PUBLIC_REST')
+    decision.update(raw_hashes=[digest], first_seen_forward=False)
+    decision['decision_id'] = store_decision(db_path, decision)
+    return decision
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--symbol', choices=('BTC/USDT', 'ETH/USDT'), default='BTC/USDT')
     parser.add_argument('--db', type=Path, required=True)
+    parser.add_argument('--venue', choices=('coinex', 'okx'), default='coinex')
     args = parser.parse_args()
     args.db.parent.mkdir(parents=True, exist_ok=True)
     exit_code = 0
     try:
-        result = live_observe(args.symbol, args.db)
+        result = (live_observe if args.venue == 'coinex' else okx_observe)(args.symbol, args.db)
     except (HTTPError, URLError, TimeoutError, ValueError, OSError) as exc:
         exit_code = 2
         result = {'status': 'NOT_CONNECTED_OR_INVALID_DATA', 'error_type': type(exc).__name__,
