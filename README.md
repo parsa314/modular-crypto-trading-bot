@@ -152,3 +152,8 @@ Predictive models do not directly authorize exchange execution. Portfolio/risk c
 ---
 
 Maintained by **Milad Parsanezhad** as an academic financial-ML, AI cryptocurrency trading-bot and quantitative-research project.
+
+
+## E2E observation increment
+
+`python -m research_bot.e2e_observer --db artifacts/observation.sqlite --symbol BTC/USDT` requests public CoinEx H1 candles and evaluates four existing prototype arms in OBSERVATION_ONLY mode. The same command accepts ETH/USDT. Public data bootstrap is historical and is not first-seen forward evidence. The command stores raw response hashes and observations; network failures exit with status 2. Financial execution and orders are disabled. M15/H4, first-seen forward collection, account reconciliation and complete risk checks remain unimplemented. Synthetic tests: `python -m unittest discover -s tests -p 'test_e2e_observer_unittest.py' -v`.
