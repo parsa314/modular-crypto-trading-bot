@@ -1,6 +1,8 @@
 """Deterministic software fixtures, not real exchange evidence."""
 from datetime import datetime, timedelta, timezone
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -66,6 +68,13 @@ class CollectorTests(unittest.TestCase):
     def test_second_worker_excluded(self):
         with self.assertRaisesRegex(ValueError, 'COLLECTOR_ALREADY_RUNNING'):
             Collector(self.path)
+
+    def test_independent_process_cannot_acquire_same_journal(self):
+        child = subprocess.run([sys.executable, '-c',
+            'import sys; from research_bot.forward_observer_002 import Collector; Collector(sys.argv[1])',
+            str(self.path)], capture_output=True, text=True, timeout=10)
+        self.assertNotEqual(child.returncode, 0)
+        self.assertIn('COLLECTOR_ALREADY_RUNNING', child.stderr)
 
     def test_closed_gap_future_nonfinite(self):
         with self.assertRaisesRegex(ValueError, 'NO_CLOSED_BARS'):
