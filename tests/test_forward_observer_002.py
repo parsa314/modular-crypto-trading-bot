@@ -124,5 +124,74 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(set(result['strategies']), {'ICHIMOKU','ICT','SMC','AL_BROOKS'})
 
 
+    def test_staged_raw_is_marked_committed_with_atomic_ingest(self):
+        raw = payload([BASE])
+        received = BASE + timedelta(minutes=15)
+        digest = self.collector.stage_candle('BTC/USDT', '15m', 'SYNTHETIC', raw, received)
+        with self.collector.connect() as db:
+            self.assertEqual(db.execute(
+                "SELECT status FROM collector_ingest_receipts WHERE raw_sha256=?", (digest,)
+            ).fetchone()[0], 'RAW_PENDING')
+        self.collector.ingest('BTC/USDT', '15m', raw, received, 'SYNTHETIC')
+        with self.collector.connect() as db:
+            self.assertEqual(db.execute(
+                "SELECT status FROM collector_ingest_receipts WHERE raw_sha256=?", (digest,)
+            ).fetchone()[0], 'COMMITTED')
+        self.collector.close()
+        self.collector = Collector(self.path, poll_seconds=60)
+        with self.collector.connect() as db:
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM collector_health "
+                "WHERE status='UNPROCESSED_RAW_AFTER_CRASH'"
+            ).fetchone()[0], 0)
+
+    def test_staged_unprocessed_raw_detected_after_restart_and_not_forward(self):
+        self.ingest([BASE], BASE+timedelta(minutes=15))
+        later = BASE+timedelta(minutes=30)
+        raw = payload([BASE, BASE+timedelta(minutes=15)])
+        digest = self.collector.stage_candle(
+            'BTC/USDT', '15m', 'SYNTHETIC', raw, later
+        )
+        # Crash after raw archive but before the ingest transaction commits.
+        self.collector.close()
+        self.collector = Collector(self.path, poll_seconds=60)
+        with self.collector.connect() as db:
+            self.assertEqual(db.execute(
+                "SELECT status FROM collector_ingest_receipts WHERE raw_sha256=?", (digest,)
+            ).fetchone()[0], 'UNPROCESSED_AFTER_CRASH')
+            self.assertEqual(db.execute(
+                "SELECT count(*) FROM collector_health "
+                "WHERE status='UNPROCESSED_RAW_AFTER_CRASH'"
+            ).fetchone()[0], 1)
+            self.assertEqual(db.execute(
+                "SELECT payload FROM collector_raw WHERE hash=?", (digest,)
+            ).fetchone()[0], raw)
+        result = self.collector.ingest('BTC/USDT', '15m', raw, later, 'SYNTHETIC')
+        self.assertEqual(result['FIRST_OBSERVED_NEW_CLOSED_BAR'], 0)
+        self.assertEqual(result['BACKFILL_AFTER_GAP'], 1)
+
+    def test_backward_receive_clock_rejected_without_mutation(self):
+        self.ingest([BASE], BASE+timedelta(minutes=17))
+        with self.assertRaisesRegex(ValueError, 'RECEIVE_CLOCK_REGRESSION'):
+            self.ingest([BASE], BASE+timedelta(minutes=16))
+        with self.collector.connect() as db:
+            self.assertEqual(db.execute(
+                "SELECT last_poll FROM collector_streams WHERE symbol='BTC/USDT' AND timeframe='15m'"
+            ).fetchone()[0], (BASE+timedelta(minutes=17)).isoformat())
+            self.assertEqual(db.execute("SELECT count(*) FROM collector_bars").fetchone()[0], 1)
+
+    def test_backward_receive_clock_rejected_across_restart_and_provider_error(self):
+        self.ingest([BASE], BASE+timedelta(minutes=17))
+        self.collector.fail(BASE+timedelta(minutes=18), 'OKX', 'DISCONNECTED')
+        self.collector.close()
+        self.collector = Collector(self.path, poll_seconds=60)
+        with self.assertRaisesRegex(ValueError, 'RECEIVE_CLOCK_REGRESSION'):
+            self.ingest([BASE], BASE+timedelta(minutes=16))
+        with self.collector.connect() as db:
+            self.assertEqual(db.execute(
+                "SELECT last_poll FROM collector_streams WHERE symbol='BTC/USDT' AND timeframe='15m'"
+            ).fetchone()[0], (BASE+timedelta(minutes=17)).isoformat())
+
+
 if __name__ == '__main__':
     unittest.main()

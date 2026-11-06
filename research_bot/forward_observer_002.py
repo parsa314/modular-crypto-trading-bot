@@ -80,6 +80,11 @@ class Collector:
             db.executescript('''
             CREATE TABLE IF NOT EXISTS collector_runs(id TEXT PRIMARY KEY, started TEXT, stopped TEXT);
             CREATE TABLE IF NOT EXISTS collector_raw(hash TEXT PRIMARY KEY, endpoint TEXT NOT NULL, received_at TEXT NOT NULL, payload BLOB NOT NULL);
+            CREATE TABLE IF NOT EXISTS collector_ingest_receipts(
+                run_id TEXT NOT NULL, symbol TEXT NOT NULL, timeframe TEXT NOT NULL,
+                received_at TEXT NOT NULL, raw_sha256 TEXT NOT NULL, status TEXT NOT NULL,
+                PRIMARY KEY(run_id,symbol,timeframe,received_at,raw_sha256)
+            );
             CREATE TABLE IF NOT EXISTS collector_bars(symbol TEXT, timeframe TEXT, bar_open TEXT, bar_close TEXT, received_at TEXT, first_seen_at TEXT, available_at TEXT, raw_sha256 TEXT, run_id TEXT, status TEXT, ohlcv TEXT, PRIMARY KEY(symbol,timeframe,bar_open));
             CREATE TABLE IF NOT EXISTS collector_streams(symbol TEXT, timeframe TEXT, watermark TEXT, coverage_since TEXT, last_poll TEXT, gaps INTEGER DEFAULT 0, PRIMARY KEY(symbol,timeframe));
             CREATE TABLE IF NOT EXISTS collector_decisions(id TEXT PRIMARY KEY, payload TEXT NOT NULL);
@@ -87,8 +92,21 @@ class Collector:
             CREATE TABLE IF NOT EXISTS collector_health(id INTEGER PRIMARY KEY, observed_at TEXT, venue TEXT, status TEXT, detail TEXT);
             ''')
             db.execute('INSERT INTO collector_runs(id,started) VALUES (?,?)', (self.run_id, datetime.now(timezone.utc).isoformat()))
-            # A process restart always breaks observed continuous coverage.
-            db.execute('UPDATE collector_streams SET coverage_since=NULL,last_poll=NULL')
+            # Previous-process staged raw without an atomic ingest completion
+            # must never silently count as continuous first-seen evidence.
+            orphaned = db.execute(
+                "UPDATE collector_ingest_receipts SET status='UNPROCESSED_AFTER_CRASH' "
+                "WHERE status='RAW_PENDING' AND run_id<>?", (self.run_id,)
+            ).rowcount
+            if orphaned:
+                db.execute(
+                    'INSERT INTO collector_health(observed_at,venue,status,detail) VALUES (?,?,?,?)',
+                    (datetime.now(timezone.utc).isoformat(), 'OKX',
+                     'UNPROCESSED_RAW_AFTER_CRASH', json.dumps({'count': orphaned})),
+                )
+            # Restart breaks continuous coverage, but must NOT erase the
+            # high-water received clock used to detect backward wall-clock time.
+            db.execute('UPDATE collector_streams SET coverage_since=NULL')
 
     def connect(self):
         return sqlite3.connect(self.path, timeout=10)
@@ -104,12 +122,37 @@ class Collector:
         with self.connect() as db:
             db.execute('INSERT INTO collector_health(observed_at,venue,status,detail) VALUES (?,?,?,?)', (stamp(at).isoformat(), venue, 'ERROR', str(error)))
             if venue == 'OKX':
-                db.execute('UPDATE collector_streams SET coverage_since=NULL,last_poll=NULL')
+                # Preserve last_poll across outages: clearing it would allow
+                # an earlier received_at timestamp to masquerade as current.
+                db.execute('UPDATE collector_streams SET coverage_since=NULL')
 
     def archive(self, endpoint, raw, at):
         digest = hashlib.sha256(raw).hexdigest()
         with self.connect() as db:
             db.execute('INSERT OR IGNORE INTO collector_raw VALUES (?,?,?,?)', (digest,endpoint,stamp(at).isoformat(),raw))
+        return digest
+
+    def stage_candle(self, symbol, period, endpoint, raw, received):
+        """Durably stage a provider response before parsing/ingesting it.
+
+        If the process dies between staging and the atomic ingest, next
+        startup marks the receipt UNPROCESSED_AFTER_CRASH and invalidates
+        continuous coverage. Raw bytes remain immutable for audit.
+        """
+        if symbol not in SYMBOLS or period not in PERIODS:
+            raise ValueError('INVALID_STREAM')
+        at = stamp(received).isoformat()
+        digest = hashlib.sha256(raw).hexdigest()
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            db.execute('INSERT OR IGNORE INTO collector_raw VALUES (?,?,?,?)',
+                       (digest, endpoint, at, raw))
+            db.execute(
+                'INSERT OR IGNORE INTO collector_ingest_receipts '
+                '(run_id,symbol,timeframe,received_at,raw_sha256,status) '
+                'VALUES (?,?,?,?,?,?)',
+                (self.run_id, symbol, period, at, digest, 'RAW_PENDING'),
+            )
         return digest
 
     def quote(self, symbol, endpoint, raw, received):
@@ -145,7 +188,11 @@ class Collector:
             watermark = stamp(prior[0]) if prior and prior[0] else None
             coverage = stamp(prior[1]) if prior and prior[1] else received
             last_poll = stamp(prior[2]) if prior and prior[2] else None
-            if last_poll and (received < last_poll or (received-last_poll).total_seconds() > self.poll_seconds*2+30):
+            # Do not hide wall-clock regression behind a coverage reset.
+            # The original last_poll must survive restarts and provider errors.
+            if last_poll and received < last_poll:
+                raise ValueError('RECEIVE_CLOCK_REGRESSION')
+            if last_poll and (received-last_poll).total_seconds() > self.poll_seconds*2+30:
                 coverage = received
             initial = watermark is None
             count = {'HISTORICAL_BOOTSTRAP': 0, 'FIRST_OBSERVED_NEW_CLOSED_BAR': 0, 'LATE_OBSERVATION': 0, 'BACKFILL_AFTER_GAP': 0, 'DUPLICATE': 0}
@@ -176,6 +223,15 @@ class Collector:
                 count[status] += 1
                 watermark = opened if watermark is None or opened > watermark else watermark
             db.execute('INSERT INTO collector_streams VALUES (?,?,?,?,?,?) ON CONFLICT(symbol,timeframe) DO UPDATE SET watermark=excluded.watermark,coverage_since=excluded.coverage_since,last_poll=excluded.last_poll,gaps=collector_streams.gaps+excluded.gaps', (symbol,period,watermark.isoformat(),coverage.isoformat(),received.isoformat(),gaps))
+            # Commit the staged response and derived bars together.
+            # An unstaged direct call (unit/replay mode) is permitted but
+            # cannot imply an exchange-origin prospective receipt.
+            db.execute(
+                "UPDATE collector_ingest_receipts SET status='COMMITTED' "
+                "WHERE run_id=? AND symbol=? AND timeframe=? AND received_at=? "
+                "AND raw_sha256=? AND status='RAW_PENDING'",
+                (self.run_id, symbol, period, received.isoformat(), digest),
+            )
             db.execute('INSERT INTO collector_health(observed_at,venue,status,detail) VALUES (?,?,?,?)', (received.isoformat(),'OKX','STREAM_OK',json.dumps({'symbol':symbol,'timeframe':period,'counts':count,'gaps':gaps},sort_keys=True)))
         return count
 
@@ -239,7 +295,7 @@ def cycle(collector):
         collector.quote(symbol, quote_url, quote_raw, quote_at)
         for period in PERIODS:
             endpoint, payload, observed = request('/api/v5/market/candles', {'instId':symbol.replace('/','-'),'bar':period,'limit':100})
-            collector.archive(endpoint, payload, observed)
+            collector.stage_candle(symbol, period, endpoint, payload, observed)
             collector.ingest(symbol, period, payload, observed, endpoint)
     results = []
     for symbol, bar_open in collector.pending():
