@@ -1,0 +1,43 @@
+name: forward-proof-003
+on:
+  push:
+    branches: ["feat/forward-proof-003-20261106"]
+  pull_request:
+    paths:
+      - "research_bot/forward_crash_drill_003.py"
+      - ".github/workflows/forward-proof-003.yml"
+permissions:
+  contents: read
+jobs:
+  fixture-process-crash:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - run: python -m unittest discover -s tests -p 'test_forward_observer_002.py' -v
+      - run: python -m research_bot.forward_crash_drill_003 --db /tmp/drill.sqlite --fixture
+  public-process-crash:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - run: mkdir -p artifacts
+      - name: Real public OKX bootstrap, staged raw, SIGKILL and restart
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m research_bot.forward_crash_drill_003 --db artifacts/drill.sqlite | tee artifacts/drill.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forward-proof-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: warn
