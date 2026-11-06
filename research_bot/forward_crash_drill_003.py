@@ -96,11 +96,15 @@ def drill(path, fixture):
             if duplicate or not health:
                 raise AssertionError('RECOVERY_INVARIANT_FAILED')
             counts = db.execute('SELECT status,count(*) FROM collector_bars GROUP BY status').fetchall()
+            gaps = db.execute('SELECT COALESCE(SUM(gaps),0) FROM collector_streams').fetchone()[0]
+            decisions = db.execute('SELECT count(*) FROM collector_decisions').fetchone()[0]
+            no_trade = db.execute("SELECT count(*) FROM collector_decisions WHERE json_extract(payload,'$.action')='NO_TRADE'").fetchone()[0]
         return {'status':'DRILL_COMPLETED', 'evidence_type':'SIMULATED_TEST' if fixture else 'PUBLIC_MARKET_CRASH_DRILL',
                 'crash':'SIGKILL', 'child_exit_code':exit_code, 'staged':staged,
                 'watermarks_before':watermark_before, 'watermarks_after_restart':watermark_after,
                 'bars_before':bars_before, 'bars_immediately_after_crash':bars_after,
                 'bar_status_counts':counts, 'duplicate_bars':duplicate, 'unprocessed_raw_events':health,
+                'gaps':gaps, 'decisions':decisions, 'no_trade':no_trade,
                 'paper_orders':0, 'demo_orders':0, 'live_orders':0,
                 'forward_24h':'NOT_EXECUTED'}
     finally:
