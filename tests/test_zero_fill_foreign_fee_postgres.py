@@ -42,7 +42,7 @@ class ZeroFillForeignFeePostgres(unittest.TestCase):
                               reference_price=approval.reference_price, precision=precision,
                               risk_decision=approval, created_at=NOW)
         with self.g._connect() as conn:
-            conn.execute("UPDATE testnet_orders SET state='CANCELLED', fee_reported=%s, fee_currency=%s WHERE client_order_id=%s",
+            conn.execute("UPDATE testnet_orders SET state='CANCELLED', fee_reported=%s, fee_currency=%s, state_version=state_version+1 WHERE client_order_id=%s",
                          (Decimal('.1'), 'BNB', approval.client_order_id))
         self.order_id = approval.client_order_id
 

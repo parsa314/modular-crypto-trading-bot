@@ -12,15 +12,16 @@ class Result:
 
 
 class FakeConnection:
-    def __init__(self, fee=D('0.1'), currency='BNB'):
+    def __init__(self, fee=D('0.1'), currency='BNB', state='CANCELLED'):
         self.queries = []
         self.fee, self.currency = fee, currency
+        self.state = state
     def execute(self, sql, params):
         self.queries.append((' '.join(sql.split()), params))
         if 'FROM risk_reservations WHERE' in sql:
             return Result(('rid','BTC/USDT','BUY',D('1'),D('0'),D('0'),D('0'),'OPEN'))
         if 'FROM testnet_orders WHERE' in sql:
-            return Result(('CANCELLED',D('0'),None,self.fee,self.currency))
+            return Result((self.state,D('0'),None,self.fee,self.currency))
         return Result()
 
 
@@ -62,5 +63,14 @@ class ZeroFillForeignFee(unittest.TestCase):
         reservations=[p for q,p in conn.queries if q.startswith('UPDATE risk_reservations SET matched_quantity=')]
         self.assertEqual(liabilities[0][3], 'UNRESOLVED')
         self.assertEqual(reservations[0][3], 'UNRESOLVED_FEE')
+
+    def test_working_unfilled_order_without_fee_is_not_a_terminal_liability(self):
+        conn=FakeConnection(fee=D('0'),currency=None,state='ACKNOWLEDGED')
+        account={'cash':D('1000'),'positions':{},'reconciled':True,'unresolved_orders':False}
+        governor=PostgresRiskGovernor.__new__(PostgresRiskGovernor)
+        with patch.object(governor,'_account',return_value=account), patch.object(governor,'_audit'):
+            governor.reconcile_accounting(account_id='a',venue_id='v',client_order_id='c',
+                now=datetime(2026,1,1,tzinfo=timezone.utc),_connection=conn)
+        self.assertFalse(any(q.startswith('INSERT INTO risk_fee_liabilities') for q, _ in conn.queries))
 
 if __name__ == '__main__': unittest.main()
