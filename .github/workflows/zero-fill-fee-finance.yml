@@ -35,7 +35,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install -e . pytest 'psycopg[binary]'
+      - run: python -m pip install -e '.[dev]' pytest 'psycopg[binary]' httpx2
       - name: Record revision and PostgreSQL version
         run: |
           mkdir -p artifacts/fee-regression
