@@ -41,9 +41,6 @@ class ZeroFillForeignFeePostgres(unittest.TestCase):
                               side=OrderSide(approval.side), quantity=approval.approved_quantity,
                               reference_price=approval.reference_price, precision=precision,
                               risk_decision=approval, created_at=NOW)
-        with self.g._connect() as conn:
-            conn.execute("UPDATE testnet_orders SET state='CANCELLED', fee_reported=%s, fee_currency=%s, state_version=state_version+1 WHERE client_order_id=%s",
-                         (Decimal('.1'), 'BNB', approval.client_order_id))
         self.order_id = approval.client_order_id
 
     def state(self):
@@ -54,6 +51,9 @@ class ZeroFillForeignFeePostgres(unittest.TestCase):
             return cash, fee, reservation
 
     def test_concurrent_reconciliation_and_restart_keep_fee_unresolved(self):
+        with self.g._connect() as conn:
+            conn.execute("UPDATE testnet_orders SET state='CANCELLED', fee_reported=%s, fee_currency=%s, state_version=state_version+1 WHERE client_order_id=%s",
+                         (Decimal('.1'), 'BNB', self.order_id))
         ctx = multiprocessing.get_context('spawn')
         barrier, result = ctx.Barrier(2), ctx.Queue()
         workers = [ctx.Process(target=reconcile_worker, args=(self.dsn, self.order_id, barrier, result)) for _ in range(2)]
@@ -66,3 +66,17 @@ class ZeroFillForeignFeePostgres(unittest.TestCase):
         governor(self.dsn).reconcile_accounting(account_id=ACCOUNT, venue_id=VENUE,
                                                 client_order_id=self.order_id, now=NOW)
         self.assertEqual(self.state(), (Decimal('1000'), ('UNRESOLVED',), 'UNRESOLVED_FEE'))
+
+    def test_direct_sql_cannot_change_known_fee_currency(self):
+        import psycopg
+        with self.g._connect() as conn:
+            conn.execute("UPDATE testnet_orders SET fee_reported=%s, fee_currency=%s, state_version=state_version+1 WHERE client_order_id=%s",
+                         (Decimal('.1'), 'BNB', self.order_id))
+        with self.assertRaisesRegex(psycopg.Error, 'FEE_CURRENCY_MISMATCH'):
+            with self.g._connect() as conn:
+                conn.execute("UPDATE testnet_orders SET fee_currency='USDT', state_version=state_version+1 WHERE client_order_id=%s",
+                             (self.order_id,))
+        with self.g._connect() as conn:
+            actual = conn.execute('SELECT fee_currency, fee_reported FROM testnet_orders WHERE client_order_id=%s',
+                                  (self.order_id,)).fetchone()
+        self.assertEqual(actual, ('BNB', Decimal('.1')))
