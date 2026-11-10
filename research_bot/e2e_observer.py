@@ -28,10 +28,39 @@ ARMS = {'ICHIMOKU': ichimoku_strategy, 'ICT': ict_strategy,
 
 
 def _utc(value):
+    if value is None or pd.isna(value):
+        raise ValueError('MISSING_TIMESTAMP')
     ts = pd.Timestamp(value)
     if ts.tzinfo is None:
         raise ValueError('TIMEZONE_REQUIRED')
     return ts.tz_convert('UTC')
+
+
+def explain_candidates(results, *, as_of):
+    """Describe detector agreement without treating overlap as independence.
+
+    This is observation metadata, not an economic forecast or order approval.
+    """
+    now = _utc(as_of)
+    if set(results) != set(ARMS):
+        raise ValueError('EXACT_FOUR_STRATEGIES_REQUIRED')
+    supporters = {'BUY': [], 'SELL': []}
+    for family, signal in results.items():
+        if signal.get('style') != family or signal.get('action') not in ('BUY', 'SELL', 'HOLD'):
+            raise ValueError('INVALID_STRATEGY_OUTPUT')
+        if _utc(signal.get('decision_at')) > now:
+            raise ValueError('FUTURE_STRATEGY_OUTPUT')
+        if signal['action'] in supporters:
+            supporters[signal['action']].append(family)
+    groups = {}
+    for side, families in supporters.items():
+        # ICT and SMC are related OHLC structure proxies; group them for
+        # disclosure, not as a statistically measured correlation estimate.
+        groups[side] = sorted({'ICT_SMC_STRUCTURE' if x in ('ICT', 'SMC') else x for x in families})
+    return {'supporters': supporters, 'evidence_groups': groups,
+            'conflict': bool(supporters['BUY'] and supporters['SELL']),
+            'independence_status': 'NOT_ESTABLISHED',
+            'score_semantics': 'ORDINAL_NOT_PROBABILITY'}
 
 
 def evaluate(frame, *, as_of, symbol, source, max_staleness='2h'):
@@ -59,14 +88,36 @@ def evaluate(frame, *, as_of, symbol, source, max_staleness='2h'):
         raise ValueError('STALE_BAR')
     results = {name: asdict(module.evaluate(x, as_of=now.to_pydatetime()))
                for name, module in ARMS.items()}
-    actions = {v['action'] for v in results.values()} - {'HOLD'}
-    reasons = ['ML_NOT_PROMOTED', 'FINANCIAL_GATE_BLOCKED']
-    if len(actions) > 1:
+    analysis = explain_candidates(results, as_of=now)
+    # Detector output is research evidence only. The source timestamp alone
+    # cannot establish an executable setup or identify a calibrated model.
+    data_available_at = x.available_at.max()
+    signals = []
+    for name, signal in results.items():
+        score = signal.get('score')
+        if isinstance(score, bool) or not isinstance(score, int) or not 0 <= score <= 3:
+            raise ValueError('INVALID_ORDINAL_SCORE')
+        signals.append({'strategy_id': name, 'symbol': symbol, 'timeframe': 'H1',
+                        'action': signal['action'], 'decision_at': now.isoformat(),
+                        'detector_timestamp': _utc(signal['decision_at']).isoformat(),
+                        'available_at': now.isoformat(),
+                        'latest_input_available_at': data_available_at.isoformat(),
+                        'evidence': signal.get('evidence', {}), 'ordinal_score': score,
+                        'contract_status': 'INCOMPLETE_SETUP' if signal['action'] != 'HOLD' else 'HOLD',
+                        'invalidation_reason': 'NOT_SPECIFIED_BY_DETECTOR',
+                        'provenance': source, 'strategy_version': STRATEGY_SHA})
+    reasons = ['ML_NOT_PROMOTED', 'FINANCIAL_GATE_BLOCKED', 'RISK_NOT_EVALUATED', 'COST_NOT_VERIFIED']
+    if analysis['conflict']:
         reasons.append('CONFLICTING_SIGNALS')
     # A research score is never a calibrated probability or permission to trade.
     decision = {'symbol': symbol, 'source': source, 'as_of': now.isoformat(),
                 'bar_open': x.timestamp.iloc[-1].isoformat(), 'strategy_sha': STRATEGY_SHA,
-                'strategies': results, 'action': 'NO_TRADE', 'reason_codes': reasons,
+                'strategies': results, 'candidate_analysis': analysis,
+                'research_signals': signals,
+                'trade_candidate': {'status': 'NOT_EVALUATED', 'reason': 'COST_AND_SETUP_NOT_VERIFIED'},
+                'execution_authorization': {'status': 'DENIED', 'reason': 'FINANCIAL_GATE_BLOCKED'},
+                'action': 'NO_TRADE', 'reason_codes': reasons,
+                'risk_status': 'NOT_EVALUATED', 'cost_status': 'NOT_VERIFIED',
                 'execution_mode': 'OBSERVATION_ONLY', 'paper_orders': 0}
     return json.loads(json.dumps(decision, sort_keys=True, default=str, allow_nan=False))
 
