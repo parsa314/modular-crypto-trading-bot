@@ -611,7 +611,10 @@ class PostgresRiskGovernor:
                 conn.execute("UPDATE risk_account_state SET reconciled=FALSE WHERE account_id=%s AND venue_id=%s",(account_id,venue_id))
                 self._audit(conn,account_id,venue_id,"FILL_ECONOMICS_UNRESOLVED",utc(now),{"client_order_id":client_order_id})
                 return
-            unresolved_fee = bool(matched and currency != 'USDT')
+            # A venue may report a fee even if no fill was recorded. Never
+            # deduct a non-quote fee as USDT or close its risk reservation;
+            # absent currency also lacks evidence of a confirmed zero fee.
+            unresolved_fee = currency != 'USDT'
             quote = matched*avg if matched else D(0)
             delta, delta_fee, delta_quote = matched-previous, (D(0) if unresolved_fee else fee-previous_fee), quote-previous_quote
             if delta > 0 and delta_quote <= 0:
@@ -625,7 +628,7 @@ class PostgresRiskGovernor:
                     (account_id,venue_id,client_order_id,previous,matched,delta_quote,utc(now))).fetchone()
                 if inserted is None:
                     raise RiskAdmissionError("PRINCIPAL_POSTING_CONFLICT")
-            if matched:
+            if matched or unresolved_fee:
                 conn.execute("""INSERT INTO risk_fee_liabilities(account_id,venue_id,client_order_id,state,updated_at)
                     VALUES (%s,%s,%s,%s,%s) ON CONFLICT(account_id,venue_id,client_order_id)
                     DO UPDATE SET state=EXCLUDED.state,updated_at=EXCLUDED.updated_at

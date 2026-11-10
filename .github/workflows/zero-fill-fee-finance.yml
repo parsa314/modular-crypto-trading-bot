@@ -1,0 +1,51 @@
+name: zero-fill-fee-finance
+on:
+  push:
+    branches: ["fix/zero-fill-fee-liability-20261110"]
+  pull_request:
+    paths:
+      - "research_bot/durable_risk.py"
+      - "tests/test_zero_fill_foreign_fee*.py"
+      - ".github/workflows/zero-fill-fee-finance.yml"
+permissions:
+  contents: read
+jobs:
+  postgres-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ephemeral-ci-only
+          POSTGRES_DB: execution_v52
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d execution_v52"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:ephemeral-ci-only@127.0.0.1:5432/execution_v52
+      NEXT_GATE_ISOLATED_DATABASE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e . pytest 'psycopg[binary]'
+      - name: Record revision and PostgreSQL version
+        run: |
+          mkdir -p artifacts/fee-regression
+          git rev-parse HEAD | tee artifacts/fee-regression/checkout-sha.txt
+          python -c "import psycopg,os; c=psycopg.connect(os.environ['TEST_DATABASE_URL']); print(c.execute('select version()').fetchone()[0])" | tee artifacts/fee-regression/postgres.txt
+      - name: PostgreSQL and focused tests
+        run: |
+          set -o pipefail
+          pytest -q tests/test_zero_fill_foreign_fee.py tests/test_zero_fill_foreign_fee_postgres.py tests/test_p0_correctness_postgres.py --junitxml=artifacts/fee-regression/junit.xml 2>&1 | tee artifacts/fee-regression/pytest.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zero-fill-fee-postgres-evidence
+          path: artifacts/fee-regression/
