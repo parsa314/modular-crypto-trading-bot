@@ -611,7 +611,15 @@ class PostgresRiskGovernor:
                 conn.execute("UPDATE risk_account_state SET reconciled=FALSE WHERE account_id=%s AND venue_id=%s",(account_id,venue_id))
                 self._audit(conn,account_id,venue_id,"FILL_ECONOMICS_UNRESOLVED",utc(now),{"client_order_id":client_order_id})
                 return
-            unresolved_fee = bool(matched and currency != 'USDT')
+            # A venue may report a fee even if no fill was recorded. Never
+            # deduct a non-quote fee as USDT or close its risk reservation;
+            # absent currency also lacks evidence of a confirmed zero fee.
+            terminal = OrderLifecycle(state) in TERMINAL_STATES
+            # While an unfilled order is still working, an absent fee is not
+            # yet evidence of a liability. Once terminal, absence of currency
+            # is unresolved; an actually reported foreign fee is unresolved
+            # even before the order becomes terminal.
+            unresolved_fee = currency != 'USDT' and bool(matched or fee or terminal)
             quote = matched*avg if matched else D(0)
             delta, delta_fee, delta_quote = matched-previous, (D(0) if unresolved_fee else fee-previous_fee), quote-previous_quote
             if delta > 0 and delta_quote <= 0:
@@ -625,7 +633,7 @@ class PostgresRiskGovernor:
                     (account_id,venue_id,client_order_id,previous,matched,delta_quote,utc(now))).fetchone()
                 if inserted is None:
                     raise RiskAdmissionError("PRINCIPAL_POSTING_CONFLICT")
-            if matched:
+            if matched or unresolved_fee:
                 conn.execute("""INSERT INTO risk_fee_liabilities(account_id,venue_id,client_order_id,state,updated_at)
                     VALUES (%s,%s,%s,%s,%s) ON CONFLICT(account_id,venue_id,client_order_id)
                     DO UPDATE SET state=EXCLUDED.state,updated_at=EXCLUDED.updated_at
@@ -644,7 +652,6 @@ class PostgresRiskGovernor:
                 cash += delta_quote-delta_fee
             if cash < 0:
                 raise RiskAdmissionError("NEGATIVE_CASH_AFTER_SETTLEMENT")
-            terminal = OrderLifecycle(state) in TERMINAL_STATES
             if delta or delta_fee or (unresolved_fee and (a['reconciled'] or not a['unresolved_orders'])):
                 conn.execute("UPDATE risk_account_state SET cash=%s,positions=%s::jsonb,reconciled=FALSE,unresolved_orders=unresolved_orders OR %s,state_version=state_version+1 WHERE account_id=%s AND venue_id=%s",
                     (cash,encoded(positions),unresolved_fee,account_id,venue_id))

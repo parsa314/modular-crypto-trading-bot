@@ -244,6 +244,12 @@ class PostgresTestnetOrderStore:
           IF OLD.venue_order_id IS NOT NULL AND NEW.venue_order_id IS DISTINCT FROM OLD.venue_order_id THEN
             RAISE EXCEPTION 'VENUE_ORDER_ID_MISMATCH';
           END IF;
+          -- Direct SQL must obey the same fee-denomination invariant as
+          -- validate_order_update(). A cumulative fee cannot be silently
+          -- reinterpreted in a different currency or lose its denomination.
+          IF OLD.fee_currency IS NOT NULL AND NEW.fee_currency IS DISTINCT FROM OLD.fee_currency THEN
+            RAISE EXCEPTION 'FEE_CURRENCY_MISMATCH';
+          END IF;
           IF OLD.state IN ('FILLED','CANCELLED','REJECTED') AND
              (NEW.state,NEW.matched_quantity,NEW.average_price,NEW.fee_reported,NEW.fee_currency)
              IS DISTINCT FROM (OLD.state,OLD.matched_quantity,OLD.average_price,OLD.fee_reported,OLD.fee_currency) THEN
@@ -621,5 +627,6 @@ class TestnetExecutionGateway:
             updated_at=datetime.now(timezone.utc),
             state_version=local.state_version,
         )
+
 
 
